@@ -3,24 +3,48 @@ import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     ComposedChart, Line, Cell, ReferenceLine, AreaChart, Area
 } from 'recharts';
-import financialConsolidated from '../financial_data.json';
-import financialSeparate from '../financial_data_separate.json';
-import epsData from '../eps_data.json';
-
-const financialRawData = { ...financialConsolidated, ...financialSeparate };
 import { Search, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { loadAllFinancialData, epsDataLoader } from './dataLoader';
 
 const App = () => {
-    const [selectedCode, setSelectedCode] = useState(() => {
-        const keys = Object.keys(financialRawData).sort();
-        return keys[0] || '';
-    });
+    const [financialRawData, setFinancialRawData] = useState({});
+    const [epsData, setEpsData] = useState({});
+    const [dataLoading, setDataLoading] = useState(true);
+    const [selectedCode, setSelectedCode] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [sortBy, setSortBy] = useState('revenue');
     const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
     const [yearRange, setYearRange] = useState([2015, 2025]);
-    const [isDefaultRange, setIsDefaultRange] = useState(true); // Track if using default range
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(false); // Track sidebar state
+    const [isDefaultRange, setIsDefaultRange] = useState(true);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+    // Load all data on mount
+    useEffect(() => {
+        async function loadData() {
+            setDataLoading(true);
+            try {
+                const [financial, eps] = await Promise.all([
+                    loadAllFinancialData(),  // Loads and merges consolidated + separate
+                    epsDataLoader.loadAll()
+                ]);
+
+                setFinancialRawData(financial || {});
+                setEpsData(eps || {});
+
+                // Set initial selected code
+                const codes = Object.keys(financial || {}).sort();
+                if (codes.length > 0) {
+                    setSelectedCode(codes[0]);
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+            } finally {
+                setDataLoading(false);
+            }
+        }
+
+        loadData();
+    }, []);
 
     const companyList = useMemo(() => {
         let list = Object.entries(financialRawData).map(([code, info]) => {
@@ -202,6 +226,18 @@ const App = () => {
         }
         return `${val.toLocaleString(undefined, { maximumFractionDigits: 1 })}억`;
     };
+
+    // Show loading screen while data is loading
+    if (dataLoading) {
+        return (
+            <div className="app-container" style={{ alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ textAlign: 'center' }}>
+                    <h2 style={{ color: '#60a5fa', marginBottom: '20px' }}>데이터 로딩 중...</h2>
+                    <p style={{ color: '#94a3b8' }}>잠시만 기다려주세요</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="app-container">

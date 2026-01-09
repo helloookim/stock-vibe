@@ -4,3 +4,8 @@ dist/
 .DS_Store
 __pycache__/
 .env
+
+# Large JSON files (replaced with chunked versions in public/data/)
+financial_data.json
+financial_data_separate.json
+eps_data.json
