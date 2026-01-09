@@ -5,6 +5,7 @@ import {
 } from 'recharts';
 import { Search, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { loadAllFinancialData, epsDataLoader } from './dataLoader';
+import marketCapData from '../market_cap_data.json';
 
 const App = () => {
     const [financialRawData, setFinancialRawData] = useState({});
@@ -12,7 +13,7 @@ const App = () => {
     const [dataLoading, setDataLoading] = useState(true);
     const [selectedCode, setSelectedCode] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
-    const [sortBy, setSortBy] = useState('revenue');
+    const [sortBy, setSortBy] = useState('revenue');  // 초기값: 매출순
     const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
     const [yearRange, setYearRange] = useState([2015, 2025]);
     const [isDefaultRange, setIsDefaultRange] = useState(true);
@@ -31,10 +32,18 @@ const App = () => {
                 setFinancialRawData(financial || {});
                 setEpsData(eps || {});
 
-                // Set initial selected code
-                const codes = Object.keys(financial || {}).sort();
+                // Set initial selected code to top revenue company
+                const codes = Object.keys(financial || {});
                 if (codes.length > 0) {
-                    setSelectedCode(codes[0]);
+                    // Sort by latest revenue to get top company
+                    const sortedByRevenue = codes.sort((a, b) => {
+                        const aLast = financial[a]?.history?.[financial[a].history.length - 1];
+                        const bLast = financial[b]?.history?.[financial[b].history.length - 1];
+                        const aRev = aLast?.revenue || 0;
+                        const bRev = bLast?.revenue || 0;
+                        return bRev - aRev;
+                    });
+                    setSelectedCode(sortedByRevenue[0]);
                 }
             } catch (error) {
                 console.error('Error loading data:', error);
@@ -53,12 +62,16 @@ const App = () => {
             const latestRevenue = lastEntry ? (lastEntry.revenue || 0) : 0;
             const latestOpProfit = lastEntry ? (lastEntry.op_profit || 0) : 0;
 
+            // Get market cap data
+            const marketCap = marketCapData[code]?.market_cap || 0;
+
             return {
                 code,
                 name: info.name,
                 sector: info.sector,
                 latestRevenue,
-                latestOpProfit
+                latestOpProfit,
+                marketCap
             };
         })
             .filter(c => {
@@ -72,13 +85,16 @@ const App = () => {
         } else if (sortBy === 'op_profit') {
             // Sort by operating profit descending
             list.sort((a, b) => b.latestOpProfit - a.latestOpProfit);
+        } else if (sortBy === 'market_cap') {
+            // Sort by market cap descending
+            list.sort((a, b) => b.marketCap - a.marketCap);
         } else {
             // Sort by code ascending
             list.sort((a, b) => a.code.localeCompare(b.code));
         }
 
         return list;
-    }, [searchTerm, sortBy]);
+    }, [searchTerm, sortBy, financialRawData]);
 
     useEffect(() => {
         if (companyList.length > 0 && !companyList.find(c => c.code === selectedCode)) {
@@ -253,7 +269,8 @@ const App = () => {
                             <ArrowUpDown size={16} />
                             <span>
                                 {sortBy === 'revenue' ? '매출순' :
-                                    sortBy === 'op_profit' ? '영업이익순' : '코드순'}
+                                    sortBy === 'op_profit' ? '영업이익순' :
+                                    sortBy === 'market_cap' ? '시가총액순' : '코드순'}
                             </span>
                         </button>
                         {sortDropdownOpen && (
@@ -263,6 +280,12 @@ const App = () => {
                                     onClick={() => { setSortBy('revenue'); setSortDropdownOpen(false); }}
                                 >
                                     매출순
+                                </button>
+                                <button
+                                    className={`sort-option ${sortBy === 'market_cap' ? 'active' : ''}`}
+                                    onClick={() => { setSortBy('market_cap'); setSortDropdownOpen(false); }}
+                                >
+                                    시가총액순
                                 </button>
                                 <button
                                     className={`sort-option ${sortBy === 'op_profit' ? 'active' : ''}`}
