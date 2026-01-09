@@ -6,6 +6,35 @@ import {
 import { Search, ArrowUpDown, ChevronLeft, ChevronRight, Menu, X } from 'lucide-react';
 import { loadAllFinancialData, epsDataLoader } from './dataLoader';
 
+// Custom Tooltip Component for displaying YoY on separate line
+const CustomTooltip = ({ active, payload, label, valueFormatter, yoyKey }) => {
+    if (active && payload && payload.length) {
+        const value = payload[0].value;
+        const yoyChange = payload[0].payload[yoyKey];
+
+        return (
+            <div style={{
+                backgroundColor: '#1e293b',
+                border: '1px solid #475569',
+                borderRadius: '8px',
+                padding: '8px 12px',
+                color: '#e2e8f0'
+            }}>
+                <p style={{ margin: 0, marginBottom: '4px', color: '#94a3b8', fontSize: '12px' }}>{label}</p>
+                <p style={{ margin: 0, fontWeight: 'bold', fontSize: '14px' }}>
+                    {valueFormatter(value)}
+                </p>
+                {yoyChange !== null && yoyChange !== undefined && (
+                    <p style={{ margin: 0, marginTop: '4px', fontSize: '12px', color: yoyChange >= 0 ? '#10b981' : '#ef4444' }}>
+                        YoY: {yoyChange > 0 ? '+' : ''}{yoyChange.toFixed(1)}%
+                    </p>
+                )}
+            </div>
+        );
+    }
+    return null;
+};
+
 const App = () => {
     const [financialRawData, setFinancialRawData] = useState({});
     const [epsData, setEpsData] = useState({});
@@ -33,8 +62,8 @@ const App = () => {
 
     // Dynamic chart margins based on screen size
     const chartMargins = isMobile
-        ? { top: 10, right: 0, left: -10, bottom: 20 }
-        : { top: 20, right: 5, left: 20, bottom: 20 };
+        ? { top: 10, right: 0, left: 5, bottom: 20 }
+        : { top: 20, right: 5, left: 35, bottom: 20 };
 
     // Dynamic X-axis label properties
     const xAxisProps = isMobile
@@ -216,24 +245,53 @@ const App = () => {
         return filteredHistory;
     }, [currentCompany, yearRange]);
 
-    // Calculate YoY change scale for charts (2x scale)
-    const yoyScaleMultiplier = 2;
+    // Calculate YoY change domain with smart ticks (must include 0)
+    const calculateYoyDomain = (changes) => {
+        if (changes.length === 0) return { domain: [-10, 10], ticks: [-10, 0, 10] };
+
+        const min = Math.min(...changes);
+        const max = Math.max(...changes);
+
+        // Calculate appropriate bounds
+        const maxAbs = Math.max(Math.abs(min), Math.abs(max));
+
+        // Determine tick interval based on magnitude
+        let tickInterval;
+        if (maxAbs < 100) {
+            // Under 100: use 10s
+            tickInterval = 10;
+        } else {
+            // 100 or more: use 100s
+            tickInterval = 100;
+        }
+
+        // Round bounds to tick intervals (not necessarily symmetric)
+        const lowerBound = Math.floor(min / tickInterval) * tickInterval;
+        const upperBound = Math.ceil(max / tickInterval) * tickInterval;
+
+        // Generate ticks from lower to upper, ensuring 0 is included
+        const ticks = [];
+        for (let i = lowerBound; i <= upperBound; i += tickInterval) {
+            ticks.push(i);
+        }
+
+        // Ensure 0 is in ticks
+        if (!ticks.includes(0)) {
+            ticks.push(0);
+            ticks.sort((a, b) => a - b);
+        }
+
+        return { domain: [lowerBound, upperBound], ticks };
+    };
+
     const revenueYoyDomain = useMemo(() => {
-        if (chartData.length === 0) return [-100, 100];
         const changes = chartData.map(d => d.rev_change).filter(v => v !== null);
-        if (changes.length === 0) return [-100, 100];
-        const maxAbs = Math.max(Math.abs(Math.min(...changes)), Math.abs(Math.max(...changes)));
-        const scaledMax = maxAbs * yoyScaleMultiplier;
-        return [-scaledMax, scaledMax];
+        return calculateYoyDomain(changes);
     }, [chartData]);
 
     const opProfitYoyDomain = useMemo(() => {
-        if (chartData.length === 0) return [-100, 100];
         const changes = chartData.map(d => d.op_change).filter(v => v !== null);
-        if (changes.length === 0) return [-100, 100];
-        const maxAbs = Math.max(Math.abs(Math.min(...changes)), Math.abs(Math.max(...changes)));
-        const scaledMax = maxAbs * yoyScaleMultiplier;
-        return [-scaledMax, scaledMax];
+        return calculateYoyDomain(changes);
     }, [chartData]);
 
     // EPS chart data
@@ -267,14 +325,10 @@ const App = () => {
         return filteredEpsHistory;
     }, [epsData, selectedCode, yearRange]);
 
-    // Calculate EPS YoY change scale (2x scale)
+    // Calculate EPS YoY change domain
     const epsYoyDomain = useMemo(() => {
-        if (epsChartData.length === 0) return [-100, 100];
         const changes = epsChartData.map(d => d.eps_change).filter(v => v !== null);
-        if (changes.length === 0) return [-100, 100];
-        const maxAbs = Math.max(Math.abs(Math.min(...changes)), Math.abs(Math.max(...changes)));
-        const scaledMax = maxAbs * yoyScaleMultiplier;
-        return [-scaledMax, scaledMax];
+        return calculateYoyDomain(changes);
     }, [epsChartData]);
 
     const peerCompanies = useMemo(() => {
@@ -474,12 +528,6 @@ const App = () => {
                             </span>
                         </div>
                         <div className="summary-card">
-                            <span className="card-label">최근 당기순이익</span>
-                            <span className="card-value">
-                                {chartData.length > 0 ? formatKoreanCurrency(chartData[chartData.length - 1].net_income_eok) : '0억'}
-                            </span>
-                        </div>
-                        <div className="summary-card">
                             <span className="card-label">영업이익률</span>
                             <span className="card-value">
                                 {chartData.length > 0 ? chartData[chartData.length - 1].op_margin : 0}%
@@ -487,16 +535,16 @@ const App = () => {
                         </div>
                     </div>
 
-                    {/* Main Chart: Bar (Revenue) + Line (Change Rate) */}
+                    {/* Main Chart: Bar (Revenue) with YoY */}
                     <div className="chart-section">
-                        <h3>분기별 매출액 & 변동률</h3>
+                        <h3>분기별 매출액 & YoY 변동률</h3>
                         <div className="chart-legend">
                             <span><span className="legend-bar"></span> 매출액 (억원)</span>
                             <span><span className="legend-line-dual"><span style={{ background: '#10b981' }}></span><span style={{ background: '#ef4444' }}></span></span> YoY 변동률 (%)</span>
                         </div>
                         <div className="chart-wrapper">
-                            <ResponsiveContainer width="100%" height={350}>
-                                <ComposedChart data={chartData} margin={chartMargins}>
+                            <ResponsiveContainer width="100%" height={250}>
+                                <BarChart data={chartData} margin={chartMargins}>
                                     <defs>
                                         <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.8} />
@@ -506,44 +554,61 @@ const App = () => {
                                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                                     <XAxis dataKey="displayLabel" stroke="#94a3b8" {...xAxisProps} />
                                     <YAxis
-                                        yAxisId="left"
                                         stroke="#94a3b8"
                                         fontSize={11}
-                                        tickFormatter={(val) => val >= 10000 ? `${(val / 10000).toFixed(1)}조` : `${val.toFixed(0)}억`}
+                                        tickFormatter={(val) => {
+                                            const maxVal = Math.max(...chartData.map(d => d.revenue_eok));
+                                            if (maxVal >= 10000) {
+                                                return `${(val / 10000).toFixed(1)}조`;
+                                            }
+                                            return `${val.toFixed(0)}억`;
+                                        }}
                                         domain={[0, 'dataMax']}
                                         padding={{ top: 20, bottom: 0 }}
+                                        width={isMobile ? 50 : 65}
                                     />
+                                    <Tooltip
+                                        content={<CustomTooltip
+                                            valueFormatter={(value) => {
+                                                if (Math.abs(value) >= 10000) {
+                                                    return `${(value / 10000).toLocaleString(undefined, { maximumFractionDigits: 2 })} 조원`;
+                                                }
+                                                return `${value.toLocaleString(undefined, { maximumFractionDigits: 1 })} 억원`;
+                                            }}
+                                            yoyKey="rev_change"
+                                        />}
+                                    />
+                                    <Bar dataKey="revenue_eok" name="매출액" fill="url(#barGrad)" radius={[4, 4, 0, 0]} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                            <ResponsiveContainer width="100%" height={120}>
+                                <ComposedChart data={chartData} margin={chartMargins}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                                    <XAxis dataKey="displayLabel" stroke="#94a3b8" {...xAxisProps} />
                                     <YAxis
-                                        yAxisId="right"
-                                        orientation="right"
                                         stroke="#10b981"
-                                        fontSize={11}
+                                        fontSize={9}
                                         tickFormatter={(val) => `${val.toFixed(0)}%`}
-                                        domain={revenueYoyDomain}
-                                        padding={{ top: 20, bottom: 20 }}
+                                        domain={revenueYoyDomain.domain}
+                                        ticks={revenueYoyDomain.ticks}
+                                        width={isMobile ? 50 : 65}
                                     />
                                     <Tooltip
                                         contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569', borderRadius: '8px' }}
-                                        formatter={(value, name) => {
-                                            if (name === '변동률') return [`${value}%`, name];
-                                            if (Math.abs(value) >= 10000) return [`${(value / 10000).toLocaleString(undefined, { maximumFractionDigits: 2 })} 조원`, name];
-                                            return [`${value.toLocaleString(undefined, { maximumFractionDigits: 1 })} 억원`, name];
-                                        }}
+                                        formatter={(value) => [`${value}%`, 'YoY']}
                                     />
-                                    <ReferenceLine yAxisId="right" y={0} stroke="#64748b" strokeDasharray="5 5" />
-                                    <Bar yAxisId="left" dataKey="revenue_eok" name="매출액" fill="url(#barGrad)" radius={[4, 4, 0, 0]} />
+                                    <ReferenceLine y={0} stroke="#64748b" strokeDasharray="5 5" />
                                     <Line
-                                        yAxisId="right"
                                         type="monotone"
                                         dataKey="rev_change"
-                                        name="변동률"
+                                        name="YoY"
                                         stroke="#64748b"
-                                        strokeWidth={2}
+                                        strokeWidth={1.5}
                                         dot={(props) => {
                                             const { cx, cy, payload } = props;
                                             if (payload.rev_change === null) return null;
                                             const color = payload.rev_change >= 0 ? '#10b981' : '#ef4444';
-                                            return <circle cx={cx} cy={cy} r={3} fill={color} stroke={color} strokeWidth={1.5} />;
+                                            return <circle cx={cx} cy={cy} r={2.5} fill={color} stroke={color} strokeWidth={1} />;
                                         }}
                                     />
                                 </ComposedChart>
@@ -551,16 +616,16 @@ const App = () => {
                         </div>
                     </div>
 
-                    {/* Operating Profit Chart - Same X-axis as Revenue */}
+                    {/* Operating Profit Bar Chart with YoY */}
                     <div className="chart-section">
-                        <h3>분기별 영업이익 & 변동률</h3>
+                        <h3>분기별 영업이익 & YoY 변동률</h3>
                         <div className="chart-legend">
                             <span><span className="legend-bar" style={{ background: 'rgba(16, 185, 129, 0.6)' }}></span> 영업이익 (억원)</span>
                             <span><span className="legend-line-dual"><span style={{ background: '#3b82f6' }}></span><span style={{ background: '#ef4444' }}></span></span> YoY 변동률 (%)</span>
                         </div>
                         <div className="chart-wrapper">
-                            <ResponsiveContainer width="100%" height={350}>
-                                <ComposedChart data={chartData} margin={chartMargins}>
+                            <ResponsiveContainer width="100%" height={250}>
+                                <BarChart data={chartData} margin={chartMargins}>
                                     <defs>
                                         <linearGradient id="barGradGreen" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="0%" stopColor="#10b981" stopOpacity={0.8} />
@@ -570,45 +635,62 @@ const App = () => {
                                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                                     <XAxis dataKey="displayLabel" stroke="#94a3b8" {...xAxisProps} />
                                     <YAxis
-                                        yAxisId="left"
                                         stroke="#94a3b8"
                                         fontSize={11}
                                         domain={isDefaultRange ? [0, 'auto'] : [dataMin => Math.min(dataMin, 0), 'auto']}
-                                        tickFormatter={(val) => Math.abs(val) >= 10000 ? `${(val / 10000).toFixed(1)}조` : `${val.toFixed(0)}억`}
+                                        tickFormatter={(val) => {
+                                            const maxVal = Math.max(...chartData.map(d => Math.abs(d.op_profit_eok)));
+                                            if (maxVal >= 10000) {
+                                                return `${(val / 10000).toFixed(1)}조`;
+                                            }
+                                            return `${val.toFixed(0)}억`;
+                                        }}
                                         padding={{ top: 20, bottom: 20 }}
+                                        width={isMobile ? 50 : 65}
                                     />
+                                    <Tooltip
+                                        content={<CustomTooltip
+                                            valueFormatter={(value) => {
+                                                if (Math.abs(value) >= 10000) {
+                                                    return `${(value / 10000).toLocaleString(undefined, { maximumFractionDigits: 2 })} 조원`;
+                                                }
+                                                return `${value.toLocaleString(undefined, { maximumFractionDigits: 1 })} 억원`;
+                                            }}
+                                            yoyKey="op_change"
+                                        />}
+                                    />
+                                    <ReferenceLine y={0} stroke="#64748b" />
+                                    <Bar dataKey="op_profit_eok" name="영업이익" fill="url(#barGradGreen)" radius={[4, 4, 0, 0]} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                            <ResponsiveContainer width="100%" height={120}>
+                                <ComposedChart data={chartData} margin={chartMargins}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                                    <XAxis dataKey="displayLabel" stroke="#94a3b8" {...xAxisProps} />
                                     <YAxis
-                                        yAxisId="right"
-                                        orientation="right"
                                         stroke="#f59e0b"
-                                        fontSize={11}
+                                        fontSize={9}
                                         tickFormatter={(val) => `${val.toFixed(0)}%`}
-                                        domain={opProfitYoyDomain}
-                                        padding={{ top: 20, bottom: 20 }}
+                                        domain={opProfitYoyDomain.domain}
+                                        ticks={opProfitYoyDomain.ticks}
+                                        width={isMobile ? 50 : 65}
                                     />
                                     <Tooltip
                                         contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569', borderRadius: '8px' }}
-                                        formatter={(value, name) => {
-                                            if (name === '변동률') return [`${value}%`, name];
-                                            if (Math.abs(value) >= 10000) return [`${(value / 10000).toLocaleString(undefined, { maximumFractionDigits: 2 })} 조원`, name];
-                                            return [`${value.toLocaleString(undefined, { maximumFractionDigits: 1 })} 억원`, name];
-                                        }}
+                                        formatter={(value) => [`${value}%`, 'YoY']}
                                     />
-                                    <ReferenceLine yAxisId="left" y={0} stroke="#64748b" />
-                                    <ReferenceLine yAxisId="right" y={0} stroke="#64748b" strokeDasharray="5 5" />
-                                    <Bar yAxisId="left" dataKey="op_profit_eok" name="영업이익" fill="url(#barGradGreen)" radius={[4, 4, 0, 0]} />
+                                    <ReferenceLine y={0} stroke="#64748b" strokeDasharray="5 5" />
                                     <Line
-                                        yAxisId="right"
                                         type="monotone"
                                         dataKey="op_change"
-                                        name="변동률"
+                                        name="YoY"
                                         stroke="#64748b"
-                                        strokeWidth={2}
+                                        strokeWidth={1.5}
                                         dot={(props) => {
                                             const { cx, cy, payload } = props;
                                             if (payload.op_change === null) return null;
                                             const color = payload.op_change >= 0 ? '#3b82f6' : '#ef4444';
-                                            return <circle cx={cx} cy={cy} r={3} fill={color} stroke={color} strokeWidth={1.5} />;
+                                            return <circle cx={cx} cy={cy} r={2.5} fill={color} stroke={color} strokeWidth={1} />;
                                         }}
                                     />
                                 </ComposedChart>
@@ -649,17 +731,17 @@ const App = () => {
                         </div>
                     </div>
 
-                    {/* EPS Chart */}
+                    {/* EPS Bar Chart with YoY */}
                     {epsChartData.length > 0 && (
                         <div className="chart-section">
-                            <h3>분기별 주당순이익 (EPS) & 변동률</h3>
+                            <h3>분기별 주당순이익 (EPS) & YoY 변동률</h3>
                             <div className="chart-legend">
                                 <span><span className="legend-bar" style={{ background: 'rgba(245, 158, 11, 0.6)' }}></span> EPS (원)</span>
                                 <span><span className="legend-line-dual"><span style={{ background: '#10b981' }}></span><span style={{ background: '#ef4444' }}></span></span> YoY 변동률 (%)</span>
                             </div>
                             <div className="chart-wrapper">
-                                <ResponsiveContainer width="100%" height={350}>
-                                    <ComposedChart data={epsChartData} margin={chartMargins}>
+                                <ResponsiveContainer width="100%" height={250}>
+                                    <BarChart data={epsChartData} margin={chartMargins}>
                                         <defs>
                                             <linearGradient id="barGradOrange" x1="0" y1="0" x2="0" y2="1">
                                                 <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.8} />
@@ -669,44 +751,51 @@ const App = () => {
                                         <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                                         <XAxis dataKey="displayLabel" stroke="#94a3b8" {...xAxisProps} />
                                         <YAxis
-                                            yAxisId="left"
                                             stroke="#94a3b8"
                                             fontSize={11}
                                             tickFormatter={(val) => `${val.toLocaleString()}원`}
                                             domain={isDefaultRange ? [0, 'auto'] : ['auto', 'auto']}
                                             padding={{ top: 20, bottom: 20 }}
+                                            width={isMobile ? 50 : 65}
                                         />
+                                        <Tooltip
+                                            content={<CustomTooltip
+                                                valueFormatter={(value) => `${value.toLocaleString()}원`}
+                                                yoyKey="eps_change"
+                                            />}
+                                        />
+                                        <ReferenceLine y={0} stroke="#64748b" />
+                                        <Bar dataKey="eps" name="EPS" fill="url(#barGradOrange)" radius={[4, 4, 0, 0]} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                                <ResponsiveContainer width="100%" height={120}>
+                                    <ComposedChart data={epsChartData} margin={chartMargins}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                                        <XAxis dataKey="displayLabel" stroke="#94a3b8" {...xAxisProps} />
                                         <YAxis
-                                            yAxisId="right"
-                                            orientation="right"
                                             stroke="#10b981"
-                                            fontSize={11}
+                                            fontSize={9}
                                             tickFormatter={(val) => `${val.toFixed(0)}%`}
-                                            domain={epsYoyDomain}
-                                            padding={{ top: 20, bottom: 20 }}
+                                            domain={epsYoyDomain.domain}
+                                            ticks={epsYoyDomain.ticks}
+                                            width={isMobile ? 50 : 65}
                                         />
                                         <Tooltip
                                             contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569', borderRadius: '8px' }}
-                                            formatter={(value, name) => {
-                                                if (name === '변동률') return [`${value}%`, name];
-                                                return [`${value.toLocaleString()}원`, name];
-                                            }}
+                                            formatter={(value) => [`${value}%`, 'YoY']}
                                         />
-                                        <ReferenceLine yAxisId="left" y={0} stroke="#64748b" />
-                                        <ReferenceLine yAxisId="right" y={0} stroke="#64748b" strokeDasharray="5 5" />
-                                        <Bar yAxisId="left" dataKey="eps" name="EPS" fill="url(#barGradOrange)" radius={[4, 4, 0, 0]} />
+                                        <ReferenceLine y={0} stroke="#64748b" strokeDasharray="5 5" />
                                         <Line
-                                            yAxisId="right"
                                             type="monotone"
                                             dataKey="eps_change"
-                                            name="변동률"
+                                            name="YoY"
                                             stroke="#64748b"
-                                            strokeWidth={2}
+                                            strokeWidth={1.5}
                                             dot={(props) => {
                                                 const { cx, cy, payload } = props;
                                                 if (payload.eps_change === null) return null;
                                                 const color = payload.eps_change >= 0 ? '#10b981' : '#ef4444';
-                                                return <circle cx={cx} cy={cy} r={3} fill={color} stroke={color} strokeWidth={1.5} />;
+                                                return <circle cx={cx} cy={cy} r={2.5} fill={color} stroke={color} strokeWidth={1} />;
                                             }}
                                         />
                                     </ComposedChart>
