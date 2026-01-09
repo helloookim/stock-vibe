@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep:*)",
+      "Bash(head:*)",
+      "Bash(python process_data.py:*)",
+      "Bash(python -c:*)",
+      "Bash(python:*)",
+      "Bash(timeout 120 python:*)",
+      "Bash(findstr:*)",
+      "Bash(cat:*)",
+      "Bash(timeout 180 python:*)",
+      "Bash(ls:*)",
+      "Bash(Select-String -Pattern \"fallback candidates\" -Context 0,15)",
+      "Bash(npm run dev:*)"
+    ]
+  }
+}
