@@ -3,7 +3,7 @@ import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     ComposedChart, Line, Cell, ReferenceLine, AreaChart, Area
 } from 'recharts';
-import { Search, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, ArrowUpDown, ChevronLeft, ChevronRight, Menu, X } from 'lucide-react';
 import { loadAllFinancialData, epsDataLoader } from './dataLoader';
 
 const App = () => {
@@ -18,6 +18,28 @@ const App = () => {
     const [yearRange, setYearRange] = useState([2015, 2025]);
     const [isDefaultRange, setIsDefaultRange] = useState(true);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
+
+    // Detect mobile screen size
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth <= 768);
+        };
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
+    // Dynamic chart margins based on screen size
+    const chartMargins = isMobile
+        ? { top: 10, right: 0, left: -10, bottom: 20 }
+        : { top: 20, right: 5, left: 20, bottom: 20 };
+
+    // Dynamic X-axis label properties
+    const xAxisProps = isMobile
+        ? { fontSize: 8, angle: -45, textAnchor: 'end', height: 60 }
+        : { fontSize: 10, angle: -45, textAnchor: 'end', height: 70 };
 
     // Load all data on mount
     useEffect(() => {
@@ -150,21 +172,16 @@ const App = () => {
     const chartData = useMemo(() => {
         if (!currentCompany) return [];
 
-        // Filter data by year range
-        const rawHistory = currentCompany.history.filter(entry => entry.year >= yearRange[0] && entry.year <= yearRange[1]);
-
-        // Data is already properly calculated in the JSON (Q4 = Annual - Q3_Cumulative)
-        // No additional processing needed
-        const processedHistory = rawHistory.map(entry => ({
+        // First, process ALL history data and calculate YoY changes using full dataset
+        const fullHistory = currentCompany.history.map(entry => ({
             ...entry,
             revenue_adjusted: entry.revenue || 0,
             op_profit_adjusted: entry.op_profit || 0,
             net_income_adjusted: entry.net_income || 0
         }));
 
-        // Don't filter - show all quarters
-        // Now convert to 억원 and calculate changes
-        const history = processedHistory.map((entry, idx, arr) => {
+        // Calculate changes using FULL history (before filtering)
+        const historyWithChanges = fullHistory.map((entry) => {
             // Convert to 억원 (100,000,000 won) units
             const revenue_eok = entry.revenue_adjusted / 100000000;
             const op_profit_eok = entry.op_profit_adjusted / 100000000;
@@ -172,8 +189,8 @@ const App = () => {
 
             let rev_change = null;  // null means no previous data
             let op_change = null;
-            // YoY: Find same quarter in previous year
-            const prevYearEntry = arr.find(e => e.year === entry.year - 1 && e.quarter === entry.quarter);
+            // YoY: Find same quarter in previous year from FULL history
+            const prevYearEntry = fullHistory.find(e => e.year === entry.year - 1 && e.quarter === entry.quarter);
             if (prevYearEntry) {
                 const prev_rev_eok = prevYearEntry.revenue_adjusted / 100000000;
                 const prev_op_eok = prevYearEntry.op_profit_adjusted / 100000000;
@@ -192,38 +209,73 @@ const App = () => {
                 op_margin: entry.revenue_adjusted ? parseFloat(((entry.op_profit_adjusted / entry.revenue_adjusted) * 100).toFixed(1)) : 0
             };
         });
-        return history;
+
+        // Now filter by year range AFTER calculating changes
+        const filteredHistory = historyWithChanges.filter(entry => entry.year >= yearRange[0] && entry.year <= yearRange[1]);
+
+        return filteredHistory;
     }, [currentCompany, yearRange]);
+
+    // Calculate YoY change scale for charts (2x scale)
+    const yoyScaleMultiplier = 2;
+    const revenueYoyDomain = useMemo(() => {
+        if (chartData.length === 0) return [-100, 100];
+        const changes = chartData.map(d => d.rev_change).filter(v => v !== null);
+        if (changes.length === 0) return [-100, 100];
+        const maxAbs = Math.max(Math.abs(Math.min(...changes)), Math.abs(Math.max(...changes)));
+        const scaledMax = maxAbs * yoyScaleMultiplier;
+        return [-scaledMax, scaledMax];
+    }, [chartData]);
+
+    const opProfitYoyDomain = useMemo(() => {
+        if (chartData.length === 0) return [-100, 100];
+        const changes = chartData.map(d => d.op_change).filter(v => v !== null);
+        if (changes.length === 0) return [-100, 100];
+        const maxAbs = Math.max(Math.abs(Math.min(...changes)), Math.abs(Math.max(...changes)));
+        const scaledMax = maxAbs * yoyScaleMultiplier;
+        return [-scaledMax, scaledMax];
+    }, [chartData]);
 
     // EPS chart data
     const epsChartData = useMemo(() => {
         const currentEpsData = epsData[selectedCode];
         if (!currentEpsData) return [];
 
-        // Filter by year range and map to chart format
-        const epsHistory = currentEpsData.history
-            .filter(entry => entry.year >= yearRange[0] && entry.year <= yearRange[1])
-            .map((entry, idx, arr) => {
-                const eps = entry.eps || 0;
+        // First, calculate YoY change using FULL history
+        const fullEpsHistory = currentEpsData.history.map((entry) => {
+            const eps = entry.eps || 0;
 
-                // Calculate YoY change
-                let eps_change = null;
-                const prevYearEntry = arr.find(e => e.year === entry.year - 1 && e.quarter === entry.quarter);
-                if (prevYearEntry && prevYearEntry.eps) {
-                    eps_change = parseFloat(((eps - prevYearEntry.eps) / Math.abs(prevYearEntry.eps) * 100).toFixed(1));
-                }
+            // Calculate YoY change from FULL history
+            let eps_change = null;
+            const prevYearEntry = currentEpsData.history.find(e => e.year === entry.year - 1 && e.quarter === entry.quarter);
+            if (prevYearEntry && prevYearEntry.eps) {
+                eps_change = parseFloat(((eps - prevYearEntry.eps) / Math.abs(prevYearEntry.eps) * 100).toFixed(1));
+            }
 
-                return {
-                    displayLabel: `${entry.year} ${entry.quarter}`,
-                    eps: eps,
-                    eps_change: eps_change,
-                    year: entry.year,
-                    quarter: entry.quarter
-                };
-            });
+            return {
+                displayLabel: `${entry.year} ${entry.quarter}`,
+                eps: eps,
+                eps_change: eps_change,
+                year: entry.year,
+                quarter: entry.quarter
+            };
+        });
 
-        return epsHistory;
-    }, [selectedCode, yearRange]);
+        // Then filter by year range AFTER calculating changes
+        const filteredEpsHistory = fullEpsHistory.filter(entry => entry.year >= yearRange[0] && entry.year <= yearRange[1]);
+
+        return filteredEpsHistory;
+    }, [epsData, selectedCode, yearRange]);
+
+    // Calculate EPS YoY change scale (2x scale)
+    const epsYoyDomain = useMemo(() => {
+        if (epsChartData.length === 0) return [-100, 100];
+        const changes = epsChartData.map(d => d.eps_change).filter(v => v !== null);
+        if (changes.length === 0) return [-100, 100];
+        const maxAbs = Math.max(Math.abs(Math.min(...changes)), Math.abs(Math.max(...changes)));
+        const scaledMax = maxAbs * yoyScaleMultiplier;
+        return [-scaledMax, scaledMax];
+    }, [epsChartData]);
 
     const peerCompanies = useMemo(() => {
         if (!currentCompany?.sector) return [];
@@ -259,10 +311,30 @@ const App = () => {
 
     return (
         <div className="app-container">
+            {/* Mobile Header with Hamburger Menu */}
+            <div className="mobile-header">
+                <button
+                    className="hamburger-menu"
+                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                    aria-label="Toggle Menu"
+                >
+                    {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                </button>
+                <h1 className="mobile-app-title">KSTOCKVIEW</h1>
+            </div>
+
+            {/* Mobile Overlay */}
+            {isMobileMenuOpen && (
+                <div
+                    className="mobile-overlay"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                />
+            )}
+
             {/* SIDEBAR */}
-            <aside className={`sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}>
+            <aside className={`sidebar ${sidebarCollapsed ? 'collapsed' : ''} ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
                 <div className="sidebar-header">
-                    <h1 className="app-title">QUANTVIBE</h1>
+                    <h1 className="app-title">KSTOCKVIEW</h1>
                     <div className="sort-dropdown-container">
                         <button
                             className="sort-dropdown-btn"
@@ -320,7 +392,10 @@ const App = () => {
                     {companyList.map((comp) => (
                         <button
                             key={comp.code}
-                            onClick={() => setSelectedCode(comp.code)}
+                            onClick={() => {
+                                setSelectedCode(comp.code);
+                                setIsMobileMenuOpen(false); // Close mobile menu on selection
+                            }}
                             className={`ticker-item ${selectedCode === comp.code ? 'active' : ''}`}
                         >
                             <span className="ticker-code">{comp.code}</span>
@@ -421,7 +496,7 @@ const App = () => {
                         </div>
                         <div className="chart-wrapper">
                             <ResponsiveContainer width="100%" height={350}>
-                                <ComposedChart data={chartData} margin={{ top: 20, right: 60, left: 20, bottom: 20 }}>
+                                <ComposedChart data={chartData} margin={chartMargins}>
                                     <defs>
                                         <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.8} />
@@ -429,21 +504,22 @@ const App = () => {
                                         </linearGradient>
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                    <XAxis dataKey="displayLabel" stroke="#94a3b8" fontSize={10} angle={-45} textAnchor="end" height={70} />
+                                    <XAxis dataKey="displayLabel" stroke="#94a3b8" {...xAxisProps} />
                                     <YAxis
                                         yAxisId="left"
                                         stroke="#94a3b8"
                                         fontSize={11}
                                         tickFormatter={(val) => val >= 10000 ? `${(val / 10000).toFixed(1)}조` : `${val.toFixed(0)}억`}
-                                        domain={isDefaultRange ? [0, 'auto'] : ['auto', 'auto']}
-                                        padding={{ top: 20, bottom: 20 }}
+                                        domain={[0, 'dataMax']}
+                                        padding={{ top: 20, bottom: 0 }}
                                     />
                                     <YAxis
                                         yAxisId="right"
                                         orientation="right"
                                         stroke="#10b981"
                                         fontSize={11}
-                                        tickFormatter={(val) => `${val}%`}
+                                        tickFormatter={(val) => `${val.toFixed(0)}%`}
+                                        domain={revenueYoyDomain}
                                         padding={{ top: 20, bottom: 20 }}
                                     />
                                     <Tooltip
@@ -467,7 +543,7 @@ const App = () => {
                                             const { cx, cy, payload } = props;
                                             if (payload.rev_change === null) return null;
                                             const color = payload.rev_change >= 0 ? '#10b981' : '#ef4444';
-                                            return <circle cx={cx} cy={cy} r={5} fill={color} stroke={color} strokeWidth={2} />;
+                                            return <circle cx={cx} cy={cy} r={3} fill={color} stroke={color} strokeWidth={1.5} />;
                                         }}
                                     />
                                 </ComposedChart>
@@ -480,11 +556,11 @@ const App = () => {
                         <h3>분기별 영업이익 & 변동률</h3>
                         <div className="chart-legend">
                             <span><span className="legend-bar" style={{ background: 'rgba(16, 185, 129, 0.6)' }}></span> 영업이익 (억원)</span>
-                            <span><span className="legend-line-dual"><span style={{ background: '#10b981' }}></span><span style={{ background: '#ef4444' }}></span></span> YoY 변동률 (%)</span>
+                            <span><span className="legend-line-dual"><span style={{ background: '#3b82f6' }}></span><span style={{ background: '#ef4444' }}></span></span> YoY 변동률 (%)</span>
                         </div>
                         <div className="chart-wrapper">
                             <ResponsiveContainer width="100%" height={350}>
-                                <ComposedChart data={chartData} margin={{ top: 20, right: 60, left: 20, bottom: 20 }}>
+                                <ComposedChart data={chartData} margin={chartMargins}>
                                     <defs>
                                         <linearGradient id="barGradGreen" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="0%" stopColor="#10b981" stopOpacity={0.8} />
@@ -492,7 +568,7 @@ const App = () => {
                                         </linearGradient>
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                    <XAxis dataKey="displayLabel" stroke="#94a3b8" fontSize={10} angle={-45} textAnchor="end" height={70} />
+                                    <XAxis dataKey="displayLabel" stroke="#94a3b8" {...xAxisProps} />
                                     <YAxis
                                         yAxisId="left"
                                         stroke="#94a3b8"
@@ -506,7 +582,8 @@ const App = () => {
                                         orientation="right"
                                         stroke="#f59e0b"
                                         fontSize={11}
-                                        tickFormatter={(val) => `${val}%`}
+                                        tickFormatter={(val) => `${val.toFixed(0)}%`}
+                                        domain={opProfitYoyDomain}
                                         padding={{ top: 20, bottom: 20 }}
                                     />
                                     <Tooltip
@@ -530,8 +607,8 @@ const App = () => {
                                         dot={(props) => {
                                             const { cx, cy, payload } = props;
                                             if (payload.op_change === null) return null;
-                                            const color = payload.op_change >= 0 ? '#10b981' : '#ef4444';
-                                            return <circle cx={cx} cy={cy} r={5} fill={color} stroke={color} strokeWidth={2} />;
+                                            const color = payload.op_change >= 0 ? '#3b82f6' : '#ef4444';
+                                            return <circle cx={cx} cy={cy} r={3} fill={color} stroke={color} strokeWidth={1.5} />;
                                         }}
                                     />
                                 </ComposedChart>
@@ -539,58 +616,36 @@ const App = () => {
                         </div>
                     </div>
 
-                    {/* Second Chart: Growth Rates */}
-                    <div className="bottom-section">
-                        <div className="chart-section profit-margin-chart">
-                            <h3>분기별 영업이익률 (%)</h3>
-                            <div className="chart-wrapper">
-                                <ResponsiveContainer width="100%" height={300}>
-                                    <AreaChart data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 60 }}>
-                                        <defs>
-                                            <linearGradient id="marginGrad" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8} />
-                                                <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
-                                            </linearGradient>
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                        <XAxis dataKey="displayLabel" stroke="#94a3b8" fontSize={10} angle={-45} textAnchor="end" />
-                                        <YAxis
-                                            stroke="#94a3b8"
-                                            fontSize={10}
-                                            tickFormatter={(val) => `${Math.round(val)}%`}
-                                            domain={['auto', 'auto']}
-                                            allowDecimals={false}
-                                            scale="linear"
-                                        />
-                                        <Tooltip
-                                            contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569', borderRadius: '8px' }}
-                                            formatter={(value) => [`${value}%`, '영업이익률']}
-                                        />
-                                        <ReferenceLine y={0} stroke="#64748b" />
-                                        <Area type="monotone" dataKey="op_margin" name="영업이익률" stroke="#8b5cf6" fillOpacity={1} fill="url(#marginGrad)" />
-                                    </AreaChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </div>
-
-                        <div className="peers-section">
-                            <h3>동종업계 기업</h3>
-                            <div className="peers-list">
-                                {peerCompanies.map(peer => (
-                                    <button
-                                        key={peer.code}
-                                        onClick={() => {
-                                            setSearchTerm(''); // Clear search to ensure company is in list
-                                            setSelectedCode(peer.code);
-                                        }}
-                                        className="peer-item"
-                                    >
-                                        <span className="peer-code">{peer.code}</span>
-                                        <span className="peer-name">{peer.name}</span>
-                                    </button>
-                                ))}
-                                {peerCompanies.length === 0 && <span className="no-peers">동종업계 기업 없음</span>}
-                            </div>
+                    {/* Profit Margin Chart (Full Width) */}
+                    <div className="chart-section profit-margin-chart">
+                        <h3>분기별 영업이익률 (%)</h3>
+                        <div className="chart-wrapper">
+                            <ResponsiveContainer width="100%" height={300}>
+                                <AreaChart data={chartData} margin={isMobile ? { top: 10, right: 5, left: -10, bottom: 50 } : { top: 20, right: 10, left: 0, bottom: 60 }}>
+                                    <defs>
+                                        <linearGradient id="marginGrad" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8} />
+                                            <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                                    <XAxis dataKey="displayLabel" stroke="#94a3b8" {...xAxisProps} />
+                                    <YAxis
+                                        stroke="#94a3b8"
+                                        fontSize={10}
+                                        tickFormatter={(val) => `${Math.round(val)}%`}
+                                        domain={['auto', 'auto']}
+                                        allowDecimals={false}
+                                        scale="linear"
+                                    />
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569', borderRadius: '8px' }}
+                                        formatter={(value) => [`${value}%`, '영업이익률']}
+                                    />
+                                    <ReferenceLine y={0} stroke="#64748b" />
+                                    <Area type="monotone" dataKey="op_margin" name="영업이익률" stroke="#8b5cf6" fillOpacity={1} fill="url(#marginGrad)" />
+                                </AreaChart>
+                            </ResponsiveContainer>
                         </div>
                     </div>
 
@@ -604,7 +659,7 @@ const App = () => {
                             </div>
                             <div className="chart-wrapper">
                                 <ResponsiveContainer width="100%" height={350}>
-                                    <ComposedChart data={epsChartData} margin={{ top: 20, right: 60, left: 20, bottom: 20 }}>
+                                    <ComposedChart data={epsChartData} margin={chartMargins}>
                                         <defs>
                                             <linearGradient id="barGradOrange" x1="0" y1="0" x2="0" y2="1">
                                                 <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.8} />
@@ -612,7 +667,7 @@ const App = () => {
                                             </linearGradient>
                                         </defs>
                                         <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                        <XAxis dataKey="displayLabel" stroke="#94a3b8" fontSize={10} angle={-45} textAnchor="end" height={70} />
+                                        <XAxis dataKey="displayLabel" stroke="#94a3b8" {...xAxisProps} />
                                         <YAxis
                                             yAxisId="left"
                                             stroke="#94a3b8"
@@ -626,7 +681,8 @@ const App = () => {
                                             orientation="right"
                                             stroke="#10b981"
                                             fontSize={11}
-                                            tickFormatter={(val) => `${val}%`}
+                                            tickFormatter={(val) => `${val.toFixed(0)}%`}
+                                            domain={epsYoyDomain}
                                             padding={{ top: 20, bottom: 20 }}
                                         />
                                         <Tooltip
@@ -650,7 +706,7 @@ const App = () => {
                                                 const { cx, cy, payload } = props;
                                                 if (payload.eps_change === null) return null;
                                                 const color = payload.eps_change >= 0 ? '#10b981' : '#ef4444';
-                                                return <circle cx={cx} cy={cy} r={5} fill={color} stroke={color} strokeWidth={2} />;
+                                                return <circle cx={cx} cy={cy} r={3} fill={color} stroke={color} strokeWidth={1.5} />;
                                             }}
                                         />
                                     </ComposedChart>
@@ -658,6 +714,28 @@ const App = () => {
                             </div>
                         </div>
                     )}
+
+                    {/* Peer Companies Section */}
+                    <div className="peers-section">
+                        <h3>동종업계 기업</h3>
+                        <div className="peers-list">
+                            {peerCompanies.map(peer => (
+                                <button
+                                    key={peer.code}
+                                    onClick={() => {
+                                        setSearchTerm(''); // Clear search to ensure company is in list
+                                        setSelectedCode(peer.code);
+                                        setIsMobileMenuOpen(false); // Close mobile menu
+                                    }}
+                                    className="peer-item"
+                                >
+                                    <span className="peer-code">{peer.code}</span>
+                                    <span className="peer-name">{peer.name}</span>
+                                </button>
+                            ))}
+                            {peerCompanies.length === 0 && <span className="no-peers">동종업계 기업 없음</span>}
+                        </div>
+                    </div>
                 </div>
             </main>
         </div>

@@ -28,6 +28,16 @@ body {
   overflow: hidden;
 }
 
+/* Mobile Header - Hidden on Desktop */
+.mobile-header {
+  display: none;
+}
+
+/* Mobile Overlay - Hidden on Desktop */
+.mobile-overlay {
+  display: none;
+}
+
 /* Sidebar */
 .sidebar {
   width: 280px;
@@ -46,11 +56,24 @@ body {
   min-width: 60px;
 }
 
-.sidebar.collapsed .sidebar-header,
+.sidebar.collapsed .sort-dropdown-container,
 .sidebar.collapsed .search-box,
 .sidebar.collapsed .ticker-list {
   opacity: 0;
   pointer-events: none;
+}
+
+/* Keep logo visible when collapsed */
+.sidebar.collapsed .sidebar-header {
+  padding: 20px 10px;
+  justify-content: center;
+}
+
+.sidebar.collapsed .app-title {
+  font-size: 0.7rem;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  letter-spacing: 2px;
 }
 
 /* Sidebar Toggle Button */
@@ -518,12 +541,13 @@ body {
   background: #8b5cf6;
 }
 
-/* Peers Section */
+/* Peers Section - Full width after EPS chart */
 .peers-section {
   background: rgba(30, 41, 59, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
   padding: 25px;
+  margin-bottom: 30px;
 }
 
 .peers-section h3 {
@@ -551,7 +575,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 250px;
+  max-height: 300px;
   overflow-y: auto;
 }
 
@@ -678,17 +702,285 @@ input[type="range"]::-moz-range-thumb {
 }
 
 @media (max-width: 768px) {
+  /* Mobile Header - Visible on Mobile */
+  .mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: #020617;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1001;
+    height: 56px;
+  }
+
+  .hamburger-menu {
+    background: transparent;
+    border: none;
+    color: #60a5fa;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .hamburger-menu:active {
+    transform: scale(0.95);
+  }
+
+  .mobile-app-title {
+    font-size: 1.2rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #60a5fa 0%, #a855f7 50%, #f472b6 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  /* Mobile Overlay - Visible when menu is open */
+  .mobile-overlay {
+    display: block;
+    position: fixed;
+    top: 56px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 999;
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* App Container - Stack vertically on mobile */
   .app-container {
     flex-direction: column;
+    padding-top: 56px; /* Height of mobile header */
   }
 
+  /* Sidebar - Drawer style on mobile */
   .sidebar {
-    width: 100%;
-    min-width: 100%;
-    max-height: 250px;
+    position: fixed;
+    top: 56px;
+    left: -280px; /* Hidden by default */
+    bottom: 0;
+    width: 280px;
+    min-width: 280px;
+    max-height: none;
+    z-index: 1000;
+    transition: left 0.3s ease;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
   }
 
+  .sidebar.mobile-open {
+    left: 0; /* Slide in when open */
+  }
+
+  /* Hide desktop collapse button on mobile */
+  .sidebar-toggle {
+    display: none;
+  }
+
+  /* Keep sidebar visible when collapsed on desktop, but not on mobile */
+  .sidebar.collapsed {
+    left: -280px;
+  }
+
+  .sidebar.collapsed.mobile-open {
+    left: 0;
+    width: 280px;
+    min-width: 280px;
+  }
+
+  .sidebar.collapsed .sidebar-header,
+  .sidebar.collapsed .search-box,
+  .sidebar.collapsed .ticker-list {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  /* Main Content - Full width on mobile */
+  .main-content {
+    width: 100%;
+    flex: 1;
+  }
+
+  /* Main Header - Stack vertically on mobile */
+  .main-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .company-info {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .company-info h1 {
+    font-size: 1.2rem;
+  }
+
+  .company-sector {
+    padding-left: 0;
+    border-left: none;
+    width: 100%;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .year-slider {
+    width: 100%;
+  }
+
+  .dual-slider-container {
+    width: 100%;
+  }
+
+  .dual-slider-container input[type="range"] {
+    width: 100%;
+  }
+
+  /* Charts Container - Reduce padding */
+  .charts-container {
+    padding: 16px;
+  }
+
+  /* Summary Cards - Single column on small mobile */
   .summary-cards {
     grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .summary-card {
+    padding: 12px 10px;
+  }
+
+  .card-label {
+    font-size: 10px;
+  }
+
+  .card-value {
+    font-size: 1.2rem;
+  }
+
+  /* Chart Sections - Reduce padding */
+  .chart-section {
+    padding: 12px 8px;
+    margin-bottom: 20px;
+  }
+
+  .chart-section h3 {
+    font-size: 12px;
+    margin-bottom: 12px;
+    padding: 0 8px;
+  }
+
+  .chart-legend {
+    flex-wrap: wrap;
+    gap: 15px;
+    font-size: 11px;
+    padding: 0 8px;
+  }
+
+  /* Reduce chart wrapper margins */
+  .chart-wrapper {
+    margin: 0 -8px;
+  }
+
+  /* Bottom Section - Single column */
+  .bottom-section {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  /* Peers Section - Reduce height */
+  .peers-section {
+    padding: 12px 8px;
+  }
+
+  .peers-section h3 {
+    padding: 0 8px;
+  }
+
+  .peers-list {
+    max-height: 200px;
+    padding: 0 4px;
+  }
+
+  .peer-item {
+    padding: 10px 8px;
+  }
+
+  /* Sidebar Header - Adjust spacing */
+  .sidebar-header {
+    padding: 16px;
+  }
+
+  .app-title {
+    font-size: 1.3rem;
+  }
+
+  /* Search Box - Reduce padding */
+  .search-box {
+    padding: 12px 16px;
+  }
+
+  .search-icon {
+    left: 28px;
+  }
+
+  /* Ticker List - Adjust padding */
+  .ticker-list {
+    padding: 8px;
+  }
+
+  .ticker-item {
+    padding: 10px;
+  }
+
+  .ticker-code {
+    font-size: 10px;
+  }
+
+  .ticker-name {
+    font-size: 12px;
+  }
+}
+
+/* Extra small mobile devices */
+@media (max-width: 480px) {
+  .summary-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .company-info h1 {
+    font-size: 1rem;
+  }
+
+  .mobile-app-title {
+    font-size: 1rem;
+  }
+
+  .card-value {
+    font-size: 1.1rem;
   }
 }

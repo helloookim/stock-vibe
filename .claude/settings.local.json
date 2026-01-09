@@ -12,7 +12,13 @@
       "Bash(timeout 180 python:*)",
       "Bash(ls:*)",
       "Bash(Select-String -Pattern \"fallback candidates\" -Context 0,15)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(taskkill:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git rm:*)",
+      "Bash(npm run build:*)"
     ]
   }
 }
