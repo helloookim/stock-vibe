@@ -5,11 +5,11 @@ import {
 } from 'recharts';
 import { Search, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { loadAllFinancialData, epsDataLoader } from './dataLoader';
-import marketCapData from '../market_cap_data.json';
 
 const App = () => {
     const [financialRawData, setFinancialRawData] = useState({});
     const [epsData, setEpsData] = useState({});
+    const [marketCapData, setMarketCapData] = useState({});
     const [dataLoading, setDataLoading] = useState(true);
     const [selectedCode, setSelectedCode] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
@@ -24,13 +24,15 @@ const App = () => {
         async function loadData() {
             setDataLoading(true);
             try {
-                const [financial, eps] = await Promise.all([
+                const [financial, eps, marketCap] = await Promise.all([
                     loadAllFinancialData(),  // Loads and merges consolidated + separate
-                    epsDataLoader.loadAll()
+                    epsDataLoader.loadAll(),
+                    fetch('/market_cap_data.json').then(r => r.json())
                 ]);
 
                 setFinancialRawData(financial || {});
                 setEpsData(eps || {});
+                setMarketCapData(marketCap || {});
 
                 // Set initial selected code to top revenue company
                 const codes = Object.keys(financial || {});
@@ -94,7 +96,7 @@ const App = () => {
         }
 
         return list;
-    }, [searchTerm, sortBy, financialRawData]);
+    }, [searchTerm, sortBy, financialRawData, marketCapData]);
 
     useEffect(() => {
         if (companyList.length > 0 && !companyList.find(c => c.code === selectedCode)) {
