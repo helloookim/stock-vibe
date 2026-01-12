@@ -474,10 +474,12 @@ class FinancialParser:
                             history.append(rec)
 
                 # Calculate Q4
-                annual_total = y_data.get('Annual_Previous')
+                # Prefer Annual_Current (from same year's annual report) over Annual_Previous (from next year's report)
+                # Annual_Previous can be incorrect due to accounting standard changes or restatements
+                annual_total = y_data.get('Annual_Current')
                 if not annual_total:
-                    annual_total = y_data.get('Annual_Current')
-                
+                    annual_total = y_data.get('Annual_Previous')
+
                 q3_acc = y_data.get('3Q_Acc')
                 
                 if annual_total and q3_acc:

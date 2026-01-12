@@ -3,8 +3,51 @@ import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     ComposedChart, Line, Cell, ReferenceLine, AreaChart, Area
 } from 'recharts';
-import { Search, ArrowUpDown, ChevronLeft, ChevronRight, Menu, X } from 'lucide-react';
+import { Search, ArrowUpDown, ChevronLeft, ChevronRight, Menu, X, Info } from 'lucide-react';
 import { loadAllFinancialData, epsDataLoader } from './dataLoader';
+
+// Info Tooltip Component
+const InfoTooltip = ({ text }) => {
+    const [isVisible, setIsVisible] = React.useState(false);
+
+    return (
+        <div style={{ position: 'relative', display: 'inline-block', marginLeft: '8px' }}>
+            <Info
+                size={16}
+                style={{
+                    color: '#94a3b8',
+                    cursor: 'pointer',
+                    transition: 'color 0.2s'
+                }}
+                onMouseEnter={() => setIsVisible(true)}
+                onMouseLeave={() => setIsVisible(false)}
+            />
+            {isVisible && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        left: '50%',
+                        top: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        backgroundColor: '#1e293b',
+                        border: '1px solid #475569',
+                        borderRadius: '8px',
+                        padding: '16px 20px',
+                        width: '320px',
+                        maxWidth: '90vw',
+                        zIndex: 1000,
+                        fontSize: '0.9rem',
+                        lineHeight: '1.6',
+                        color: '#e2e8f0',
+                        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
+                        pointerEvents: 'none'
+                    }}>
+                    {text}
+                </div>
+            )}
+        </div>
+    );
+};
 
 // Custom Tooltip Component for displaying YoY on separate line
 const CustomTooltip = ({ active, payload, label, valueFormatter, yoyKey }) => {
@@ -43,6 +86,7 @@ const App = () => {
     const [selectedCode, setSelectedCode] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [sortBy, setSortBy] = useState('revenue');  // 초기값: 매출순
+    const [showPolicyModal, setShowPolicyModal] = useState(null); // 'privacy', 'terms', 'contact', null
     const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
     const [yearRange, setYearRange] = useState([2015, 2025]);
     const [isDefaultRange, setIsDefaultRange] = useState(true);
@@ -537,10 +581,16 @@ const App = () => {
 
                     {/* Main Chart: Bar (Revenue) with YoY */}
                     <div className="chart-section">
-                        <h3>분기별 매출액 & YoY 변동률</h3>
+                        <h3>
+                            분기별 매출액 & YoY 변동률
+                            <InfoTooltip text="매출액은 기업이 제품이나 서비스를 판매하고 벌어들인 총 금액입니다. 기업의 외형적인 성장세를 판단하는 가장 기초적인 지표로, 매출이 꾸준히 늘어나는 기업은 시장 점유율이 확대되고 있다는 긍정적인 신호일 수 있습니다." />
+                        </h3>
                         <div className="chart-legend">
                             <span><span className="legend-bar"></span> 매출액 (억원)</span>
-                            <span><span className="legend-line-dual"><span style={{ background: '#10b981' }}></span><span style={{ background: '#ef4444' }}></span></span> YoY 변동률 (%)</span>
+                            <span>
+                                <span className="legend-line-dual"><span style={{ background: '#10b981' }}></span><span style={{ background: '#ef4444' }}></span></span> YoY 변동률 (%)
+                                <InfoTooltip text="YoY(Year on Year)는 전년 동기 대비 변동률입니다. 작년 같은 분기와 비교하여 얼마나 성장했는지를 나타내며, 계절적 요인을 배제하고 회사의 실질적인 성장 추세를 파악하는 데 필수적입니다." />
+                            </span>
                         </div>
                         <div className="chart-wrapper">
                             <ResponsiveContainer width="100%" height={250}>
@@ -618,7 +668,10 @@ const App = () => {
 
                     {/* Operating Profit Bar Chart with YoY */}
                     <div className="chart-section">
-                        <h3>분기별 영업이익 & YoY 변동률</h3>
+                        <h3>
+                            분기별 영업이익 & YoY 변동률
+                            <InfoTooltip text="영업이익은 매출액에서 원가와 판매관리비(인건비, 마케팅비 등)를 뺀 금액입니다. 회사가 본업인 장사를 통해 실제로 얼마나 돈을 벌었는지를 보여주는 가장 중요한 수익성 지표입니다." />
+                        </h3>
                         <div className="chart-legend">
                             <span><span className="legend-bar" style={{ background: 'rgba(16, 185, 129, 0.6)' }}></span> 영업이익 (억원)</span>
                             <span><span className="legend-line-dual"><span style={{ background: '#3b82f6' }}></span><span style={{ background: '#ef4444' }}></span></span> YoY 변동률 (%)</span>
@@ -700,7 +753,10 @@ const App = () => {
 
                     {/* Profit Margin Chart (Full Width) */}
                     <div className="chart-section profit-margin-chart">
-                        <h3>분기별 영업이익률 (%)</h3>
+                        <h3>
+                            분기별 영업이익률 (%)
+                            <InfoTooltip text="영업이익률은 매출액 대비 영업이익의 비율(%)입니다. 같은 매출을 올려도 영업이익률이 높은 회사가 더 효율적으로 돈을 버는 회사입니다." />
+                        </h3>
                         <div className="chart-wrapper">
                             <ResponsiveContainer width="100%" height={300}>
                                 <AreaChart data={chartData} margin={isMobile ? { top: 10, right: 5, left: -10, bottom: 50 } : { top: 20, right: 10, left: 0, bottom: 60 }}>
@@ -734,7 +790,10 @@ const App = () => {
                     {/* EPS Bar Chart with YoY */}
                     {epsChartData.length > 0 && (
                         <div className="chart-section">
-                            <h3>분기별 주당순이익 (EPS) & YoY 변동률</h3>
+                            <h3>
+                                분기별 주당순이익 (EPS) & YoY 변동률
+                                <InfoTooltip text="EPS(Earning Per Share)는 기업이 벌어들인 순이익을 발행 주식 수로 나눈 값입니다. '내가 가진 주식 1주가 얼마를 벌었나'를 나타내며, EPS가 증가해야 주가도 오를 가능성이 높습니다." />
+                            </h3>
                             <div className="chart-legend">
                                 <span><span className="legend-bar" style={{ background: 'rgba(245, 158, 11, 0.6)' }}></span> EPS (원)</span>
                                 <span><span className="legend-line-dual"><span style={{ background: '#10b981' }}></span><span style={{ background: '#ef4444' }}></span></span> YoY 변동률 (%)</span>
@@ -815,6 +874,7 @@ const App = () => {
                                         setSearchTerm(''); // Clear search to ensure company is in list
                                         setSelectedCode(peer.code);
                                         setIsMobileMenuOpen(false); // Close mobile menu
+                                        window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top
                                     }}
                                     className="peer-item"
                                 >
@@ -825,8 +885,226 @@ const App = () => {
                             {peerCompanies.length === 0 && <span className="no-peers">동종업계 기업 없음</span>}
                         </div>
                     </div>
+
+                    {/* Disclaimer */}
+                    <div style={{
+                        marginTop: '40px',
+                        marginBottom: '20px',
+                        padding: '20px',
+                        backgroundColor: '#0f172a',
+                        border: '1px solid #334155',
+                        borderRadius: '12px',
+                        fontSize: '0.85rem',
+                        lineHeight: '1.7',
+                        color: '#94a3b8'
+                    }}>
+                        <h4 style={{ color: '#e2e8f0', marginBottom: '12px', fontSize: '0.95rem', fontWeight: '600' }}>
+                            ⚠️ 면책조항 (Disclaimer)
+                        </h4>
+                        <p style={{ margin: 0 }}>
+                            본 사이트(KSTOCKVIEW)에서 제공하는 모든 금융 데이터와 정보는 참고 용도이며, 정확성이나 완전성을 보장하지 않습니다.<br />
+                            제공되는 정보는 주식 매수/매도에 대한 추천이 아니며, 투자에 대한 모든 책임은 투자자 본인에게 있습니다.<br />
+                            데이터 오류나 지연이 발생할 수 있으므로, 실제 거래 전 반드시 증권사 정보를 다시 확인하시기 바랍니다.
+                        </p>
+                    </div>
+
+                    {/* Footer */}
+                    <footer style={{
+                        marginTop: '40px',
+                        marginBottom: '80px',
+                        padding: '30px 20px',
+                        borderTop: '1px solid #334155',
+                        textAlign: 'center'
+                    }}>
+                        <div style={{ marginBottom: '20px' }}>
+                            <h3 style={{ color: '#e2e8f0', fontSize: '1.2rem', marginBottom: '8px' }}>KSTOCKVIEW</h3>
+                            <p style={{ color: '#94a3b8', fontSize: '0.85rem', margin: 0 }}>한국 상장 기업 재무 정보 조회 서비스</p>
+                        </div>
+
+                        <div style={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            gap: '20px',
+                            flexWrap: 'wrap',
+                            marginBottom: '20px',
+                            fontSize: '0.85rem'
+                        }}>
+                            <button
+                                onClick={() => setShowPolicyModal('privacy')}
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    color: '#94a3b8',
+                                    cursor: 'pointer',
+                                    textDecoration: 'underline',
+                                    padding: 0
+                                }}
+                            >
+                                개인정보처리방침
+                            </button>
+                            <span style={{ color: '#475569' }}>|</span>
+                            <button
+                                onClick={() => setShowPolicyModal('terms')}
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    color: '#94a3b8',
+                                    cursor: 'pointer',
+                                    textDecoration: 'underline',
+                                    padding: 0
+                                }}
+                            >
+                                이용약관
+                            </button>
+                            <span style={{ color: '#475569' }}>|</span>
+                            <button
+                                onClick={() => setShowPolicyModal('contact')}
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    color: '#94a3b8',
+                                    cursor: 'pointer',
+                                    textDecoration: 'underline',
+                                    padding: 0
+                                }}
+                            >
+                                문의하기
+                            </button>
+                        </div>
+
+                        <div style={{ color: '#64748b', fontSize: '0.75rem' }}>
+                            <p style={{ margin: '5px 0' }}>© 2026 KSTOCKVIEW. All rights reserved.</p>
+                            <p style={{ margin: '5px 0' }}>데이터 출처: 금융감독원 전자공시시스템(DART)</p>
+                        </div>
+                    </footer>
                 </div>
             </main>
+
+            {/* Policy Modal */}
+            {showPolicyModal && (
+                <div
+                    onClick={() => setShowPolicyModal(null)}
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                        zIndex: 2000,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '20px'
+                    }}
+                >
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                            backgroundColor: '#1e293b',
+                            borderRadius: '12px',
+                            padding: '30px',
+                            maxWidth: '700px',
+                            width: '100%',
+                            maxHeight: '80vh',
+                            overflow: 'auto',
+                            border: '1px solid #475569'
+                        }}
+                    >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                            <h2 style={{ color: '#e2e8f0', margin: 0 }}>
+                                {showPolicyModal === 'privacy' && '개인정보처리방침'}
+                                {showPolicyModal === 'terms' && '이용약관'}
+                                {showPolicyModal === 'contact' && '문의하기'}
+                            </h2>
+                            <button
+                                onClick={() => setShowPolicyModal(null)}
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    color: '#94a3b8',
+                                    fontSize: '24px',
+                                    cursor: 'pointer',
+                                    padding: '0 10px'
+                                }}
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        <div style={{ color: '#cbd5e1', fontSize: '0.9rem', lineHeight: '1.7' }}>
+                            {showPolicyModal === 'privacy' && (
+                                <>
+                                    <h3 style={{ color: '#e2e8f0', fontSize: '1.1rem', marginTop: '20px' }}>1. 개인정보의 수집 및 이용</h3>
+                                    <p>본 사이트는 회원가입 없이 운영되며, <strong>별도의 개인정보를 수집하지 않습니다</strong>.</p>
+
+                                    <h3 style={{ color: '#e2e8f0', fontSize: '1.1rem', marginTop: '20px' }}>2. 쿠키(Cookie) 사용</h3>
+                                    <p>본 사이트는 사용자 경험 개선을 위해 쿠키를 사용할 수 있습니다. 쿠키는 웹사이트 방문 기록, 설정 등을 저장하는 작은 텍스트 파일입니다.</p>
+
+                                    <h3 style={{ color: '#e2e8f0', fontSize: '1.1rem', marginTop: '20px' }}>3. Google AdSense</h3>
+                                    <p>본 사이트는 Google AdSense 광고를 게재합니다. Google은 광고 게재를 위해 쿠키를 사용하며, 이를 통해 맞춤형 광고를 제공할 수 있습니다. Google의 개인정보 보호정책은 <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#60a5fa' }}>Google 개인정보처리방침</a>에서 확인하실 수 있습니다.</p>
+
+                                    <h3 style={{ color: '#e2e8f0', fontSize: '1.1rem', marginTop: '20px' }}>4. 개인정보 관련 문의</h3>
+                                    <p>개인정보와 관련한 문의사항은 '문의하기'를 통해 연락주시기 바랍니다.</p>
+
+                                    <p style={{ marginTop: '30px', color: '#94a3b8', fontSize: '0.85rem' }}>최종 수정일: 2026년 1월 11일</p>
+                                </>
+                            )}
+
+                            {showPolicyModal === 'terms' && (
+                                <>
+                                    <h3 style={{ color: '#e2e8f0', fontSize: '1.1rem', marginTop: '20px' }}>1. 서비스 이용</h3>
+                                    <p>본 사이트(KSTOCKVIEW)는 한국 상장 기업의 재무 정보를 조회할 수 있는 무료 서비스입니다. 모든 사용자는 별도의 회원가입 없이 서비스를 이용할 수 있습니다.</p>
+
+                                    <h3 style={{ color: '#e2e8f0', fontSize: '1.1rem', marginTop: '20px' }}>2. 제공 정보의 성격</h3>
+                                    <p>본 사이트에서 제공하는 모든 재무 데이터와 정보는 <strong>참고 목적</strong>으로만 제공됩니다. 제공되는 정보는 투자 조언이나 매수/매도 권유가 아니며, 투자 결정에 대한 모든 책임은 이용자 본인에게 있습니다.</p>
+
+                                    <h3 style={{ color: '#e2e8f0', fontSize: '1.1rem', marginTop: '20px' }}>3. 면책사항</h3>
+                                    <p>• 본 사이트는 데이터의 정확성, 완전성, 적시성을 보장하지 않습니다.<br />
+                                    • 데이터 오류, 누락, 지연으로 인한 손해에 대해 책임지지 않습니다.<br />
+                                    • 실제 투자 전 반드시 공식 증권사 및 금융감독원 자료를 확인하시기 바랍니다.</p>
+
+                                    <h3 style={{ color: '#e2e8f0', fontSize: '1.1rem', marginTop: '20px' }}>4. 저작권</h3>
+                                    <p>본 사이트의 디자인, 구조, 코드 등은 저작권법의 보호를 받습니다. 무단 복제 및 배포를 금지합니다.</p>
+
+                                    <h3 style={{ color: '#e2e8f0', fontSize: '1.1rem', marginTop: '20px' }}>5. 데이터 출처</h3>
+                                    <p>본 사이트에 게시된 재무 데이터는 금융감독원 전자공시시스템(DART)에서 제공하는 공개 정보를 기반으로 합니다.</p>
+
+                                    <p style={{ marginTop: '30px', color: '#94a3b8', fontSize: '0.85rem' }}>최종 수정일: 2026년 1월 11일</p>
+                                </>
+                            )}
+
+                            {showPolicyModal === 'contact' && (
+                                <>
+                                    <p>KSTOCKVIEW 서비스 이용과 관련하여 문의사항이 있으시면 아래 이메일로 연락주시기 바랍니다.</p>
+
+                                    <div style={{
+                                        marginTop: '30px',
+                                        padding: '20px',
+                                        backgroundColor: '#0f172a',
+                                        borderRadius: '8px',
+                                        border: '1px solid #334155'
+                                    }}>
+                                        <h3 style={{ color: '#e2e8f0', fontSize: '1rem', marginBottom: '15px' }}>📧 문의 이메일</h3>
+                                        <p style={{ fontSize: '1.1rem', color: '#60a5fa', margin: 0 }}>contact@kstockview.com</p>
+                                    </div>
+
+                                    <div style={{ marginTop: '30px', fontSize: '0.85rem', color: '#94a3b8' }}>
+                                        <p><strong>문의 가능 내용:</strong></p>
+                                        <ul style={{ paddingLeft: '20px', margin: '10px 0' }}>
+                                            <li>데이터 오류 신고</li>
+                                            <li>서비스 개선 제안</li>
+                                            <li>기술적 문제 보고</li>
+                                            <li>기타 문의사항</li>
+                                        </ul>
+                                        <p style={{ marginTop: '15px' }}>※  개별 종목 추천이나 투자 상담은 제공하지 않습니다.</p>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
