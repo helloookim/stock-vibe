@@ -382,26 +382,31 @@ class FinancialParser:
             item_name = row[col_item_name].strip()
             clean_item_name = clean_header(item_name)
 
-            # Skip Cost of Sales and Gross Profit
+            # Skip Cost of Sales and Gross Profit (except for Kakao)
             if 'CostOfSales' in item_code or '매출원가' in clean_item_name:
                 continue
-            if 'GrossProfit' in item_code or '매출총이익' in clean_item_name or '매출총손실' in clean_item_name:
+
+            # SPECIAL CASE: Kakao (035720) uses GrossProfit for revenue
+            if row_code == '035720' and (item_code == 'ifrs_GrossProfit' or item_code == 'ifrs-full_GrossProfit'):
+                # Treat Kakao's GrossProfit as revenue
+                metric_type = 'revenue'
+            elif 'GrossProfit' in item_code or '매출총이익' in clean_item_name or '매출총손실' in clean_item_name:
                 continue
+            else:
+                # Determine Metric Type with exclusion check
+                metric_type = None
+                for m_key, m_def in METRICS.items():
+                    # First check if should be excluded
+                    if should_exclude_metric(item_code, item_name, m_def):
+                        continue
 
-            # Determine Metric Type with exclusion check
-            metric_type = None
-            for m_key, m_def in METRICS.items():
-                # First check if should be excluded
-                if should_exclude_metric(item_code, item_name, m_def):
-                    continue
-
-                # Check if matches by code or standard names
-                if matches_metric_code(item_code, m_def) or any(n in clean_item_name for n in m_def['names']):
-                    metric_type = m_key
-                    # Track if this is revenue with IFRS code (per year)
-                    if m_key == 'revenue' and (item_code == 'ifrs_Revenue' or item_code == 'ifrs-full_Revenue'):
-                        self.companies_with_ifrs_revenue_by_year[row_code].add(year)
-                    break
+                    # Check if matches by code or standard names
+                    if matches_metric_code(item_code, m_def) or any(n in clean_item_name for n in m_def['names']):
+                        metric_type = m_key
+                        # Track if this is revenue with IFRS code (per year)
+                        if m_key == 'revenue' and (item_code == 'ifrs_Revenue' or item_code == 'ifrs-full_Revenue'):
+                            self.companies_with_ifrs_revenue_by_year[row_code].add(year)
+                        break
 
             # If not matched and this is potentially a fallback revenue candidate
             if not metric_type and 'fallback_names' in METRICS['revenue']:
@@ -823,26 +828,31 @@ class FinancialParser:
             item_name = row[col_item_name].strip()
             clean_item_name = clean_header(item_name)
 
-            # Skip Cost of Sales and Gross Profit
+            # Skip Cost of Sales and Gross Profit (except for Kakao)
             if 'CostOfSales' in item_code or '매출원가' in clean_item_name:
                 continue
-            if 'GrossProfit' in item_code or '매출총이익' in clean_item_name or '매출총손실' in clean_item_name:
+
+            # SPECIAL CASE: Kakao (035720) uses GrossProfit for revenue
+            if row_code == '035720' and (item_code == 'ifrs_GrossProfit' or item_code == 'ifrs-full_GrossProfit'):
+                # Treat Kakao's GrossProfit as revenue
+                metric_type = 'revenue'
+            elif 'GrossProfit' in item_code or '매출총이익' in clean_item_name or '매출총손실' in clean_item_name:
                 continue
+            else:
+                # Determine Metric Type with exclusion check
+                metric_type = None
+                for m_key, m_def in METRICS.items():
+                    # First check if should be excluded
+                    if should_exclude_metric(item_code, item_name, m_def):
+                        continue
 
-            # Determine Metric Type with exclusion check
-            metric_type = None
-            for m_key, m_def in METRICS.items():
-                # First check if should be excluded
-                if should_exclude_metric(item_code, item_name, m_def):
-                    continue
-
-                # Check if matches by code or standard names
-                if matches_metric_code(item_code, m_def) or any(n in clean_item_name for n in m_def['names']):
-                    metric_type = m_key
-                    # Track if this is revenue with IFRS code (per year)
-                    if m_key == 'revenue' and (item_code == 'ifrs_Revenue' or item_code == 'ifrs-full_Revenue'):
-                        self.companies_with_ifrs_revenue_by_year[row_code].add(year)
-                    break
+                    # Check if matches by code or standard names
+                    if matches_metric_code(item_code, m_def) or any(n in clean_item_name for n in m_def['names']):
+                        metric_type = m_key
+                        # Track if this is revenue with IFRS code (per year)
+                        if m_key == 'revenue' and (item_code == 'ifrs_Revenue' or item_code == 'ifrs-full_Revenue'):
+                            self.companies_with_ifrs_revenue_by_year[row_code].add(year)
+                        break
 
             # If not matched and this is potentially a fallback revenue candidate
             if not metric_type and 'fallback_names' in METRICS['revenue']:
