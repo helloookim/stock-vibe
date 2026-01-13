@@ -998,6 +998,7 @@ const App = () => {
                     <footer style={{
                         marginTop: '60px',
                         padding: '30px 20px',
+                        paddingBottom: '60px',
                         borderTop: '1px solid #334155',
                         textAlign: 'center',
                         backgroundColor: '#0f172a',
