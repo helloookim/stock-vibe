@@ -369,6 +369,11 @@ body {
   border-left: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* Desktop: header-top-row displays inline for desktop layout */
+.header-top-row {
+  display: contents;
+}
+
 .year-slider {
   display: flex;
   flex-direction: column;
@@ -830,21 +835,45 @@ input[type="range"]::-moz-range-thumb {
     padding: 12px;
   }
 
+  /* Top row: company info + view mode buttons */
+  .header-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+    gap: 8px;
+  }
+
   .company-info {
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
   }
 
   .company-info h1 {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
+    width: 100%;
   }
 
   .company-sector {
     padding-left: 0;
     border-left: none;
     width: 100%;
-    padding-top: 8px;
+    padding-top: 4px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* View mode toggle - compact for mobile */
+  .view-mode-toggle {
+    flex-shrink: 0;
+    margin-bottom: 0 !important;
+  }
+
+  .view-mode-toggle button {
+    padding: 4px 10px !important;
+    font-size: 0.75rem !important;
+    white-space: nowrap;
   }
 
   .year-slider {

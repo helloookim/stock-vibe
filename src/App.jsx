@@ -581,50 +581,52 @@ const App = () => {
             {/* MAIN CONTENT */}
             <main className="main-content">
                 <header className="main-header">
-                    <div className="company-info">
-                        <h1>{currentCompany?.name}</h1>
-                        <span className="company-code">{selectedCode}</span>
-                        <span className="company-sector">{currentCompany?.sector || '일반'}</span>
-                    </div>
+                    <div className="header-top-row">
+                        <div className="company-info">
+                            <h1>{currentCompany?.name}</h1>
+                            <span className="company-code">{selectedCode}</span>
+                            <span className="company-sector">{currentCompany?.sector || '일반'}</span>
+                        </div>
 
-                    <div className="view-mode-toggle" style={{
-                        display: 'flex',
-                        gap: '6px',
-                        marginBottom: '8px',
-                        justifyContent: 'center'
-                    }}>
-                        <button
-                            onClick={() => setViewMode('quarterly')}
-                            style={{
-                                padding: '6px 16px',
-                                borderRadius: '6px',
-                                border: viewMode === 'quarterly' ? '2px solid #60a5fa' : '1px solid #475569',
-                                backgroundColor: viewMode === 'quarterly' ? '#1e3a5f' : '#1e293b',
-                                color: viewMode === 'quarterly' ? '#60a5fa' : '#94a3b8',
-                                cursor: 'pointer',
-                                fontSize: '0.85rem',
-                                fontWeight: viewMode === 'quarterly' ? '600' : '400',
-                                transition: 'all 0.2s'
-                            }}
-                        >
-                            분기별
-                        </button>
-                        <button
-                            onClick={() => setViewMode('annual')}
-                            style={{
-                                padding: '6px 16px',
-                                borderRadius: '6px',
-                                border: viewMode === 'annual' ? '2px solid #60a5fa' : '1px solid #475569',
-                                backgroundColor: viewMode === 'annual' ? '#1e3a5f' : '#1e293b',
-                                color: viewMode === 'annual' ? '#60a5fa' : '#94a3b8',
-                                cursor: 'pointer',
-                                fontSize: '0.85rem',
-                                fontWeight: viewMode === 'annual' ? '600' : '400',
-                                transition: 'all 0.2s'
-                            }}
-                        >
-                            연간
-                        </button>
+                        <div className="view-mode-toggle" style={{
+                            display: 'flex',
+                            gap: '6px',
+                            marginBottom: '8px',
+                            justifyContent: 'center'
+                        }}>
+                            <button
+                                onClick={() => setViewMode('quarterly')}
+                                style={{
+                                    padding: '6px 16px',
+                                    borderRadius: '6px',
+                                    border: viewMode === 'quarterly' ? '2px solid #60a5fa' : '1px solid #475569',
+                                    backgroundColor: viewMode === 'quarterly' ? '#1e3a5f' : '#1e293b',
+                                    color: viewMode === 'quarterly' ? '#60a5fa' : '#94a3b8',
+                                    cursor: 'pointer',
+                                    fontSize: '0.85rem',
+                                    fontWeight: viewMode === 'quarterly' ? '600' : '400',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                분기별
+                            </button>
+                            <button
+                                onClick={() => setViewMode('annual')}
+                                style={{
+                                    padding: '6px 16px',
+                                    borderRadius: '6px',
+                                    border: viewMode === 'annual' ? '2px solid #60a5fa' : '1px solid #475569',
+                                    backgroundColor: viewMode === 'annual' ? '#1e3a5f' : '#1e293b',
+                                    color: viewMode === 'annual' ? '#60a5fa' : '#94a3b8',
+                                    cursor: 'pointer',
+                                    fontSize: '0.85rem',
+                                    fontWeight: viewMode === 'annual' ? '600' : '400',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                연간
+                            </button>
+                        </div>
                     </div>
 
                     <div className="year-slider">
