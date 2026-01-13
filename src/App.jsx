@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-    ComposedChart, Line, Cell, ReferenceLine, AreaChart, Area
+    ComposedChart, Line, ReferenceLine, AreaChart, Area
 } from 'recharts';
 import { Search, ArrowUpDown, ChevronLeft, ChevronRight, Menu, X, Info } from 'lucide-react';
 import { loadAllFinancialData, epsDataLoader } from './dataLoader';
@@ -9,6 +9,46 @@ import { loadAllFinancialData, epsDataLoader } from './dataLoader';
 // Info Tooltip Component
 const InfoTooltip = ({ text }) => {
     const [isVisible, setIsVisible] = React.useState(false);
+
+    // Split text by sentences for better readability
+    const formatText = (text) => {
+        // Split by '. ' or '.' at end of sentence
+        const sentences = text.split(/\.\s+/);
+        return sentences.map((sentence, idx) => {
+            if (!sentence.trim()) return null;
+            const isLast = idx === sentences.length - 1;
+
+            // Process sentence to highlight text in quotes
+            const parts = [];
+            let lastIndex = 0;
+            const quoteRegex = /'([^']+)'/g;
+            let match;
+
+            while ((match = quoteRegex.exec(sentence)) !== null) {
+                // Add text before quote
+                if (match.index > lastIndex) {
+                    parts.push(sentence.substring(lastIndex, match.index));
+                }
+                // Add quoted text with emphasis
+                parts.push(<span key={match.index} style={{ color: '#60a5fa', fontWeight: '500' }}>'{match[1]}'</span>);
+                lastIndex = match.index + match[0].length;
+            }
+
+            // Add remaining text
+            if (lastIndex < sentence.length) {
+                parts.push(sentence.substring(lastIndex));
+            }
+
+            // If no quotes found, just use the plain sentence
+            const content = parts.length > 0 ? parts : sentence.trim();
+
+            return (
+                <p key={idx} style={{ margin: '0 0 10px 0', fontWeight: '400' }}>
+                    {content}{!isLast && !sentence.endsWith('.') ? '.' : ''}
+                </p>
+            );
+        }).filter(Boolean);
+    };
 
     return (
         <div style={{ position: 'relative', display: 'inline-block', marginLeft: '8px' }}>
@@ -32,17 +72,20 @@ const InfoTooltip = ({ text }) => {
                         backgroundColor: '#1e293b',
                         border: '1px solid #475569',
                         borderRadius: '8px',
-                        padding: '16px 20px',
-                        width: '320px',
+                        padding: '20px 24px',
+                        width: '360px',
                         maxWidth: '90vw',
+                        maxHeight: '80vh',
+                        overflow: 'auto',
                         zIndex: 1000,
-                        fontSize: '0.9rem',
-                        lineHeight: '1.6',
+                        fontSize: '0.875rem',
+                        lineHeight: '1.7',
                         color: '#e2e8f0',
                         boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
-                        pointerEvents: 'none'
+                        pointerEvents: 'none',
+                        textAlign: 'left'
                     }}>
-                    {text}
+                    {formatText(text)}
                 </div>
             )}
         </div>
@@ -493,6 +536,7 @@ const App = () => {
                             onClick={() => {
                                 setSelectedCode(comp.code);
                                 setIsMobileMenuOpen(false); // Close mobile menu on selection
+                                window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top
                             }}
                             className={`ticker-item ${selectedCode === comp.code ? 'active' : ''}`}
                         >
@@ -631,7 +675,7 @@ const App = () => {
                                     <Bar dataKey="revenue_eok" name="매출액" fill="url(#barGrad)" radius={[4, 4, 0, 0]} />
                                 </BarChart>
                             </ResponsiveContainer>
-                            <ResponsiveContainer width="100%" height={120}>
+                            <ResponsiveContainer width="100%" height={isMobile ? 120 : 180}>
                                 <ComposedChart data={chartData} margin={chartMargins}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                                     <XAxis dataKey="displayLabel" stroke="#94a3b8" {...xAxisProps} />
@@ -716,7 +760,7 @@ const App = () => {
                                     <Bar dataKey="op_profit_eok" name="영업이익" fill="url(#barGradGreen)" radius={[4, 4, 0, 0]} />
                                 </BarChart>
                             </ResponsiveContainer>
-                            <ResponsiveContainer width="100%" height={120}>
+                            <ResponsiveContainer width="100%" height={isMobile ? 120 : 180}>
                                 <ComposedChart data={chartData} margin={chartMargins}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                                     <XAxis dataKey="displayLabel" stroke="#94a3b8" {...xAxisProps} />
@@ -792,7 +836,7 @@ const App = () => {
                         <div className="chart-section">
                             <h3>
                                 분기별 주당순이익 (EPS) & YoY 변동률
-                                <InfoTooltip text="EPS(Earning Per Share)는 기업이 벌어들인 순이익을 발행 주식 수로 나눈 값입니다. '내가 가진 주식 1주가 얼마를 벌었나'를 나타내며, EPS가 증가해야 주가도 오를 가능성이 높습니다." />
+                                <InfoTooltip text="EPS(Earning Per Share)는 기업이 벌어들인 순이익을 발행 주식 수로 나눈 값입니다. '내가 가진 주식 1주가 얼마를 벌었나'를 나타내며, EPS가 증가해야 주가도 오를 가능성이 높습니다. 단, 주식 발행량 증가나 주식 분할에 따라 주당순이익이 크게 변동할 수 있으므로, EPS 변화를 해석할 때는 주식 수 변동 여부도 함께 확인해야 합니다." />
                             </h3>
                             <div className="chart-legend">
                                 <span><span className="legend-bar" style={{ background: 'rgba(245, 158, 11, 0.6)' }}></span> EPS (원)</span>
@@ -827,7 +871,7 @@ const App = () => {
                                         <Bar dataKey="eps" name="EPS" fill="url(#barGradOrange)" radius={[4, 4, 0, 0]} />
                                     </BarChart>
                                 </ResponsiveContainer>
-                                <ResponsiveContainer width="100%" height={120}>
+                                <ResponsiveContainer width="100%" height={isMobile ? 120 : 180}>
                                     <ComposedChart data={epsChartData} margin={chartMargins}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                                         <XAxis dataKey="displayLabel" stroke="#94a3b8" {...xAxisProps} />
@@ -886,41 +930,71 @@ const App = () => {
                         </div>
                     </div>
 
-                    {/* Disclaimer */}
-                    <div style={{
-                        marginTop: '40px',
-                        marginBottom: '20px',
-                        padding: '20px',
-                        backgroundColor: '#0f172a',
-                        border: '1px solid #334155',
-                        borderRadius: '12px',
-                        fontSize: '0.85rem',
-                        lineHeight: '1.7',
-                        color: '#94a3b8'
-                    }}>
-                        <h4 style={{ color: '#e2e8f0', marginBottom: '12px', fontSize: '0.95rem', fontWeight: '600' }}>
-                            ⚠️ 면책조항 (Disclaimer)
-                        </h4>
-                        <p style={{ margin: 0 }}>
-                            본 사이트(KSTOCKVIEW)에서 제공하는 모든 금융 데이터와 정보는 참고 용도이며, 정확성이나 완전성을 보장하지 않습니다.<br />
-                            제공되는 정보는 주식 매수/매도에 대한 추천이 아니며, 투자에 대한 모든 책임은 투자자 본인에게 있습니다.<br />
-                            데이터 오류나 지연이 발생할 수 있으므로, 실제 거래 전 반드시 증권사 정보를 다시 확인하시기 바랍니다.
-                        </p>
-                    </div>
-
-                    {/* Footer */}
+                    {/* Footer with Legal Notice */}
                     <footer style={{
-                        marginTop: '40px',
-                        marginBottom: '80px',
+                        marginTop: '60px',
                         padding: '30px 20px',
                         borderTop: '1px solid #334155',
-                        textAlign: 'center'
+                        textAlign: 'center',
+                        backgroundColor: '#0f172a',
+                        color: '#64748b',
+                        fontSize: '0.8rem',
+                        lineHeight: '1.6'
                     }}>
                         <div style={{ marginBottom: '20px' }}>
                             <h3 style={{ color: '#e2e8f0', fontSize: '1.2rem', marginBottom: '8px' }}>KSTOCKVIEW</h3>
                             <p style={{ color: '#94a3b8', fontSize: '0.85rem', margin: 0 }}>한국 상장 기업 재무 정보 조회 서비스</p>
                         </div>
 
+                        {/* Data Source Notice */}
+                        <div style={{
+                            marginBottom: '25px',
+                            padding: '15px',
+                            backgroundColor: '#1e293b',
+                            border: '1px solid #334155',
+                            borderRadius: '8px'
+                        }}>
+                            <p style={{ margin: '0 0 8px 0', fontWeight: '600', color: '#cbd5e1' }}>
+                                📊 데이터 출처 및 저작권 고지
+                            </p>
+                            <p style={{ margin: 0, fontSize: '0.75rem' }}>
+                                본 서비스는 <strong style={{ color: '#94a3b8' }}>금융감독원 Open DART</strong> 및 <strong style={{ color: '#94a3b8' }}>한국거래소(KRX)</strong>의 공공데이터를 기반으로 제공됩니다.<br />
+                                (Source: Financial Supervisory Service Open DART & Korea Exchange)
+                            </p>
+                        </div>
+
+                        {/* Disclaimer */}
+                        <div style={{
+                            marginBottom: '25px',
+                            padding: '20px',
+                            backgroundColor: '#0f172a',
+                            border: '1px solid #ef4444',
+                            borderRadius: '8px',
+                            fontSize: '0.75rem',
+                            lineHeight: '1.7'
+                        }}>
+                            <h4 style={{ color: '#ef4444', marginBottom: '12px', fontSize: '0.9rem', fontWeight: '600' }}>
+                                ⚠️ 면책 조항 (Disclaimer)
+                            </h4>
+                            <div style={{ textAlign: 'left', maxWidth: '800px', margin: '0 auto', color: '#94a3b8' }}>
+                                <p style={{ margin: '0 0 8px 0' }}>
+                                    <strong>1.</strong> 본 서비스가 제공하는 재무 데이터는 공시 제출인(기업)이 작성한 자료를 기반으로 하며,
+                                    금융감독원과 운영자는 데이터의 <strong style={{ color: '#ef4444' }}>정확성, 완전성, 무결성을 보장하지 않습니다.</strong>
+                                </p>
+                                <p style={{ margin: '0 0 8px 0' }}>
+                                    <strong>2.</strong> 제공되는 정보는 투자 참고용일 뿐이며, 주식 매매의 권유가 아닙니다.
+                                </p>
+                                <p style={{ margin: '0 0 8px 0' }}>
+                                    <strong>3.</strong> 본 서비스의 정보를 활용하여 발생한 투자의 결과(손익)에 대한 법적 책임은
+                                    <strong style={{ color: '#ef4444' }}> 전적으로 투자자 본인</strong>에게 있습니다.
+                                </p>
+                                <p style={{ margin: 0 }}>
+                                    <strong>4.</strong> 데이터 오류나 지연이 발생할 수 있으므로, 실제 거래 전 반드시 증권사 및 공식 공시 정보를 확인하시기 바랍니다.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Links */}
                         <div style={{
                             display: 'flex',
                             justifyContent: 'center',
@@ -972,9 +1046,9 @@ const App = () => {
                             </button>
                         </div>
 
-                        <div style={{ color: '#64748b', fontSize: '0.75rem' }}>
+                        {/* Copyright */}
+                        <div style={{ color: '#64748b', fontSize: '0.7rem', marginTop: '20px', opacity: 0.8 }}>
                             <p style={{ margin: '5px 0' }}>© 2026 KSTOCKVIEW. All rights reserved.</p>
-                            <p style={{ margin: '5px 0' }}>데이터 출처: 금융감독원 전자공시시스템(DART)</p>
                         </div>
                     </footer>
                 </div>

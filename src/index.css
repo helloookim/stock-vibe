@@ -40,8 +40,8 @@ body {
 
 /* Sidebar */
 .sidebar {
-  width: 280px;
-  min-width: 280px;
+  width: 320px;
+  min-width: 320px;
   background: #020617;
   border-right: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
@@ -172,13 +172,14 @@ body {
 .sort-dropdown-menu {
   position: absolute;
   top: 100%;
-  right: 0;
+  left: 0;
   margin-top: 4px;
   background: #1e293b;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 8px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
-  min-width: 120px;
+  min-width: 140px;
+  width: max-content;
   z-index: 100;
   overflow: hidden;
   animation: dropdownFade 0.15s ease-out;
