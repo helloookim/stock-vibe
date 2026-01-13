@@ -123,6 +123,7 @@ const CustomTooltip = ({ active, payload, label, valueFormatter, yoyKey }) => {
 
 const App = () => {
     const [financialRawData, setFinancialRawData] = useState({});
+    const [financialAnnualData, setFinancialAnnualData] = useState({});
     const [epsData, setEpsData] = useState({});
     const [marketCapData, setMarketCapData] = useState({});
     const [dataLoading, setDataLoading] = useState(true);
@@ -136,6 +137,7 @@ const App = () => {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
+    const [viewMode, setViewMode] = useState('quarterly'); // 'quarterly' or 'annual'
 
     // Detect mobile screen size
     useEffect(() => {
@@ -162,13 +164,15 @@ const App = () => {
         async function loadData() {
             setDataLoading(true);
             try {
-                const [financial, eps, marketCap] = await Promise.all([
+                const [financial, annual, eps, marketCap] = await Promise.all([
                     loadAllFinancialData(),  // Loads and merges consolidated + separate
+                    fetch('/financial_data_annual.json').then(r => r.json()),
                     epsDataLoader.loadAll(),
                     fetch('/market_cap_data.json').then(r => r.json())
                 ]);
 
                 setFinancialRawData(financial || {});
+                setFinancialAnnualData(annual || {});
                 setEpsData(eps || {});
                 setMarketCapData(marketCap || {});
 
@@ -242,14 +246,20 @@ const App = () => {
         }
     }, [companyList, selectedCode]);
 
-    const currentCompany = financialRawData[selectedCode];
+    const currentCompany = viewMode === 'quarterly' ? financialRawData[selectedCode] : financialAnnualData[selectedCode];
 
     // Calculate the min/max years for the current company's data
-    // Skip years that only have Q4 without Q1-Q3 (since Q4 calculation needs Q1-Q3)
+    // Skip years that only have Q4 without Q1-Q3 (since Q4 calculation needs Q1-Q3) for quarterly mode
     const companyDataRange = useMemo(() => {
         if (!currentCompany?.history?.length) return { min: 2015, max: 2025 };
 
-        // Find years that have valid data (not just Q4-only without Q1-Q3)
+        if (viewMode === 'annual') {
+            // For annual mode, just get min/max years
+            const years = currentCompany.history.map(h => h.year);
+            return { min: Math.min(...years), max: Math.max(...years) };
+        }
+
+        // For quarterly mode: Find years that have valid data (not just Q4-only without Q1-Q3)
         const validYears = [];
         const yearGroups = {};
 
@@ -277,13 +287,13 @@ const App = () => {
 
         if (validYears.length === 0) return { min: 2015, max: 2025 };
         return { min: Math.min(...validYears), max: Math.max(...validYears) };
-    }, [currentCompany]);
+    }, [currentCompany, viewMode]);
 
-    // Update yearRange when company changes to fit company's data range
+    // Update yearRange when company or viewMode changes to fit company's data range
     useEffect(() => {
         setYearRange([companyDataRange.min, companyDataRange.max]);
         setIsDefaultRange(true); // Reset to default when company changes
-    }, [companyDataRange]);
+    }, [companyDataRange, viewMode]);
 
     const chartData = useMemo(() => {
         if (!currentCompany) return [];
@@ -305,18 +315,30 @@ const App = () => {
 
             let rev_change = null;  // null means no previous data
             let op_change = null;
-            // YoY: Find same quarter in previous year from FULL history
-            const prevYearEntry = fullHistory.find(e => e.year === entry.year - 1 && e.quarter === entry.quarter);
-            if (prevYearEntry) {
-                const prev_rev_eok = prevYearEntry.revenue_adjusted / 100000000;
-                const prev_op_eok = prevYearEntry.op_profit_adjusted / 100000000;
-                rev_change = prev_rev_eok ? parseFloat(((revenue_eok - prev_rev_eok) / Math.abs(prev_rev_eok) * 100).toFixed(1)) : 0;
-                op_change = prev_op_eok ? parseFloat(((op_profit_eok - prev_op_eok) / Math.abs(prev_op_eok) * 100).toFixed(1)) : 0;
+
+            if (viewMode === 'annual') {
+                // YoY for annual: Find previous year
+                const prevYearEntry = fullHistory.find(e => e.year === entry.year - 1);
+                if (prevYearEntry) {
+                    const prev_rev_eok = prevYearEntry.revenue_adjusted / 100000000;
+                    const prev_op_eok = prevYearEntry.op_profit_adjusted / 100000000;
+                    rev_change = prev_rev_eok ? parseFloat(((revenue_eok - prev_rev_eok) / Math.abs(prev_rev_eok) * 100).toFixed(1)) : 0;
+                    op_change = prev_op_eok ? parseFloat(((op_profit_eok - prev_op_eok) / Math.abs(prev_op_eok) * 100).toFixed(1)) : 0;
+                }
+            } else {
+                // YoY for quarterly: Find same quarter in previous year from FULL history
+                const prevYearEntry = fullHistory.find(e => e.year === entry.year - 1 && e.quarter === entry.quarter);
+                if (prevYearEntry) {
+                    const prev_rev_eok = prevYearEntry.revenue_adjusted / 100000000;
+                    const prev_op_eok = prevYearEntry.op_profit_adjusted / 100000000;
+                    rev_change = prev_rev_eok ? parseFloat(((revenue_eok - prev_rev_eok) / Math.abs(prev_rev_eok) * 100).toFixed(1)) : 0;
+                    op_change = prev_op_eok ? parseFloat(((op_profit_eok - prev_op_eok) / Math.abs(prev_op_eok) * 100).toFixed(1)) : 0;
+                }
             }
 
             return {
                 ...entry,
-                displayLabel: `${entry.year} ${entry.quarter}`,
+                displayLabel: viewMode === 'annual' ? `${entry.year}` : `${entry.year} ${entry.quarter}`,
                 revenue_eok,
                 op_profit_eok,
                 net_income_eok,
@@ -330,7 +352,7 @@ const App = () => {
         const filteredHistory = historyWithChanges.filter(entry => entry.year >= yearRange[0] && entry.year <= yearRange[1]);
 
         return filteredHistory;
-    }, [currentCompany, yearRange]);
+    }, [currentCompany, yearRange, viewMode]);
 
     // Calculate YoY change domain with smart ticks (must include 0)
     const calculateYoyDomain = (changes) => {
@@ -565,6 +587,46 @@ const App = () => {
                         <span className="company-sector">{currentCompany?.sector || '일반'}</span>
                     </div>
 
+                    <div className="view-mode-toggle" style={{
+                        display: 'flex',
+                        gap: '8px',
+                        marginBottom: '20px',
+                        justifyContent: 'center'
+                    }}>
+                        <button
+                            onClick={() => setViewMode('quarterly')}
+                            style={{
+                                padding: '8px 20px',
+                                borderRadius: '8px',
+                                border: viewMode === 'quarterly' ? '2px solid #60a5fa' : '1px solid #475569',
+                                backgroundColor: viewMode === 'quarterly' ? '#1e3a5f' : '#1e293b',
+                                color: viewMode === 'quarterly' ? '#60a5fa' : '#94a3b8',
+                                cursor: 'pointer',
+                                fontSize: '0.9rem',
+                                fontWeight: viewMode === 'quarterly' ? '600' : '400',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            분기별
+                        </button>
+                        <button
+                            onClick={() => setViewMode('annual')}
+                            style={{
+                                padding: '8px 20px',
+                                borderRadius: '8px',
+                                border: viewMode === 'annual' ? '2px solid #60a5fa' : '1px solid #475569',
+                                backgroundColor: viewMode === 'annual' ? '#1e3a5f' : '#1e293b',
+                                color: viewMode === 'annual' ? '#60a5fa' : '#94a3b8',
+                                cursor: 'pointer',
+                                fontSize: '0.9rem',
+                                fontWeight: viewMode === 'annual' ? '600' : '400',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            연간
+                        </button>
+                    </div>
+
                     <div className="year-slider">
                         <label>기간: {yearRange[0]} - {yearRange[1]}</label>
                         <div className="dual-slider-container">
@@ -626,7 +688,7 @@ const App = () => {
                     {/* Main Chart: Bar (Revenue) with YoY */}
                     <div className="chart-section">
                         <h3>
-                            분기별 매출액 & YoY 변동률
+                            {viewMode === 'annual' ? '연간' : '분기별'} 매출액 & YoY 변동률
                             <InfoTooltip text="매출액은 기업이 제품이나 서비스를 판매하고 벌어들인 총 금액입니다. 기업의 외형적인 성장세를 판단하는 가장 기초적인 지표로, 매출이 꾸준히 늘어나는 기업은 시장 점유율이 확대되고 있다는 긍정적인 신호일 수 있습니다." />
                         </h3>
                         <div className="chart-legend">
@@ -713,7 +775,7 @@ const App = () => {
                     {/* Operating Profit Bar Chart with YoY */}
                     <div className="chart-section">
                         <h3>
-                            분기별 영업이익 & YoY 변동률
+                            {viewMode === 'annual' ? '연간' : '분기별'} 영업이익 & YoY 변동률
                             <InfoTooltip text="영업이익은 매출액에서 원가와 판매관리비(인건비, 마케팅비 등)를 뺀 금액입니다. 회사가 본업인 장사를 통해 실제로 얼마나 돈을 벌었는지를 보여주는 가장 중요한 수익성 지표입니다." />
                         </h3>
                         <div className="chart-legend">
@@ -798,7 +860,7 @@ const App = () => {
                     {/* Profit Margin Chart (Full Width) */}
                     <div className="chart-section profit-margin-chart">
                         <h3>
-                            분기별 영업이익률 (%)
+                            {viewMode === 'annual' ? '연간' : '분기별'} 영업이익률 (%)
                             <InfoTooltip text="영업이익률은 매출액 대비 영업이익의 비율(%)입니다. 같은 매출을 올려도 영업이익률이 높은 회사가 더 효율적으로 돈을 버는 회사입니다." />
                         </h3>
                         <div className="chart-wrapper">

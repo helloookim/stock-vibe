@@ -19,7 +19,12 @@
       "Bash(git push:*)",
       "Bash(git rm:*)",
       "Bash(npm run build:*)",
-      "Bash(timeout 5 tail:*)"
+      "Bash(timeout 5 tail:*)",
+      "Bash(iconv:*)",
+      "Bash(timeout 60 python:*)",
+      "Bash(while read f)",
+      "Bash(do mv \"$f\" debug/)",
+      "Bash(done)"
     ]
   }
 }
