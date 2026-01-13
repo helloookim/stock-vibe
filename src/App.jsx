@@ -589,20 +589,20 @@ const App = () => {
 
                     <div className="view-mode-toggle" style={{
                         display: 'flex',
-                        gap: '8px',
-                        marginBottom: '20px',
+                        gap: '6px',
+                        marginBottom: '8px',
                         justifyContent: 'center'
                     }}>
                         <button
                             onClick={() => setViewMode('quarterly')}
                             style={{
-                                padding: '8px 20px',
-                                borderRadius: '8px',
+                                padding: '6px 16px',
+                                borderRadius: '6px',
                                 border: viewMode === 'quarterly' ? '2px solid #60a5fa' : '1px solid #475569',
                                 backgroundColor: viewMode === 'quarterly' ? '#1e3a5f' : '#1e293b',
                                 color: viewMode === 'quarterly' ? '#60a5fa' : '#94a3b8',
                                 cursor: 'pointer',
-                                fontSize: '0.9rem',
+                                fontSize: '0.85rem',
                                 fontWeight: viewMode === 'quarterly' ? '600' : '400',
                                 transition: 'all 0.2s'
                             }}
@@ -612,13 +612,13 @@ const App = () => {
                         <button
                             onClick={() => setViewMode('annual')}
                             style={{
-                                padding: '8px 20px',
-                                borderRadius: '8px',
+                                padding: '6px 16px',
+                                borderRadius: '6px',
                                 border: viewMode === 'annual' ? '2px solid #60a5fa' : '1px solid #475569',
                                 backgroundColor: viewMode === 'annual' ? '#1e3a5f' : '#1e293b',
                                 color: viewMode === 'annual' ? '#60a5fa' : '#94a3b8',
                                 cursor: 'pointer',
-                                fontSize: '0.9rem',
+                                fontSize: '0.85rem',
                                 fontWeight: viewMode === 'annual' ? '600' : '400',
                                 transition: 'all 0.2s'
                             }}
