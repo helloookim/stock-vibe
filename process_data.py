@@ -121,7 +121,18 @@ def normalize_code(code, company_name=None):
             }
             return COMPANY_CODE_MAP.get(company_name.strip())
         return None
-    return re.sub(r'[^\d]', '', code).zfill(6)
+
+    # Extract only digits
+    digits_only = re.sub(r'[^\d]', '', code)
+
+    # Check if original code contains non-digit characters (excluding brackets and spaces)
+    # If the code has letters (like 0008Z0), reject it as invalid
+    cleaned_code = code.replace('[', '').replace(']', '').replace(' ', '').strip()
+    if not cleaned_code.isdigit():
+        # Invalid stock code (contains letters)
+        return None
+
+    return digits_only.zfill(6)
 
 def is_financial_sector(sector):
     """Check if company belongs to financial/insurance sector"""
