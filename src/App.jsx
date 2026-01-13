@@ -978,8 +978,8 @@ const App = () => {
                             </h4>
                             <div style={{ textAlign: 'left', maxWidth: '800px', margin: '0 auto', color: '#94a3b8' }}>
                                 <p style={{ margin: '0 0 8px 0' }}>
-                                    <strong>1.</strong> 본 서비스가 제공하는 재무 데이터는 공시 제출인(기업)이 작성한 자료를 기반으로 하며,
-                                    금융감독원과 운영자는 데이터의 <strong style={{ color: '#ef4444' }}>정확성, 완전성, 무결성을 보장하지 않습니다.</strong>
+                                    <strong>1.</strong> 본 서비스가 제공하는 재무 데이터는 금융감독원 전자공시시스템(DART)에 기업이 제출한 공시 자료를 기반으로 자동 처리한 것이며,
+                                    데이터 수집 및 처리 과정에서 오류가 발생할 수 있습니다. 운영자는 데이터의 <strong style={{ color: '#ef4444' }}>정확성, 완전성, 무결성을 보장하지 않습니다.</strong>
                                 </p>
                                 <p style={{ margin: '0 0 8px 0' }}>
                                     <strong>2.</strong> 제공되는 정보는 투자 참고용일 뿐이며, 주식 매매의 권유가 아닙니다.
