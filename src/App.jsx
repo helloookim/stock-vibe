@@ -1022,8 +1022,8 @@ const App = () => {
                                 📊 데이터 출처 및 저작권 고지
                             </p>
                             <p style={{ margin: 0, fontSize: '0.75rem' }}>
-                                본 서비스는 <strong style={{ color: '#94a3b8' }}>금융감독원 Open DART</strong> 및 <strong style={{ color: '#94a3b8' }}>한국거래소(KRX)</strong>의 공공데이터를 기반으로 제공됩니다.<br />
-                                (Source: Financial Supervisory Service Open DART & Korea Exchange)
+                                본 서비스는 <strong style={{ color: '#94a3b8' }}>금융감독원 Open DART</strong>의 공공데이터를 기반으로 제공됩니다.<br />
+                                (Source: Financial Supervisory Service Open DART)
                             </p>
                         </div>
 
