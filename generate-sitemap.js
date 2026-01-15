@@ -45,6 +45,25 @@ let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
+  <!-- Static Pages -->
+  <url>
+    <loc>${baseUrl}/privacy</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/terms</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/contact</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
 `;
 
 // Add all stock pages (sorted for consistency)
@@ -67,4 +86,4 @@ fs.writeFileSync(sitemapPath, sitemap);
 
 console.log(`✅ Sitemap generated successfully!`);
 console.log(`📍 Location: ${sitemapPath}`);
-console.log(`📊 Total URLs: ${sortedCodes.length + 1} (1 homepage + ${sortedCodes.length} stocks)`);
+console.log(`📊 Total URLs: ${sortedCodes.length + 4} (1 homepage + 3 static pages + ${sortedCodes.length} stocks)`);

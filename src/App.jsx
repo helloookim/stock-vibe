@@ -135,7 +135,6 @@ const App = () => {
     const [selectedCode, setSelectedCode] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [sortBy, setSortBy] = useState('revenue');  // 초기값: 매출순
-    const [showPolicyModal, setShowPolicyModal] = useState(null); // 'privacy', 'terms', 'contact', null
     const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
     const [yearRange, setYearRange] = useState([2015, 2025]);
     const [isDefaultRange, setIsDefaultRange] = useState(true);
@@ -1129,47 +1128,44 @@ const App = () => {
                             marginBottom: '20px',
                             fontSize: '0.85rem'
                         }}>
-                            <button
-                                onClick={() => setShowPolicyModal('privacy')}
+                            <a
+                                href="/privacy"
                                 style={{
-                                    background: 'none',
-                                    border: 'none',
                                     color: '#94a3b8',
-                                    cursor: 'pointer',
                                     textDecoration: 'underline',
-                                    padding: 0
+                                    transition: 'color 0.2s'
                                 }}
+                                onMouseEnter={(e) => e.target.style.color = '#e2e8f0'}
+                                onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
                             >
                                 개인정보처리방침
-                            </button>
+                            </a>
                             <span style={{ color: '#475569' }}>|</span>
-                            <button
-                                onClick={() => setShowPolicyModal('terms')}
+                            <a
+                                href="/terms"
                                 style={{
-                                    background: 'none',
-                                    border: 'none',
                                     color: '#94a3b8',
-                                    cursor: 'pointer',
                                     textDecoration: 'underline',
-                                    padding: 0
+                                    transition: 'color 0.2s'
                                 }}
+                                onMouseEnter={(e) => e.target.style.color = '#e2e8f0'}
+                                onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
                             >
                                 이용약관
-                            </button>
+                            </a>
                             <span style={{ color: '#475569' }}>|</span>
-                            <button
-                                onClick={() => setShowPolicyModal('contact')}
+                            <a
+                                href="/contact"
                                 style={{
-                                    background: 'none',
-                                    border: 'none',
                                     color: '#94a3b8',
-                                    cursor: 'pointer',
                                     textDecoration: 'underline',
-                                    padding: 0
+                                    transition: 'color 0.2s'
                                 }}
+                                onMouseEnter={(e) => e.target.style.color = '#e2e8f0'}
+                                onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
                             >
                                 문의하기
-                            </button>
+                            </a>
                         </div>
 
                         {/* Copyright */}
@@ -1179,132 +1175,6 @@ const App = () => {
                     </footer>
                 </div>
             </main>
-
-            {/* Policy Modal */}
-            {showPolicyModal && (
-                <div
-                    onClick={() => setShowPolicyModal(null)}
-                    style={{
-                        position: 'fixed',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                        zIndex: 2000,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        padding: '20px'
-                    }}
-                >
-                    <div
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                            backgroundColor: '#1e293b',
-                            borderRadius: '12px',
-                            padding: '30px',
-                            maxWidth: '700px',
-                            width: '100%',
-                            maxHeight: '80vh',
-                            overflow: 'auto',
-                            border: '1px solid #475569'
-                        }}
-                    >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                            <h2 style={{ color: '#e2e8f0', margin: 0 }}>
-                                {showPolicyModal === 'privacy' && '개인정보처리방침'}
-                                {showPolicyModal === 'terms' && '이용약관'}
-                                {showPolicyModal === 'contact' && '문의하기'}
-                            </h2>
-                            <button
-                                onClick={() => setShowPolicyModal(null)}
-                                style={{
-                                    background: 'none',
-                                    border: 'none',
-                                    color: '#94a3b8',
-                                    fontSize: '24px',
-                                    cursor: 'pointer',
-                                    padding: '0 10px'
-                                }}
-                            >
-                                ×
-                            </button>
-                        </div>
-
-                        <div style={{ color: '#cbd5e1', fontSize: '0.9rem', lineHeight: '1.7' }}>
-                            {showPolicyModal === 'privacy' && (
-                                <>
-                                    <h3 style={{ color: '#e2e8f0', fontSize: '1.1rem', marginTop: '20px' }}>1. 개인정보의 수집 및 이용</h3>
-                                    <p>본 사이트는 회원가입 없이 운영되며, <strong>별도의 개인정보를 수집하지 않습니다</strong>.</p>
-
-                                    <h3 style={{ color: '#e2e8f0', fontSize: '1.1rem', marginTop: '20px' }}>2. 쿠키(Cookie) 사용</h3>
-                                    <p>본 사이트는 사용자 경험 개선을 위해 쿠키를 사용할 수 있습니다. 쿠키는 웹사이트 방문 기록, 설정 등을 저장하는 작은 텍스트 파일입니다.</p>
-
-                                    <h3 style={{ color: '#e2e8f0', fontSize: '1.1rem', marginTop: '20px' }}>3. Google AdSense</h3>
-                                    <p>본 사이트는 Google AdSense 광고를 게재합니다. Google은 광고 게재를 위해 쿠키를 사용하며, 이를 통해 맞춤형 광고를 제공할 수 있습니다. Google의 개인정보 보호정책은 <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#60a5fa' }}>Google 개인정보처리방침</a>에서 확인하실 수 있습니다.</p>
-
-                                    <h3 style={{ color: '#e2e8f0', fontSize: '1.1rem', marginTop: '20px' }}>4. 개인정보 관련 문의</h3>
-                                    <p>개인정보와 관련한 문의사항은 '문의하기'를 통해 연락주시기 바랍니다.</p>
-
-                                    <p style={{ marginTop: '30px', color: '#94a3b8', fontSize: '0.85rem' }}>최종 수정일: 2026년 1월 11일</p>
-                                </>
-                            )}
-
-                            {showPolicyModal === 'terms' && (
-                                <>
-                                    <h3 style={{ color: '#e2e8f0', fontSize: '1.1rem', marginTop: '20px' }}>1. 서비스 이용</h3>
-                                    <p>본 사이트(KSTOCKVIEW)는 한국 상장 기업의 재무 정보를 조회할 수 있는 무료 서비스입니다. 모든 사용자는 별도의 회원가입 없이 서비스를 이용할 수 있습니다.</p>
-
-                                    <h3 style={{ color: '#e2e8f0', fontSize: '1.1rem', marginTop: '20px' }}>2. 제공 정보의 성격</h3>
-                                    <p>본 사이트에서 제공하는 모든 재무 데이터와 정보는 <strong>참고 목적</strong>으로만 제공됩니다. 제공되는 정보는 투자 조언이나 매수/매도 권유가 아니며, 투자 결정에 대한 모든 책임은 이용자 본인에게 있습니다.</p>
-
-                                    <h3 style={{ color: '#e2e8f0', fontSize: '1.1rem', marginTop: '20px' }}>3. 면책사항</h3>
-                                    <p>• 본 사이트는 데이터의 정확성, 완전성, 적시성을 보장하지 않습니다.<br />
-                                    • 데이터 오류, 누락, 지연으로 인한 손해에 대해 책임지지 않습니다.<br />
-                                    • 실제 투자 전 반드시 공식 증권사 및 금융감독원 자료를 확인하시기 바랍니다.</p>
-
-                                    <h3 style={{ color: '#e2e8f0', fontSize: '1.1rem', marginTop: '20px' }}>4. 저작권</h3>
-                                    <p>본 사이트의 디자인, 구조, 코드 등은 저작권법의 보호를 받습니다. 무단 복제 및 배포를 금지합니다.</p>
-
-                                    <h3 style={{ color: '#e2e8f0', fontSize: '1.1rem', marginTop: '20px' }}>5. 데이터 출처</h3>
-                                    <p>본 사이트에 게시된 재무 데이터는 금융감독원 전자공시시스템(DART)에서 제공하는 공개 정보를 기반으로 합니다.</p>
-
-                                    <p style={{ marginTop: '30px', color: '#94a3b8', fontSize: '0.85rem' }}>최종 수정일: 2026년 1월 11일</p>
-                                </>
-                            )}
-
-                            {showPolicyModal === 'contact' && (
-                                <>
-                                    <p>KSTOCKVIEW 서비스 이용과 관련하여 문의사항이 있으시면 아래 이메일로 연락주시기 바랍니다.</p>
-
-                                    <div style={{
-                                        marginTop: '30px',
-                                        padding: '20px',
-                                        backgroundColor: '#0f172a',
-                                        borderRadius: '8px',
-                                        border: '1px solid #334155'
-                                    }}>
-                                        <h3 style={{ color: '#e2e8f0', fontSize: '1rem', marginBottom: '15px' }}>📧 문의 이메일</h3>
-                                        <p style={{ fontSize: '1.1rem', color: '#60a5fa', margin: 0 }}>contact@kstockview.com</p>
-                                    </div>
-
-                                    <div style={{ marginTop: '30px', fontSize: '0.85rem', color: '#94a3b8' }}>
-                                        <p><strong>문의 가능 내용:</strong></p>
-                                        <ul style={{ paddingLeft: '20px', margin: '10px 0' }}>
-                                            <li>데이터 오류 신고</li>
-                                            <li>서비스 개선 제안</li>
-                                            <li>기술적 문제 보고</li>
-                                            <li>기타 문의사항</li>
-                                        </ul>
-                                        <p style={{ marginTop: '15px' }}>※  개별 종목 추천이나 투자 상담은 제공하지 않습니다.</p>
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
             </div>
         </>
     );
