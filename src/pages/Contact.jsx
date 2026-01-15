@@ -4,6 +4,16 @@ import { Helmet } from 'react-helmet-async';
 import { ArrowLeft, Mail, MessageSquare } from 'lucide-react';
 
 const Contact = () => {
+    // Override body overflow for this page
+    React.useEffect(() => {
+        document.body.style.overflow = 'auto';
+        document.documentElement.style.overflow = 'auto';
+        return () => {
+            document.body.style.overflow = 'hidden';
+            document.documentElement.style.overflow = 'hidden';
+        };
+    }, []);
+
     return (
         <>
             <Helmet>
@@ -14,11 +24,15 @@ const Contact = () => {
                 minHeight: '100vh',
                 background: 'linear-gradient(135deg, #020617 0%, #0f172a 100%)',
                 color: '#e2e8f0',
-                padding: '40px 20px 80px 20px'
+                padding: '20px 15px 100px 15px',
+                paddingTop: window.innerWidth > 768 ? '40px' : '20px',
+                paddingLeft: window.innerWidth > 768 ? '20px' : '15px',
+                paddingRight: window.innerWidth > 768 ? '20px' : '15px'
             }}>
                 <div style={{
                     maxWidth: '800px',
-                    margin: '0 auto'
+                    margin: '0 auto',
+                    width: '100%'
                 }}>
                     {/* Back Button */}
                     <Link
@@ -47,7 +61,7 @@ const Contact = () => {
                         borderBottom: '2px solid #334155'
                     }}>
                         <h1 style={{
-                            fontSize: '2.5rem',
+                            fontSize: window.innerWidth > 768 ? '2.5rem' : '1.8rem',
                             fontWeight: '900',
                             background: 'linear-gradient(135deg, #60a5fa 0%, #a855f7 100%)',
                             WebkitBackgroundClip: 'text',
@@ -57,7 +71,7 @@ const Contact = () => {
                         }}>
                             문의하기
                         </h1>
-                        <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>
+                        <p style={{ color: '#94a3b8', fontSize: window.innerWidth > 768 ? '0.9rem' : '0.8rem' }}>
                             서비스 이용과 관련하여 문의사항이 있으시면 연락주시기 바랍니다.
                         </p>
                     </header>
@@ -67,8 +81,9 @@ const Contact = () => {
                         background: 'rgba(30, 41, 59, 0.6)',
                         border: '1px solid rgba(255, 255, 255, 0.1)',
                         borderRadius: '16px',
-                        padding: '40px',
-                        lineHeight: '1.8'
+                        padding: window.innerWidth > 768 ? '40px' : '20px',
+                        lineHeight: '1.8',
+                        fontSize: window.innerWidth > 768 ? '1rem' : '0.9rem'
                     }}>
                         {/* Email Contact */}
                         <section style={{ marginBottom: '40px' }}>
@@ -81,7 +96,7 @@ const Contact = () => {
                                 <Mail size={24} color="#60a5fa" />
                                 <h2 style={{
                                     color: '#e2e8f0',
-                                    fontSize: '1.5rem',
+                                    fontSize: window.innerWidth > 768 ? '1.5rem' : '1.2rem',
                                     margin: 0
                                 }}>
                                     이메일 문의
@@ -100,15 +115,17 @@ const Contact = () => {
                                 <a
                                     href="mailto:contact@kstockview.com"
                                     style={{
-                                        fontSize: '1.3rem',
+                                        fontSize: window.innerWidth > 768 ? '1.3rem' : '0.95rem',
                                         color: '#60a5fa',
                                         textDecoration: 'none',
                                         fontWeight: '600',
                                         display: 'inline-block',
-                                        padding: '10px 20px',
+                                        padding: window.innerWidth > 768 ? '10px 20px' : '8px 12px',
                                         background: 'rgba(96, 165, 250, 0.1)',
                                         borderRadius: '8px',
-                                        transition: 'all 0.2s'
+                                        transition: 'all 0.2s',
+                                        wordBreak: 'break-all',
+                                        maxWidth: '100%'
                                     }}
                                     onMouseEnter={(e) => {
                                         e.target.style.background = 'rgba(96, 165, 250, 0.2)';
@@ -135,7 +152,7 @@ const Contact = () => {
                                 <MessageSquare size={24} color="#10b981" />
                                 <h2 style={{
                                     color: '#e2e8f0',
-                                    fontSize: '1.5rem',
+                                    fontSize: window.innerWidth > 768 ? '1.5rem' : '1.2rem',
                                     margin: 0
                                 }}>
                                     문의 가능 내용

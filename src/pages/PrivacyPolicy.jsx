@@ -4,6 +4,16 @@ import { Helmet } from 'react-helmet-async';
 import { ArrowLeft } from 'lucide-react';
 
 const PrivacyPolicy = () => {
+    // Override body overflow for this page
+    React.useEffect(() => {
+        document.body.style.overflow = 'auto';
+        document.documentElement.style.overflow = 'auto';
+        return () => {
+            document.body.style.overflow = 'hidden';
+            document.documentElement.style.overflow = 'hidden';
+        };
+    }, []);
+
     return (
         <>
             <Helmet>
@@ -14,11 +24,15 @@ const PrivacyPolicy = () => {
                 minHeight: '100vh',
                 background: 'linear-gradient(135deg, #020617 0%, #0f172a 100%)',
                 color: '#e2e8f0',
-                padding: '40px 20px 80px 20px'
+                padding: '20px 15px 100px 15px',
+                paddingTop: window.innerWidth > 768 ? '40px' : '20px',
+                paddingLeft: window.innerWidth > 768 ? '20px' : '15px',
+                paddingRight: window.innerWidth > 768 ? '20px' : '15px'
             }}>
                 <div style={{
                     maxWidth: '800px',
-                    margin: '0 auto'
+                    margin: '0 auto',
+                    width: '100%'
                 }}>
                     {/* Back Button */}
                     <Link
@@ -47,7 +61,7 @@ const PrivacyPolicy = () => {
                         borderBottom: '2px solid #334155'
                     }}>
                         <h1 style={{
-                            fontSize: '2.5rem',
+                            fontSize: window.innerWidth > 768 ? '2.5rem' : '1.8rem',
                             fontWeight: '900',
                             background: 'linear-gradient(135deg, #60a5fa 0%, #a855f7 100%)',
                             WebkitBackgroundClip: 'text',
@@ -57,7 +71,7 @@ const PrivacyPolicy = () => {
                         }}>
                             개인정보처리방침
                         </h1>
-                        <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>
+                        <p style={{ color: '#94a3b8', fontSize: window.innerWidth > 768 ? '0.9rem' : '0.8rem' }}>
                             최종 수정일: 2026년 1월 15일
                         </p>
                     </header>
@@ -67,13 +81,14 @@ const PrivacyPolicy = () => {
                         background: 'rgba(30, 41, 59, 0.6)',
                         border: '1px solid rgba(255, 255, 255, 0.1)',
                         borderRadius: '16px',
-                        padding: '40px',
-                        lineHeight: '1.8'
+                        padding: window.innerWidth > 768 ? '40px' : '20px',
+                        lineHeight: '1.8',
+                        fontSize: window.innerWidth > 768 ? '1rem' : '0.9rem'
                     }}>
                         <section style={{ marginBottom: '40px' }}>
                             <h2 style={{
                                 color: '#e2e8f0',
-                                fontSize: '1.5rem',
+                                fontSize: window.innerWidth > 768 ? '1.5rem' : '1.2rem',
                                 marginBottom: '20px',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -98,7 +113,7 @@ const PrivacyPolicy = () => {
                         <section style={{ marginBottom: '40px' }}>
                             <h2 style={{
                                 color: '#e2e8f0',
-                                fontSize: '1.5rem',
+                                fontSize: window.innerWidth > 768 ? '1.5rem' : '1.2rem',
                                 marginBottom: '20px',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -126,7 +141,7 @@ const PrivacyPolicy = () => {
                         <section style={{ marginBottom: '40px' }}>
                             <h2 style={{
                                 color: '#e2e8f0',
-                                fontSize: '1.5rem',
+                                fontSize: window.innerWidth > 768 ? '1.5rem' : '1.2rem',
                                 marginBottom: '20px',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -163,7 +178,7 @@ const PrivacyPolicy = () => {
                         <section style={{ marginBottom: '40px' }}>
                             <h2 style={{
                                 color: '#e2e8f0',
-                                fontSize: '1.5rem',
+                                fontSize: window.innerWidth > 768 ? '1.5rem' : '1.2rem',
                                 marginBottom: '20px',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -187,7 +202,12 @@ const PrivacyPolicy = () => {
                                 borderRadius: '8px',
                                 border: '1px solid #334155'
                             }}>
-                                <p style={{ fontSize: '1rem', color: '#60a5fa', margin: 0 }}>
+                                <p style={{
+                                    fontSize: window.innerWidth > 768 ? '1rem' : '0.85rem',
+                                    color: '#60a5fa',
+                                    margin: 0,
+                                    wordBreak: 'break-all'
+                                }}>
                                     📧 contact@kstockview.com
                                 </p>
                             </div>
@@ -196,7 +216,7 @@ const PrivacyPolicy = () => {
                         <section>
                             <h2 style={{
                                 color: '#e2e8f0',
-                                fontSize: '1.5rem',
+                                fontSize: window.innerWidth > 768 ? '1.5rem' : '1.2rem',
                                 marginBottom: '20px',
                                 display: 'flex',
                                 alignItems: 'center',
