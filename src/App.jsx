@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     ComposedChart, Line, ReferenceLine, AreaChart, Area
@@ -122,6 +124,9 @@ const CustomTooltip = ({ active, payload, label, valueFormatter, yoyKey }) => {
 };
 
 const App = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
+
     const [financialRawData, setFinancialRawData] = useState({});
     const [financialAnnualData, setFinancialAnnualData] = useState({});
     const [epsData, setEpsData] = useState({});
@@ -138,6 +143,9 @@ const App = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     const [viewMode, setViewMode] = useState('quarterly'); // 'quarterly' or 'annual'
+
+    // Track the source of selectedCode changes to prevent loops
+    const isUrlChangeRef = useRef(false);
 
     // Detect mobile screen size
     useEffect(() => {
@@ -198,6 +206,42 @@ const App = () => {
 
         loadData();
     }, []);
+
+    // Sync selected code with URL on direct navigation (browser back/forward, direct URL)
+    useEffect(() => {
+        if (dataLoading) return; // Wait for data to load
+
+        const pathCode = location.pathname.slice(1) || '005930'; // Default to Samsung
+
+        if (pathCode && financialRawData[pathCode]) {
+            // Only update if different
+            if (pathCode !== selectedCode) {
+                isUrlChangeRef.current = true; // Mark this as URL-driven change
+                setSelectedCode(pathCode);
+            }
+        } else if (Object.keys(financialRawData).length > 0) {
+            // Invalid code, redirect to default
+            navigate('/005930', { replace: true });
+        }
+    }, [location.pathname, financialRawData, dataLoading]);
+
+    // Sync URL with selected code (only on user selection)
+    useEffect(() => {
+        if (!dataLoading && selectedCode) {
+            const pathCode = location.pathname.slice(1);
+
+            // If this change came from URL, don't navigate
+            if (isUrlChangeRef.current) {
+                isUrlChangeRef.current = false; // Reset the flag
+                return;
+            }
+
+            // User clicked a stock - update URL if different
+            if (pathCode !== selectedCode) {
+                navigate(`/${selectedCode}`, { replace: true });
+            }
+        }
+    }, [selectedCode, dataLoading, navigate, location.pathname]);
 
     const companyList = useMemo(() => {
         let list = Object.entries(financialRawData).map(([code, info]) => {
@@ -473,8 +517,18 @@ const App = () => {
     }
 
     return (
-        <div className="app-container">
-            {/* Mobile Header with Hamburger Menu */}
+        <>
+            <Helmet>
+                <title>{currentCompany?.name ? `${currentCompany.name} (${selectedCode}) - 재무 데이터 | KStockView` : 'KStockView - 한국 주식 재무 시각화'}</title>
+                <meta name="description" content={currentCompany?.name ? `${currentCompany.name}의 분기별/연간 재무 데이터, 매출액, 영업이익, 영업이익률 등을 시각화하여 제공합니다.` : '한국 상장 기업의 재무 데이터를 시각화하여 제공합니다.'} />
+                <meta property="og:title" content={currentCompany?.name ? `${currentCompany.name} (${selectedCode}) - 재무 데이터 | KStockView` : 'KStockView'} />
+                <meta property="og:description" content={currentCompany?.name ? `${currentCompany.name}의 분기별/연간 재무 데이터를 그래프로 확인하세요.` : '한국 상장 기업의 재무 데이터를 시각화하여 제공합니다.'} />
+                <meta property="og:type" content="website" />
+                <meta property="og:url" content={`https://kstockview.com/${selectedCode || ''}`} />
+                <link rel="canonical" href={`https://kstockview.com/${selectedCode || ''}`} />
+            </Helmet>
+            <div className="app-container">
+                {/* Mobile Header with Hamburger Menu */}
             <div className="mobile-header">
                 <button
                     className="hamburger-menu"
@@ -556,9 +610,13 @@ const App = () => {
                         <button
                             key={comp.code}
                             onClick={() => {
+                                // Scroll the charts-container to top (not window!)
+                                const chartsContainer = document.querySelector('.charts-container');
+                                if (chartsContainer) {
+                                    chartsContainer.scrollTo({ top: 0, behavior: 'instant' });
+                                }
                                 setSelectedCode(comp.code);
                                 setIsMobileMenuOpen(false); // Close mobile menu on selection
-                                window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top
                             }}
                             className={`ticker-item ${selectedCode === comp.code ? 'active' : ''}`}
                         >
@@ -979,10 +1037,14 @@ const App = () => {
                                 <button
                                     key={peer.code}
                                     onClick={() => {
+                                        // Scroll the charts-container to top (not window!)
+                                        const chartsContainer = document.querySelector('.charts-container');
+                                        if (chartsContainer) {
+                                            chartsContainer.scrollTo({ top: 0, behavior: 'instant' });
+                                        }
                                         setSearchTerm(''); // Clear search to ensure company is in list
                                         setSelectedCode(peer.code);
                                         setIsMobileMenuOpen(false); // Close mobile menu
-                                        window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top
                                     }}
                                     className="peer-item"
                                 >
@@ -1243,7 +1305,8 @@ const App = () => {
                     </div>
                 </div>
             )}
-        </div>
+            </div>
+        </>
     );
 };
 
