@@ -1102,19 +1102,20 @@ const App = () => {
                                 ⚠️ 면책 조항 (Disclaimer)
                             </h4>
                             <div style={{ textAlign: 'left', maxWidth: '800px', margin: '0 auto', color: '#94a3b8' }}>
-                                <p style={{ margin: '0 0 8px 0' }}>
-                                    <strong>1.</strong> 본 서비스가 제공하는 재무 데이터는 금융감독원 전자공시시스템(DART)에 기업이 제출한 공시 자료를 기반으로 자동 처리한 것이며,
-                                    데이터 수집 및 처리 과정에서 오류가 발생할 수 있습니다. 운영자는 데이터의 <strong style={{ color: '#ef4444' }}>정확성, 완전성, 무결성을 보장하지 않습니다.</strong>
+                                <p style={{ margin: '0 0 10px 0' }}>
+                                    <strong>1. 데이터 정확성 면책:</strong> 본 서비스는 금융감독원 DART의 공시 자료를 자동 처리하여 제공하며,
+                                    데이터 수집·가공·표시 과정에서 발생할 수 있는 오류, 누락, 지연에 대해 <strong style={{ color: '#ef4444' }}>어떠한 법적 책임도 지지 않습니다.</strong>
                                 </p>
-                                <p style={{ margin: '0 0 8px 0' }}>
-                                    <strong>2.</strong> 제공되는 정보는 투자 참고용일 뿐이며, 주식 매매의 권유가 아닙니다.
+                                <p style={{ margin: '0 0 10px 0' }}>
+                                    <strong>2. 손해배상 면책:</strong> 본 서비스의 데이터 오류로 인해 발생한 직접적·간접적·부수적·파생적 손해
+                                    (투자 손실, 기회 손실 등 일체 포함)에 대해 운영자는 <strong style={{ color: '#ef4444' }}>법적 책임을 지지 않습니다.</strong>
                                 </p>
-                                <p style={{ margin: '0 0 8px 0' }}>
-                                    <strong>3.</strong> 본 서비스의 정보를 활용하여 발생한 투자의 결과(손익)에 대한 법적 책임은
-                                    <strong style={{ color: '#ef4444' }}> 전적으로 투자자 본인</strong>에게 있습니다.
+                                <p style={{ margin: '0 0 10px 0' }}>
+                                    <strong>3. 투자 판단 책임:</strong> 제공되는 정보는 투자 조언이 아니며,
+                                    모든 투자 결정 및 그 결과(손익)에 대한 법적 책임은 <strong style={{ color: '#ef4444' }}>전적으로 이용자 본인</strong>에게 있습니다.
                                 </p>
                                 <p style={{ margin: 0 }}>
-                                    <strong>4.</strong> 데이터 오류나 지연이 발생할 수 있으므로, 실제 거래 전 반드시 증권사 및 공식 공시 정보를 확인하시기 바랍니다.
+                                    <strong>4. 검증 의무:</strong> 실제 투자 전 반드시 공식 증권사, 금융감독원, 한국거래소 등의 공식 자료를 직접 확인하시기 바랍니다.
                                 </p>
                             </div>
                         </div>

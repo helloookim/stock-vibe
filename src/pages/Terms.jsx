@@ -14,7 +14,7 @@ const Terms = () => {
                 minHeight: '100vh',
                 background: 'linear-gradient(135deg, #020617 0%, #0f172a 100%)',
                 color: '#e2e8f0',
-                padding: '40px 20px'
+                padding: '40px 20px 80px 20px'
             }}>
                 <div style={{
                     maxWidth: '800px',
@@ -149,16 +149,20 @@ const Terms = () => {
                                 </h3>
                                 <ul style={{ color: '#cbd5e1', paddingLeft: '20px', margin: 0 }}>
                                     <li style={{ marginBottom: '10px' }}>
-                                        본 사이트는 데이터의 <strong style={{ color: '#ef4444' }}>정확성, 완전성, 적시성을 보장하지 않습니다.</strong>
+                                        <strong style={{ color: '#ef4444' }}>데이터 정확성 면책:</strong> 본 사이트는 금융감독원 DART의 공시 자료를 자동으로 처리하여 제공하며,
+                                        데이터 수집·가공·표시 과정에서 발생할 수 있는 오류, 누락, 지연에 대해 <strong style={{ color: '#ef4444' }}>어떠한 법적 책임도 지지 않습니다.</strong>
                                     </li>
                                     <li style={{ marginBottom: '10px' }}>
-                                        데이터 오류, 누락, 지연으로 인한 손해에 대해 책임지지 않습니다.
+                                        <strong style={{ color: '#ef4444' }}>손해배상 면책:</strong> 본 서비스의 데이터 오류로 인해 발생한 직접적·간접적·부수적·파생적 손해
+                                        (투자 손실, 기회 손실 등 일체 포함)에 대해 운영자는 <strong style={{ color: '#ef4444' }}>법적 책임을 지지 않습니다.</strong>
                                     </li>
                                     <li style={{ marginBottom: '10px' }}>
-                                        실제 투자 전 반드시 공식 증권사 및 금융감독원 자료를 확인하시기 바랍니다.
+                                        <strong style={{ color: '#ef4444' }}>투자 판단 책임:</strong> 본 서비스는 투자 조언이 아니며,
+                                        모든 투자 결정 및 그 결과(손익)에 대한 법적 책임은 <strong style={{ color: '#ef4444' }}>전적으로 이용자 본인</strong>에게 있습니다.
                                     </li>
                                     <li>
-                                        투자 결과(손익)에 대한 법적 책임은 <strong style={{ color: '#ef4444' }}>전적으로 투자자 본인</strong>에게 있습니다.
+                                        <strong style={{ color: '#ef4444' }}>검증 의무:</strong> 실제 투자 전 반드시 공식 증권사, 금융감독원, 한국거래소 등의
+                                        공식 자료를 직접 확인하시기 바랍니다.
                                     </li>
                                 </ul>
                             </div>

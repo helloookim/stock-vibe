@@ -14,7 +14,7 @@ const Contact = () => {
                 minHeight: '100vh',
                 background: 'linear-gradient(135deg, #020617 0%, #0f172a 100%)',
                 color: '#e2e8f0',
-                padding: '40px 20px'
+                padding: '40px 20px 80px 20px'
             }}>
                 <div style={{
                     maxWidth: '800px',
