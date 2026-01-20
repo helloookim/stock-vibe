@@ -6,7 +6,7 @@ import {
     ComposedChart, Line, ReferenceLine, AreaChart, Area
 } from 'recharts';
 import { Search, ArrowUpDown, ChevronLeft, ChevronRight, Menu, X, Info } from 'lucide-react';
-import { loadAllFinancialData, epsDataLoader } from './dataLoader';
+import { loadAllFinancialData, loadAllAnnualFinancialData, epsDataLoader } from './dataLoader';
 
 // Info Tooltip Component
 const InfoTooltip = ({ text }) => {
@@ -172,8 +172,8 @@ const App = () => {
             setDataLoading(true);
             try {
                 const [financial, annual, eps, marketCap] = await Promise.all([
-                    loadAllFinancialData(),  // Loads and merges consolidated + separate
-                    fetch('/financial_data_annual.json').then(r => r.json()),
+                    loadAllFinancialData(),  // Loads and merges consolidated + separate + income statement
+                    loadAllAnnualFinancialData(),  // Loads and merges annual + income statement annual
                     epsDataLoader.loadAll(),
                     fetch('/market_cap_data.json').then(r => r.json())
                 ]);
