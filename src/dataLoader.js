@@ -268,6 +268,55 @@ export async function loadAllAnnualFinancialData() {
     return annual;
 }
 
+// Helper function to load and merge EPS data (eps_data + income_statement_eps)
+export async function loadAllEpsData() {
+    const [eps, incomeStatementEps] = await Promise.all([
+        epsDataLoader.loadAll(),
+        fetch('/income_statement_eps.json').then(r => r.json()).catch(() => ({}))
+    ]);
+
+    // Merge income statement EPS data
+    Object.entries(incomeStatementEps).forEach(([code, data]) => {
+        if (!eps[code]) {
+            // Company not in eps - add entirely
+            eps[code] = data;
+        } else {
+            // Company exists but might be missing EPS data
+            // Update name and sector to latest (from income statement which uses 2025 Q3 data)
+            eps[code].name = data.name;
+            eps[code].sector = data.sector;
+
+            const existingHistory = eps[code].history || [];
+            const incomeHistory = data.history || [];
+
+            incomeHistory.forEach(incomeEntry => {
+                const existingEntry = existingHistory.find(
+                    e => e.year === incomeEntry.year && e.quarter === incomeEntry.quarter
+                );
+
+                if (existingEntry) {
+                    // Entry exists - fill in missing EPS if needed
+                    if (existingEntry.eps === null || existingEntry.eps === undefined) {
+                        existingEntry.eps = incomeEntry.eps;
+                    }
+                } else {
+                    // Entry doesn't exist - add it
+                    existingHistory.push(incomeEntry);
+                }
+            });
+
+            // Sort history by year and quarter
+            eps[code].history = existingHistory.sort((a, b) => {
+                if (a.year !== b.year) return a.year - b.year;
+                const qOrder = { '1Q': 1, '2Q': 2, '3Q': 3, '4Q': 4 };
+                return (qOrder[a.quarter] || 0) - (qOrder[b.quarter] || 0);
+            });
+        }
+    });
+
+    return eps;
+}
+
 // Helper function to initialize all loaders
 export async function initializeDataLoaders() {
     const results = await Promise.all([
