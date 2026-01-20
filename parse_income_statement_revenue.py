@@ -24,6 +24,14 @@ REVENUE_CODES = ['ifrs_Revenue', 'ifrs-full_Revenue']
 # Operating profit codes
 OP_PROFIT_CODES = ['dart_OperatingIncomeLoss', 'ifrs_OperatingIncomeLoss', 'ifrs-full_ProfitLossFromOperatingActivities']
 
+# 지분법이익 코드 (SK스퀘어 등 특수 기업용)
+EQUITY_METHOD_PROFIT_CODES = ['dart_ProfitsOfAssociatesAndJointVenturesAccountedForUsingEquityMethod']
+
+# 특수 처리 기업: revenue + 지분법이익을 합산해야 하는 기업들
+SPECIAL_REVENUE_COMPANIES = {
+    '402340': 'SK스퀘어'  # revenue + 지분법이익 합산
+}
+
 def clean_header(h):
     return h.replace(' ', '').replace('\xa0', '').strip()
 
@@ -250,12 +258,16 @@ def extract_revenue_data_from_income_statement(filepath, filename, target_compan
         company_name = row[col_name].strip() if col_name is not None else 'Unknown'
         sector = row[col_sector].strip() if col_sector is not None else 'Unknown'
 
-        # revenue 또는 영업이익인지 확인
+        # revenue, 영업이익, 또는 지분법이익인지 확인
         metric_type = None
         if item_code in REVENUE_CODES:
             metric_type = 'revenue'
         elif any(code in item_code for code in OP_PROFIT_CODES):
             metric_type = 'op_profit'
+        elif any(code in item_code for code in EQUITY_METHOD_PROFIT_CODES):
+            # 지분법이익은 특수 기업에 대해서만 저장
+            if stock_code in SPECIAL_REVENUE_COMPANIES:
+                metric_type = 'equity_method_profit'
 
         if not metric_type:
             continue
@@ -287,9 +299,12 @@ def extract_revenue_data_from_income_statement(filepath, filename, target_compan
 
     return results
 
-def compile_history(data):
+def compile_history(data, stock_code=None):
     """데이터를 분기별 히스토리로 컴파일"""
     history = []
+
+    # 특수 기업 여부 확인
+    is_special = stock_code in SPECIAL_REVENUE_COMPANIES
 
     for year in sorted(data.keys()):
         year_data = data[year]
@@ -297,12 +312,27 @@ def compile_history(data):
         # 1Q, 2Q, 3Q
         for q in ['1Q', '2Q', '3Q']:
             if q in year_data:
+                base_revenue = year_data[q].get('revenue')
+                equity_profit = year_data[q].get('equity_method_profit')
+
+                # 특수 기업의 경우 revenue + 지분법이익 합산
+                if is_special and base_revenue is not None and equity_profit is not None:
+                    combined_revenue = base_revenue + equity_profit
+                else:
+                    combined_revenue = base_revenue
+
                 rec = {
                     'year': year,
                     'quarter': q,
-                    'revenue': year_data[q].get('revenue'),
+                    'revenue': combined_revenue,
                     'op_profit': year_data[q].get('op_profit'),
                 }
+
+                # 특수 기업의 경우 메타 정보 추가
+                if is_special and equity_profit is not None:
+                    rec['revenue_includes_equity_method'] = True
+                    rec['equity_method_profit'] = equity_profit
+
                 if rec['revenue'] is not None or rec['op_profit'] is not None:
                     history.append(rec)
 
@@ -323,6 +353,17 @@ def compile_history(data):
                 val_q3 = q3_acc_data.get(m)
                 if val_ann is not None and val_q3 is not None:
                     q4_rec[m] = val_ann - val_q3
+
+            # 특수 기업의 경우 지분법이익도 4Q 계산
+            if is_special:
+                equity_ann = annual_data.get('equity_method_profit')
+                equity_q3 = q3_acc_data.get('equity_method_profit')
+                if equity_ann is not None and equity_q3 is not None:
+                    q4_equity = equity_ann - equity_q3
+                    if q4_rec['revenue'] is not None:
+                        q4_rec['revenue'] = q4_rec['revenue'] + q4_equity
+                        q4_rec['revenue_includes_equity_method'] = True
+                        q4_rec['equity_method_profit'] = q4_equity
 
             if q4_rec['revenue'] is not None or q4_rec['op_profit'] is not None:
                 # 음수 revenue 스킵
@@ -405,7 +446,7 @@ def main():
 
     for stock_code in sorted(all_results.keys()):
         company_data = all_results[stock_code]
-        history = compile_history(dict(company_data['data']))
+        history = compile_history(dict(company_data['data']), stock_code=stock_code)
 
         if history:
             # 최신 회사명 사용 (있으면), 없으면 기존 이름 유지
@@ -444,6 +485,21 @@ def main():
             rev_str = f"{rec['revenue']:,}" if rec['revenue'] else 'N/A'
             op_str = f"{rec['op_profit']:,}" if rec['op_profit'] else 'N/A'
             print(f"  {rec['year']} {rec['quarter']}: 매출 {rev_str}, 영업이익 {op_str}")
+
+    # 샘플 출력: SK스퀘어 (revenue + 지분법이익 합산)
+    if '402340' in final_output:
+        print("\n=== 샘플: SK스퀘어 [402340] (revenue + 지분법이익 합산) ===")
+        sks = final_output['402340']
+        print(f"회사명: {sks['name']}")
+        print(f"업종: {sks['sector']}")
+        print(f"데이터 출처: {sks['source']}")
+        print(f"분기 데이터 개수: {len(sks['history'])}")
+        print("\n최근 5개 분기:")
+        for rec in sks['history'][-5:]:
+            rev_str = f"{rec['revenue']:,}" if rec.get('revenue') else 'N/A'
+            op_str = f"{rec['op_profit']:,}" if rec.get('op_profit') else 'N/A'
+            equity_str = f" (지분법이익: {rec['equity_method_profit']:,})" if rec.get('equity_method_profit') else ''
+            print(f"  {rec['year']} {rec['quarter']}: 매출 {rev_str}{equity_str}, 영업이익 {op_str}")
 
 if __name__ == '__main__':
     main()
