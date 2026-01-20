@@ -518,10 +518,10 @@ const App = () => {
     return (
         <>
             <Helmet>
-                <title>{currentCompany?.name ? `${currentCompany.name} (${selectedCode}) - 재무 데이터 | KStockView` : 'KStockView - 한국 주식 재무 시각화'}</title>
-                <meta name="description" content={currentCompany?.name ? `${currentCompany.name}의 분기별/연간 재무 데이터, 매출액, 영업이익, 영업이익률 등을 시각화하여 제공합니다.` : '한국 상장 기업의 재무 데이터를 시각화하여 제공합니다.'} />
-                <meta property="og:title" content={currentCompany?.name ? `${currentCompany.name} (${selectedCode}) - 재무 데이터 | KStockView` : 'KStockView'} />
-                <meta property="og:description" content={currentCompany?.name ? `${currentCompany.name}의 분기별/연간 재무 데이터를 그래프로 확인하세요.` : '한국 상장 기업의 재무 데이터를 시각화하여 제공합니다.'} />
+                <title>{currentCompany?.name ? `${currentCompany.name} (${selectedCode}) 재무제표 & 실적 분석 - 매출액, 영업이익 | KStockView` : 'KStockView - 한국 주식 재무제표 & 실적 분석'}</title>
+                <meta name="description" content={currentCompany?.name ? `${currentCompany.name}(${selectedCode})의 분기별/연간 재무제표, 매출액, 영업이익, 영업이익률, EPS 등 실적 데이터를 차트로 분석합니다.` : '한국 상장 기업의 재무제표와 실적 데이터를 시각화하여 분석합니다.'} />
+                <meta property="og:title" content={currentCompany?.name ? `${currentCompany.name} (${selectedCode}) 재무제표 & 실적 분석 | KStockView` : 'KStockView - 한국 주식 재무제표 분석'} />
+                <meta property="og:description" content={currentCompany?.name ? `${currentCompany.name}의 매출액, 영업이익, EPS 등 재무제표 실적을 차트로 확인하세요.` : '한국 상장 기업의 재무제표와 실적 데이터를 시각화하여 분석합니다.'} />
                 <meta property="og:type" content="website" />
                 <meta property="og:url" content={`https://kstockview.com/${selectedCode || ''}`} />
                 <link rel="canonical" href={`https://kstockview.com/${selectedCode || ''}`} />
