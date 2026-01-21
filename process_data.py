@@ -259,9 +259,10 @@ class FinancialParser:
                         if company_name not in self.company_name_to_code:
                             self.company_name_to_code[company_name] = stock_code
 
-                        # For code_to_company_name, always use latest name (overwrite with newest data)
-                        # Since files are sorted by year descending, first encountered = latest
-                        self.code_to_company_name[stock_code] = company_name
+                        # For code_to_company_name, use latest name (first encountered since files sorted descending)
+                        # Only set if not already present to preserve newest name
+                        if stock_code not in self.code_to_company_name:
+                            self.code_to_company_name[stock_code] = company_name
 
         print(f"Mapped {len(self.company_name_to_code)} companies")
 
@@ -912,7 +913,7 @@ class FinancialParser:
 def main():
     parser = FinancialParser()
 
-    files = sorted(os.listdir(SOURCE_DIR))
+    files = sorted(os.listdir(SOURCE_DIR), reverse=True)  # Process latest files first for company name mapping
 
     # Build company name to code mapping from latest files first
     parser.build_company_mapping(files)
