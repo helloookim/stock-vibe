@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -219,8 +219,8 @@ const App = () => {
                 setSelectedCode(pathCode);
             }
         } else if (Object.keys(financialRawData).length > 0 && pathCode) {
-            // Invalid stock code, redirect to home
-            navigate('/', { replace: true });
+            // Invalid stock code, redirect to 404
+            navigate('/not-found', { replace: true });
         }
     }, [location.pathname, financialRawData, dataLoading]);
 
@@ -536,7 +536,7 @@ const App = () => {
                 >
                     {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                 </button>
-                <h1 className="mobile-app-title">KSTOCKVIEW</h1>
+                <Link to="/" className="mobile-app-title" style={{ textDecoration: 'none', color: 'inherit' }}>KSTOCKVIEW</Link>
             </div>
 
             {/* Mobile Overlay */}
@@ -550,7 +550,7 @@ const App = () => {
             {/* SIDEBAR */}
             <aside className={`sidebar ${sidebarCollapsed ? 'collapsed' : ''} ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
                 <div className="sidebar-header">
-                    <h1 className="app-title">KSTOCKVIEW</h1>
+                    <Link to="/" className="app-title" style={{ textDecoration: 'none', color: 'inherit' }}>KSTOCKVIEW</Link>
                     <div className="sort-dropdown-container">
                         <button
                             className="sort-dropdown-btn"

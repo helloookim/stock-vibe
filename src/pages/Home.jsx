@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Search, Menu, X, BarChart3, TrendingUp, PieChart, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Menu, X, BarChart3, TrendingUp, PieChart, ArrowUpDown, ChevronLeft, ChevronRight, CheckCircle, FileText } from 'lucide-react';
 import { loadAllFinancialData } from '../dataLoader';
 
 const Home = () => {
@@ -104,7 +104,7 @@ const Home = () => {
                     >
                         {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                     </button>
-                    <h1 className="mobile-app-title">KSTOCKVIEW</h1>
+                    <Link to="/" className="mobile-app-title" style={{ textDecoration: 'none', color: 'inherit' }}>KSTOCKVIEW</Link>
                 </div>
 
                 {/* Mobile Overlay */}
@@ -118,7 +118,7 @@ const Home = () => {
                 {/* SIDEBAR */}
                 <aside className={`sidebar ${sidebarCollapsed ? 'collapsed' : ''} ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
                     <div className="sidebar-header">
-                        <h1 className="app-title">KSTOCKVIEW</h1>
+                        <Link to="/" className="app-title" style={{ textDecoration: 'none', color: 'inherit' }}>KSTOCKVIEW</Link>
                         <div className="sort-dropdown-container">
                             <button
                                 className="sort-dropdown-btn"
@@ -232,13 +232,34 @@ const Home = () => {
                             <p style={{
                                 fontSize: 'clamp(1rem, 3vw, 1.25rem)',
                                 color: '#94a3b8',
-                                marginBottom: '40px',
+                                marginBottom: '20px',
                                 maxWidth: '600px',
                                 lineHeight: '1.6'
                             }}>
                                 한국 상장 기업의 재무제표와 실적 데이터를<br />
                                 차트로 시각화하여 분석합니다
                             </p>
+
+                            {/* Free Service Badge */}
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                border: '1px solid rgba(16, 185, 129, 0.3)',
+                                borderRadius: '12px',
+                                padding: '12px 20px',
+                                marginBottom: '40px'
+                            }}>
+                                <CheckCircle size={20} style={{ color: '#10b981' }} />
+                                <span style={{
+                                    color: '#10b981',
+                                    fontSize: '0.95rem',
+                                    fontWeight: '600'
+                                }}>
+                                    회원가입 없이 무료로 이용 가능
+                                </span>
+                            </div>
 
                             {/* Features */}
                             <div style={{
@@ -385,6 +406,174 @@ const Home = () => {
                                             <span>{stock.name}</span>
                                         </Link>
                                     ))}
+                                </div>
+                            </div>
+
+                            {/* Blog Analysis Reports Section - Orphan Page 해결 */}
+                            <div className="chart-section" style={{
+                                width: '100%',
+                                maxWidth: '700px',
+                                marginTop: '40px'
+                            }}>
+                                <h3 style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px'
+                                }}>
+                                    <FileText size={20} style={{ color: '#8b5cf6' }} />
+                                    종목 분석 리포트
+                                </h3>
+                                <p style={{
+                                    color: '#94a3b8',
+                                    fontSize: '0.9rem',
+                                    marginBottom: '20px',
+                                    lineHeight: '1.5'
+                                }}>
+                                    주요 종목에 대한 상세 분석 리포트를 확인하세요. 기업 개요, 재무 분석, 투자 포인트를 제공합니다.
+                                </p>
+                                <div style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                                    gap: '12px'
+                                }}>
+                                    <Link
+                                        to="/blog/samsung-electronics"
+                                        style={{
+                                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                                            border: '1px solid rgba(139, 92, 246, 0.2)',
+                                            borderRadius: '10px',
+                                            padding: '16px',
+                                            color: '#e2e8f0',
+                                            textDecoration: 'none',
+                                            transition: 'all 0.2s'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.backgroundColor = 'rgba(139, 92, 246, 0.2)';
+                                            e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.4)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.backgroundColor = 'rgba(139, 92, 246, 0.1)';
+                                            e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.2)';
+                                        }}
+                                    >
+                                        <div style={{ fontWeight: '600', marginBottom: '4px' }}>삼성전자</div>
+                                        <div style={{ fontSize: '0.8rem', color: '#a78bfa' }}>반도체 · 전자</div>
+                                    </Link>
+                                    <Link
+                                        to="/blog/sk-hynix"
+                                        style={{
+                                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                                            border: '1px solid rgba(139, 92, 246, 0.2)',
+                                            borderRadius: '10px',
+                                            padding: '16px',
+                                            color: '#e2e8f0',
+                                            textDecoration: 'none',
+                                            transition: 'all 0.2s'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.backgroundColor = 'rgba(139, 92, 246, 0.2)';
+                                            e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.4)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.backgroundColor = 'rgba(139, 92, 246, 0.1)';
+                                            e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.2)';
+                                        }}
+                                    >
+                                        <div style={{ fontWeight: '600', marginBottom: '4px' }}>SK하이닉스</div>
+                                        <div style={{ fontSize: '0.8rem', color: '#a78bfa' }}>메모리 반도체</div>
+                                    </Link>
+                                    <Link
+                                        to="/blog/hyundai-motor"
+                                        style={{
+                                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                                            border: '1px solid rgba(139, 92, 246, 0.2)',
+                                            borderRadius: '10px',
+                                            padding: '16px',
+                                            color: '#e2e8f0',
+                                            textDecoration: 'none',
+                                            transition: 'all 0.2s'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.backgroundColor = 'rgba(139, 92, 246, 0.2)';
+                                            e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.4)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.backgroundColor = 'rgba(139, 92, 246, 0.1)';
+                                            e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.2)';
+                                        }}
+                                    >
+                                        <div style={{ fontWeight: '600', marginBottom: '4px' }}>현대자동차</div>
+                                        <div style={{ fontSize: '0.8rem', color: '#a78bfa' }}>완성차 · EV</div>
+                                    </Link>
+                                    <Link
+                                        to="/blog/lg-energy-solution"
+                                        style={{
+                                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                                            border: '1px solid rgba(139, 92, 246, 0.2)',
+                                            borderRadius: '10px',
+                                            padding: '16px',
+                                            color: '#e2e8f0',
+                                            textDecoration: 'none',
+                                            transition: 'all 0.2s'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.backgroundColor = 'rgba(139, 92, 246, 0.2)';
+                                            e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.4)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.backgroundColor = 'rgba(139, 92, 246, 0.1)';
+                                            e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.2)';
+                                        }}
+                                    >
+                                        <div style={{ fontWeight: '600', marginBottom: '4px' }}>LG에너지솔루션</div>
+                                        <div style={{ fontSize: '0.8rem', color: '#a78bfa' }}>배터리</div>
+                                    </Link>
+                                    <Link
+                                        to="/blog/samsung-biologics"
+                                        style={{
+                                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                                            border: '1px solid rgba(139, 92, 246, 0.2)',
+                                            borderRadius: '10px',
+                                            padding: '16px',
+                                            color: '#e2e8f0',
+                                            textDecoration: 'none',
+                                            transition: 'all 0.2s'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.backgroundColor = 'rgba(139, 92, 246, 0.2)';
+                                            e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.4)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.backgroundColor = 'rgba(139, 92, 246, 0.1)';
+                                            e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.2)';
+                                        }}
+                                    >
+                                        <div style={{ fontWeight: '600', marginBottom: '4px' }}>삼성바이오로직스</div>
+                                        <div style={{ fontSize: '0.8rem', color: '#a78bfa' }}>바이오 CMO</div>
+                                    </Link>
+                                    <Link
+                                        to="/blog/hanwha-aerospace"
+                                        style={{
+                                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                                            border: '1px solid rgba(139, 92, 246, 0.2)',
+                                            borderRadius: '10px',
+                                            padding: '16px',
+                                            color: '#e2e8f0',
+                                            textDecoration: 'none',
+                                            transition: 'all 0.2s'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.backgroundColor = 'rgba(139, 92, 246, 0.2)';
+                                            e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.4)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.backgroundColor = 'rgba(139, 92, 246, 0.1)';
+                                            e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.2)';
+                                        }}
+                                    >
+                                        <div style={{ fontWeight: '600', marginBottom: '4px' }}>한화에어로스페이스</div>
+                                        <div style={{ fontSize: '0.8rem', color: '#a78bfa' }}>방산 · 우주</div>
+                                    </Link>
                                 </div>
                             </div>
                         </div>

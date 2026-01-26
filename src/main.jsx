@@ -13,6 +13,10 @@ import HyundaiMotor from './pages/blog/HyundaiMotor.jsx'
 import LGEnergySolution from './pages/blog/LGEnergySolution.jsx'
 import SamsungBiologics from './pages/blog/SamsungBiologics.jsx'
 import HanwhaAerospace from './pages/blog/HanwhaAerospace.jsx'
+import Kia from './pages/blog/Kia.jsx'
+import Naver from './pages/blog/Naver.jsx'
+import Kakao from './pages/blog/Kakao.jsx'
+import NotFound from './pages/NotFound.jsx'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -30,7 +34,11 @@ ReactDOM.createRoot(document.getElementById('root')).render(
                     <Route path="/blog/lg-energy-solution" element={<LGEnergySolution />} />
                     <Route path="/blog/samsung-biologics" element={<SamsungBiologics />} />
                     <Route path="/blog/hanwha-aerospace" element={<HanwhaAerospace />} />
+                    <Route path="/blog/kia" element={<Kia />} />
+                    <Route path="/blog/naver" element={<Naver />} />
+                    <Route path="/blog/kakao" element={<Kakao />} />
                     <Route path="/:stockCode" element={<App />} />
+                    <Route path="*" element={<NotFound />} />
                 </Routes>
             </BrowserRouter>
         </HelmetProvider>

@@ -42,7 +42,10 @@ const blogPages = [
   'hyundai-motor',
   'lg-energy-solution',
   'samsung-biologics',
-  'hanwha-aerospace'
+  'hanwha-aerospace',
+  'kia',
+  'naver',
+  'kakao'
 ];
 
 // Generate sitemap XML
