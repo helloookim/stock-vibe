@@ -35,6 +35,16 @@ if (fs.existsSync(separateIndexPath)) {
 
 console.log(`Generating sitemap for ${stockCodes.size} stocks...`);
 
+// Blog pages
+const blogPages = [
+  'samsung-electronics',
+  'sk-hynix',
+  'hyundai-motor',
+  'lg-energy-solution',
+  'samsung-biologics',
+  'hanwha-aerospace'
+];
+
 // Generate sitemap XML
 let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -66,6 +76,19 @@ let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
   </url>
 `;
 
+// Add blog pages
+blogPages.forEach(slug => {
+  sitemap += `  <url>
+    <loc>${baseUrl}/blog/${slug}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+`});
+
+sitemap += `  <!-- Stock Pages -->
+`;
+
 // Add all stock pages (sorted for consistency)
 const sortedCodes = Array.from(stockCodes).sort();
 sortedCodes.forEach(code => {
@@ -86,4 +109,4 @@ fs.writeFileSync(sitemapPath, sitemap);
 
 console.log(`✅ Sitemap generated successfully!`);
 console.log(`📍 Location: ${sitemapPath}`);
-console.log(`📊 Total URLs: ${sortedCodes.length + 4} (1 homepage + 3 static pages + ${sortedCodes.length} stocks)`);
+console.log(`📊 Total URLs: ${sortedCodes.length + 4 + blogPages.length} (1 homepage + 3 static pages + ${blogPages.length} blog pages + ${sortedCodes.length} stocks)`);
