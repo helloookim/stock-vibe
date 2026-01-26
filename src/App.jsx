@@ -231,7 +231,10 @@ const App = () => {
 
     // Sync URL with selected code (only on user selection)
     useEffect(() => {
-        if (!dataLoading && selectedCode && !isInvalidCode) {
+        // Don't do anything if we have an invalid code
+        if (isInvalidCode) return;
+
+        if (!dataLoading && selectedCode) {
             const pathCode = location.pathname.slice(1);
 
             // If this change came from URL, don't navigate
@@ -289,9 +292,12 @@ const App = () => {
     }, [searchTerm, sortBy, financialRawData, marketCapData]);
 
     useEffect(() => {
-        // Only set default company if no stock code in URL and not invalid code
+        // Don't do anything if we have an invalid code
+        if (isInvalidCode) return;
+
+        // Only set default company if no stock code in URL
         const pathCode = location.pathname.slice(1);
-        if (companyList.length > 0 && !selectedCode && !pathCode && !isInvalidCode) {
+        if (companyList.length > 0 && !selectedCode && !pathCode) {
             setSelectedCode(companyList[0].code);
         }
     }, [companyList, selectedCode, location.pathname, isInvalidCode]);
