@@ -210,17 +210,17 @@ const App = () => {
     useEffect(() => {
         if (dataLoading) return; // Wait for data to load
 
-        const pathCode = location.pathname.slice(1) || '005930'; // Default to Samsung
+        const pathCode = location.pathname.slice(1);
 
         if (pathCode && financialRawData[pathCode]) {
-            // Only update if different
+            // Valid stock code - update if different
             if (pathCode !== selectedCode) {
                 isUrlChangeRef.current = true; // Mark this as URL-driven change
                 setSelectedCode(pathCode);
             }
-        } else if (Object.keys(financialRawData).length > 0) {
-            // Invalid code, redirect to default
-            navigate('/005930', { replace: true });
+        } else if (Object.keys(financialRawData).length > 0 && pathCode) {
+            // Invalid stock code, redirect to home
+            navigate('/', { replace: true });
         }
     }, [location.pathname, financialRawData, dataLoading]);
 
