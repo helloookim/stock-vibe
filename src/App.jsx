@@ -7,6 +7,7 @@ import {
 } from 'recharts';
 import { Search, ArrowUpDown, ChevronLeft, ChevronRight, Menu, X, Info } from 'lucide-react';
 import { loadAllFinancialData, loadAllAnnualFinancialData, loadAllEpsData } from './dataLoader';
+import NotFound from './pages/NotFound';
 
 // Info Tooltip Component
 const InfoTooltip = ({ text }) => {
@@ -223,9 +224,8 @@ const App = () => {
                 setSelectedCode(pathCode);
             }
         } else if (Object.keys(financialRawData).length > 0 && pathCode) {
-            // Invalid stock code, redirect to 404
+            // Invalid stock code - show 404
             setIsInvalidCode(true);
-            navigate('/not-found', { replace: true });
         }
     }, [location.pathname, financialRawData, dataLoading]);
 
@@ -520,6 +520,11 @@ const App = () => {
                 </div>
             </div>
         );
+    }
+
+    // Show 404 page for invalid stock codes
+    if (isInvalidCode) {
+        return <NotFound />;
     }
 
     return (
