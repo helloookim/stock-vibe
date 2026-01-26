@@ -1,9 +1,19 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Search, Menu, BarChart3, TrendingUp, PieChart } from 'lucide-react';
+import { Search, Menu, X, BarChart3, TrendingUp, PieChart, ArrowUpDown } from 'lucide-react';
+import { loadAllFinancialData } from '../dataLoader';
 
 const Home = () => {
+    const navigate = useNavigate();
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [financialRawData, setFinancialRawData] = useState({});
+    const [marketCapData, setMarketCapData] = useState({});
+    const [dataLoading, setDataLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [sortBy, setSortBy] = useState('revenue');
+    const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
+
     const popularStocks = [
         { code: '005930', name: '삼성전자' },
         { code: '000660', name: 'SK하이닉스' },
@@ -12,6 +22,64 @@ const Home = () => {
         { code: '035420', name: 'NAVER' },
         { code: '035720', name: '카카오' },
     ];
+
+    // Load financial data for sidebar
+    useEffect(() => {
+        async function loadData() {
+            setDataLoading(true);
+            try {
+                const [financial, marketCap] = await Promise.all([
+                    loadAllFinancialData(),
+                    fetch('/market_cap_data.json').then(r => r.json())
+                ]);
+                setFinancialRawData(financial || {});
+                setMarketCapData(marketCap || {});
+            } catch (error) {
+                console.error('Error loading data:', error);
+            } finally {
+                setDataLoading(false);
+            }
+        }
+        loadData();
+    }, []);
+
+    const companyList = useMemo(() => {
+        let list = Object.entries(financialRawData).map(([code, info]) => {
+            const lastEntry = info.history && info.history.length > 0 ? info.history[info.history.length - 1] : null;
+            const latestRevenue = lastEntry ? (lastEntry.revenue || 0) : 0;
+            const latestOpProfit = lastEntry ? (lastEntry.op_profit || 0) : 0;
+            const marketCap = marketCapData[code]?.market_cap || 0;
+
+            return {
+                code,
+                name: info.name,
+                latestRevenue,
+                latestOpProfit,
+                marketCap
+            };
+        })
+        .filter(c => {
+            const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.code.includes(searchTerm);
+            return matchesSearch;
+        });
+
+        if (sortBy === 'revenue') {
+            list.sort((a, b) => b.latestRevenue - a.latestRevenue);
+        } else if (sortBy === 'op_profit') {
+            list.sort((a, b) => b.latestOpProfit - a.latestOpProfit);
+        } else if (sortBy === 'market_cap') {
+            list.sort((a, b) => b.marketCap - a.marketCap);
+        } else {
+            list.sort((a, b) => a.code.localeCompare(b.code));
+        }
+
+        return list;
+    }, [searchTerm, sortBy, financialRawData, marketCapData]);
+
+    const handleStockSelect = (code) => {
+        setIsMobileMenuOpen(false);
+        navigate(`/${code}`);
+    };
 
     return (
         <>
@@ -32,6 +100,255 @@ const Home = () => {
                 display: 'flex',
                 flexDirection: 'column'
             }}>
+                {/* Header with Hamburger Menu */}
+                <header style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: '56px',
+                    backgroundColor: '#0f172a',
+                    borderBottom: '1px solid #1e293b',
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '0 16px',
+                    zIndex: 100
+                }}>
+                    <button
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#e2e8f0',
+                            cursor: 'pointer',
+                            padding: '8px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}
+                        aria-label="Toggle Menu"
+                    >
+                        {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                    </button>
+                    <span style={{
+                        marginLeft: '12px',
+                        fontSize: '1.1rem',
+                        fontWeight: '600',
+                        color: '#60a5fa'
+                    }}>
+                        KSTOCKVIEW
+                    </span>
+                </header>
+
+                {/* Mobile Overlay */}
+                {isMobileMenuOpen && (
+                    <div
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        style={{
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                            zIndex: 150
+                        }}
+                    />
+                )}
+
+                {/* Sidebar */}
+                <aside style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: isMobileMenuOpen ? 0 : '-280px',
+                    width: '280px',
+                    height: '100vh',
+                    backgroundColor: '#1e293b',
+                    zIndex: 200,
+                    transition: 'left 0.3s ease',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    boxShadow: isMobileMenuOpen ? '4px 0 20px rgba(0, 0, 0, 0.3)' : 'none'
+                }}>
+                    {/* Sidebar Header */}
+                    <div style={{
+                        padding: '16px',
+                        borderBottom: '1px solid #334155'
+                    }}>
+                        <div style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: '16px'
+                        }}>
+                            <h2 style={{
+                                fontSize: '1.2rem',
+                                fontWeight: '700',
+                                color: '#60a5fa',
+                                margin: 0
+                            }}>
+                                KSTOCKVIEW
+                            </h2>
+                            <button
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    color: '#94a3b8',
+                                    cursor: 'pointer',
+                                    padding: '4px'
+                                }}
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {/* Sort Dropdown */}
+                        <div style={{ position: 'relative', marginBottom: '12px' }}>
+                            <button
+                                onClick={() => setSortDropdownOpen(prev => !prev)}
+                                style={{
+                                    width: '100%',
+                                    padding: '8px 12px',
+                                    backgroundColor: '#0f172a',
+                                    border: '1px solid #334155',
+                                    borderRadius: '6px',
+                                    color: '#e2e8f0',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    fontSize: '0.85rem'
+                                }}
+                            >
+                                <ArrowUpDown size={16} />
+                                <span>
+                                    {sortBy === 'revenue' ? '매출순' :
+                                        sortBy === 'op_profit' ? '영업이익순' :
+                                        sortBy === 'market_cap' ? '시가총액순' : '코드순'}
+                                </span>
+                            </button>
+                            {sortDropdownOpen && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '100%',
+                                    left: 0,
+                                    right: 0,
+                                    backgroundColor: '#0f172a',
+                                    border: '1px solid #334155',
+                                    borderRadius: '6px',
+                                    marginTop: '4px',
+                                    zIndex: 10,
+                                    overflow: 'hidden'
+                                }}>
+                                    {['revenue', 'market_cap', 'op_profit', 'code'].map((sort) => (
+                                        <button
+                                            key={sort}
+                                            onClick={() => { setSortBy(sort); setSortDropdownOpen(false); }}
+                                            style={{
+                                                width: '100%',
+                                                padding: '10px 12px',
+                                                background: sortBy === sort ? '#334155' : 'transparent',
+                                                border: 'none',
+                                                color: sortBy === sort ? '#60a5fa' : '#e2e8f0',
+                                                cursor: 'pointer',
+                                                textAlign: 'left',
+                                                fontSize: '0.85rem'
+                                            }}
+                                        >
+                                            {sort === 'revenue' ? '매출순' :
+                                                sort === 'op_profit' ? '영업이익순' :
+                                                sort === 'market_cap' ? '시가총액순' : '코드순'}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Search Box */}
+                        <div style={{
+                            position: 'relative',
+                            display: 'flex',
+                            alignItems: 'center'
+                        }}>
+                            <Search size={18} style={{
+                                position: 'absolute',
+                                left: '12px',
+                                color: '#64748b'
+                            }} />
+                            <input
+                                type="text"
+                                placeholder="티커 또는 회사명 검색..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                style={{
+                                    width: '100%',
+                                    padding: '10px 12px 10px 40px',
+                                    backgroundColor: '#0f172a',
+                                    border: '1px solid #334155',
+                                    borderRadius: '6px',
+                                    color: '#e2e8f0',
+                                    fontSize: '0.9rem',
+                                    outline: 'none'
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Stock List */}
+                    <div style={{
+                        flex: 1,
+                        overflowY: 'auto',
+                        padding: '8px'
+                    }}>
+                        {dataLoading ? (
+                            <div style={{ textAlign: 'center', padding: '20px', color: '#94a3b8' }}>
+                                로딩 중...
+                            </div>
+                        ) : (
+                            companyList.map((comp) => (
+                                <button
+                                    key={comp.code}
+                                    onClick={() => handleStockSelect(comp.code)}
+                                    style={{
+                                        width: '100%',
+                                        padding: '12px',
+                                        backgroundColor: 'transparent',
+                                        border: 'none',
+                                        borderRadius: '6px',
+                                        color: '#e2e8f0',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '12px',
+                                        textAlign: 'left',
+                                        transition: 'background-color 0.2s'
+                                    }}
+                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#334155'}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                >
+                                    <span style={{
+                                        color: '#60a5fa',
+                                        fontWeight: '600',
+                                        fontSize: '0.8rem',
+                                        minWidth: '60px'
+                                    }}>
+                                        {comp.code}
+                                    </span>
+                                    <span style={{
+                                        fontSize: '0.9rem',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap'
+                                    }}>
+                                        {comp.name}
+                                    </span>
+                                </button>
+                            ))
+                        )}
+                    </div>
+                </aside>
+
                 {/* Hero Section */}
                 <main style={{
                     flex: 1,
@@ -39,7 +356,7 @@ const Home = () => {
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    padding: '40px 20px',
+                    padding: '80px 20px 40px',
                     textAlign: 'center'
                 }}>
                     {/* Logo */}
@@ -109,7 +426,7 @@ const Home = () => {
                         </div>
                     </div>
 
-                    {/* How to Use - Mobile */}
+                    {/* How to Use */}
                     <div style={{
                         backgroundColor: '#1e293b',
                         border: '1px solid #334155',
@@ -134,7 +451,7 @@ const Home = () => {
                             gap: '16px',
                             textAlign: 'left'
                         }}>
-                            {/* Mobile instruction */}
+                            {/* Menu instruction */}
                             <div style={{
                                 display: 'flex',
                                 alignItems: 'flex-start',
@@ -153,15 +470,15 @@ const Home = () => {
                                 </div>
                                 <div>
                                     <p style={{ color: '#e2e8f0', margin: '0 0 4px 0', fontWeight: '500' }}>
-                                        모바일
+                                        종목 검색
                                     </p>
                                     <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.9rem', lineHeight: '1.5' }}>
-                                        왼쪽 상단의 <strong style={{ color: '#60a5fa' }}>햄버거 메뉴</strong>를 눌러 종목을 검색하세요
+                                        왼쪽 상단의 <strong style={{ color: '#60a5fa' }}>메뉴 버튼</strong>을 눌러 종목을 검색하세요
                                     </p>
                                 </div>
                             </div>
 
-                            {/* Desktop instruction */}
+                            {/* Search instruction */}
                             <div style={{
                                 display: 'flex',
                                 alignItems: 'flex-start',
@@ -180,10 +497,10 @@ const Home = () => {
                                 </div>
                                 <div>
                                     <p style={{ color: '#e2e8f0', margin: '0 0 4px 0', fontWeight: '500' }}>
-                                        데스크톱
+                                        검색 & 정렬
                                     </p>
                                     <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.9rem', lineHeight: '1.5' }}>
-                                        왼쪽 <strong style={{ color: '#60a5fa' }}>사이드바</strong>에서 종목을 검색하거나 선택하세요
+                                        회사명 또는 종목코드로 검색하고, 매출/시총/영업이익 순으로 정렬할 수 있습니다
                                     </p>
                                 </div>
                             </div>
