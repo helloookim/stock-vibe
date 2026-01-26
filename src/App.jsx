@@ -284,10 +284,12 @@ const App = () => {
     }, [searchTerm, sortBy, financialRawData, marketCapData]);
 
     useEffect(() => {
-        if (companyList.length > 0 && !companyList.find(c => c.code === selectedCode)) {
+        // Only set default company if no stock code in URL (home page redirect case)
+        const pathCode = location.pathname.slice(1);
+        if (companyList.length > 0 && !selectedCode && !pathCode) {
             setSelectedCode(companyList[0].code);
         }
-    }, [companyList, selectedCode]);
+    }, [companyList, selectedCode, location.pathname]);
 
     const currentCompany = viewMode === 'quarterly' ? financialRawData[selectedCode] : financialAnnualData[selectedCode];
 
