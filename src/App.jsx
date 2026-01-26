@@ -206,6 +206,9 @@ const App = () => {
         loadData();
     }, []);
 
+    // Track if we have an invalid stock code
+    const [isInvalidCode, setIsInvalidCode] = useState(false);
+
     // Sync selected code with URL on direct navigation (browser back/forward, direct URL)
     useEffect(() => {
         if (dataLoading) return; // Wait for data to load
@@ -214,19 +217,21 @@ const App = () => {
 
         if (pathCode && financialRawData[pathCode]) {
             // Valid stock code - update if different
+            setIsInvalidCode(false);
             if (pathCode !== selectedCode) {
                 isUrlChangeRef.current = true; // Mark this as URL-driven change
                 setSelectedCode(pathCode);
             }
         } else if (Object.keys(financialRawData).length > 0 && pathCode) {
             // Invalid stock code, redirect to 404
+            setIsInvalidCode(true);
             navigate('/not-found', { replace: true });
         }
     }, [location.pathname, financialRawData, dataLoading]);
 
     // Sync URL with selected code (only on user selection)
     useEffect(() => {
-        if (!dataLoading && selectedCode) {
+        if (!dataLoading && selectedCode && !isInvalidCode) {
             const pathCode = location.pathname.slice(1);
 
             // If this change came from URL, don't navigate
@@ -240,7 +245,7 @@ const App = () => {
                 navigate(`/${selectedCode}`, { replace: true });
             }
         }
-    }, [selectedCode, dataLoading, navigate, location.pathname]);
+    }, [selectedCode, dataLoading, navigate, location.pathname, isInvalidCode]);
 
     const companyList = useMemo(() => {
         let list = Object.entries(financialRawData).map(([code, info]) => {
@@ -284,12 +289,12 @@ const App = () => {
     }, [searchTerm, sortBy, financialRawData, marketCapData]);
 
     useEffect(() => {
-        // Only set default company if no stock code in URL (home page redirect case)
+        // Only set default company if no stock code in URL and not invalid code
         const pathCode = location.pathname.slice(1);
-        if (companyList.length > 0 && !selectedCode && !pathCode) {
+        if (companyList.length > 0 && !selectedCode && !pathCode && !isInvalidCode) {
             setSelectedCode(companyList[0].code);
         }
-    }, [companyList, selectedCode, location.pathname]);
+    }, [companyList, selectedCode, location.pathname, isInvalidCode]);
 
     const currentCompany = viewMode === 'quarterly' ? financialRawData[selectedCode] : financialAnnualData[selectedCode];
 
