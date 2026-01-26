@@ -184,18 +184,26 @@ const App = () => {
                 setEpsData(eps || {});
                 setMarketCapData(marketCap || {});
 
-                // Set initial selected code to top revenue company
+                // Check if URL has a stock code
+                const pathCode = window.location.pathname.slice(1);
+
+                // Only set default company if:
+                // 1. No code in URL, OR
+                // 2. Code in URL is valid
+                // If code is invalid, don't set anything (let 404 show)
                 const codes = Object.keys(financial || {});
                 if (codes.length > 0) {
-                    // Sort by latest revenue to get top company
-                    const sortedByRevenue = codes.sort((a, b) => {
-                        const aLast = financial[a]?.history?.[financial[a].history.length - 1];
-                        const bLast = financial[b]?.history?.[financial[b].history.length - 1];
-                        const aRev = aLast?.revenue || 0;
-                        const bRev = bLast?.revenue || 0;
-                        return bRev - aRev;
-                    });
-                    setSelectedCode(sortedByRevenue[0]);
+                    if (!pathCode || financial[pathCode]) {
+                        // Valid code or no code - set selected
+                        if (pathCode && financial[pathCode]) {
+                            setSelectedCode(pathCode);
+                        } else if (!pathCode) {
+                            // No code in URL - this is home page, don't set default
+                            // (Home component handles this separately)
+                        }
+                    }
+                    // If pathCode exists but is invalid, don't set selectedCode
+                    // This will let isInvalidCode logic handle it
                 }
             } catch (error) {
                 console.error('Error loading data:', error);
@@ -237,6 +245,11 @@ const App = () => {
         if (!dataLoading && selectedCode) {
             const pathCode = location.pathname.slice(1);
 
+            // If URL has an invalid code, don't navigate (let 404 show)
+            if (pathCode && !financialRawData[pathCode]) {
+                return;
+            }
+
             // If this change came from URL, don't navigate
             if (isUrlChangeRef.current) {
                 isUrlChangeRef.current = false; // Reset the flag
@@ -248,7 +261,7 @@ const App = () => {
                 navigate(`/${selectedCode}`, { replace: true });
             }
         }
-    }, [selectedCode, dataLoading, navigate, location.pathname, isInvalidCode]);
+    }, [selectedCode, dataLoading, navigate, location.pathname, isInvalidCode, financialRawData]);
 
     const companyList = useMemo(() => {
         let list = Object.entries(financialRawData).map(([code, info]) => {
@@ -297,10 +310,16 @@ const App = () => {
 
         // Only set default company if no stock code in URL
         const pathCode = location.pathname.slice(1);
+
+        // If URL has an invalid code, don't set default (let 404 show)
+        if (pathCode && Object.keys(financialRawData).length > 0 && !financialRawData[pathCode]) {
+            return;
+        }
+
         if (companyList.length > 0 && !selectedCode && !pathCode) {
             setSelectedCode(companyList[0].code);
         }
-    }, [companyList, selectedCode, location.pathname, isInvalidCode]);
+    }, [companyList, selectedCode, location.pathname, isInvalidCode, financialRawData]);
 
     const currentCompany = viewMode === 'quarterly' ? financialRawData[selectedCode] : financialAnnualData[selectedCode];
 
