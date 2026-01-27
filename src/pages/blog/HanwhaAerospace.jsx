@@ -303,7 +303,7 @@ const HanwhaAerospace = () => {
                                 분기별 재무 데이터를 인터랙티브 차트로 확인하세요.
                                 K-방산 수출 호조와 함께 급성장하는 실적 추이를 직접 분석해보세요.
                             </p>
-                            <Link to="/012450" style={{
+                            <Link to="/stocks/012450" style={{
                                 display: 'inline-flex', alignItems: 'center', gap: '8px',
                                 background: 'linear-gradient(135deg, #f97316 0%, #eab308 100%)',
                                 color: '#fff', padding: '14px 32px', borderRadius: '12px',
@@ -329,9 +329,9 @@ const HanwhaAerospace = () => {
                     <div style={{ marginTop: '40px', padding: '30px', background: 'rgba(30, 41, 59, 0.6)', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
                         <h3 style={{ color: '#e2e8f0', fontSize: '1.2rem', marginBottom: '20px' }}>관련 기업 분석</h3>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-                            <Link to="/009830" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>한화솔루션 (009830)</Link>
-                            <Link to="/042660" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>한화오션 (042660)</Link>
-                            <Link to="/047810" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>한국항공우주 (047810)</Link>
+                            <Link to="/stocks/009830" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>한화솔루션 (009830)</Link>
+                            <Link to="/stocks/042660" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>한화오션 (042660)</Link>
+                            <Link to="/stocks/047810" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>한국항공우주 (047810)</Link>
                         </div>
                     </div>
 

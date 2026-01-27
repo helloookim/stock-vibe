@@ -457,7 +457,7 @@ const SamsungElectronics = () => {
                                 YoY(전년 동기 대비) 성장률, 영업이익률 추이 등 투자 분석에 필요한 모든 데이터를 제공합니다.
                             </p>
                             <Link
-                                to="/005930"
+                                to="/stocks/005930"
                                 style={{
                                     display: 'inline-flex',
                                     alignItems: 'center',
@@ -531,7 +531,7 @@ const SamsungElectronics = () => {
                             gap: '12px'
                         }}>
                             <Link
-                                to="/000660"
+                                to="/stocks/000660"
                                 style={{
                                     color: '#60a5fa',
                                     background: '#1e3a5f',
@@ -544,7 +544,7 @@ const SamsungElectronics = () => {
                                 SK하이닉스 (000660)
                             </Link>
                             <Link
-                                to="/005380"
+                                to="/stocks/005380"
                                 style={{
                                     color: '#60a5fa',
                                     background: '#1e3a5f',
@@ -557,7 +557,7 @@ const SamsungElectronics = () => {
                                 현대자동차 (005380)
                             </Link>
                             <Link
-                                to="/035420"
+                                to="/stocks/035420"
                                 style={{
                                     color: '#60a5fa',
                                     background: '#1e3a5f',

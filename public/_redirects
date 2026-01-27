@@ -1,1 +1,13 @@
-/*    /index.html   200
+# 정적 페이지들은 리다이렉트하지 않음 (먼저 매칭되어야 함)
+/privacy        /index.html   200
+/terms          /index.html   200
+/contact        /index.html   200
+/blog/*         /index.html   200
+/stocks/*       /index.html   200
+
+# 기존 주식 페이지 URL을 새 /stocks/ 경로로 301 리다이렉트 (SEO 보존)
+# 6자리 숫자로 된 종목코드 경로만 리다이렉트
+/:stockCode     /stocks/:stockCode  301
+
+# SPA fallback (마지막에 위치해야 함)
+/*              /index.html   200
