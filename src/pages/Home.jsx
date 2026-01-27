@@ -415,14 +415,50 @@ const Home = () => {
                                 maxWidth: '700px',
                                 marginTop: '40px'
                             }}>
-                                <h3 style={{
+                                <div style={{
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: '8px'
+                                    justifyContent: 'space-between',
+                                    flexWrap: 'wrap',
+                                    gap: '12px'
                                 }}>
-                                    <FileText size={20} style={{ color: '#8b5cf6' }} />
-                                    종목 분석 리포트
-                                </h3>
+                                    <h3 style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px',
+                                        margin: 0
+                                    }}>
+                                        <FileText size={20} style={{ color: '#8b5cf6' }} />
+                                        종목 분석 리포트
+                                    </h3>
+                                    <Link
+                                        to="/blogs"
+                                        style={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '4px',
+                                            backgroundColor: 'rgba(139, 92, 246, 0.15)',
+                                            border: '1px solid rgba(139, 92, 246, 0.3)',
+                                            borderRadius: '8px',
+                                            padding: '8px 16px',
+                                            color: '#a78bfa',
+                                            textDecoration: 'none',
+                                            fontSize: '0.85rem',
+                                            fontWeight: '600',
+                                            transition: 'all 0.2s'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.backgroundColor = 'rgba(139, 92, 246, 0.25)';
+                                            e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.5)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.backgroundColor = 'rgba(139, 92, 246, 0.15)';
+                                            e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.3)';
+                                        }}
+                                    >
+                                        전체보기 →
+                                    </Link>
+                                </div>
                                 <p style={{
                                     color: '#94a3b8',
                                     fontSize: '0.9rem',

@@ -16,6 +16,7 @@ import HanwhaAerospace from './pages/blog/HanwhaAerospace.jsx'
 import Kia from './pages/blog/Kia.jsx'
 import Naver from './pages/blog/Naver.jsx'
 import Kakao from './pages/blog/Kakao.jsx'
+import BlogList from './pages/BlogList.jsx'
 import NotFound from './pages/NotFound.jsx'
 import './index.css'
 
@@ -37,6 +38,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
                     <Route path="/blog/kia" element={<Kia />} />
                     <Route path="/blog/naver" element={<Naver />} />
                     <Route path="/blog/kakao" element={<Kakao />} />
+                    <Route path="/blogs" element={<BlogList />} />
                     <Route path="/stocks/:stockCode" element={<App />} />
                     <Route path="*" element={<NotFound />} />
                 </Routes>
