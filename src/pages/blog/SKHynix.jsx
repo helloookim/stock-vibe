@@ -485,7 +485,7 @@ const SKHynix = () => {
                                 HBM 성장과 함께 급변하는 실적 추이를 직접 확인해보세요.
                             </p>
                             <Link
-                                to="/stocks/000660"
+                                to="/000660"
                                 style={{
                                     display: 'inline-flex',
                                     alignItems: 'center',
@@ -541,13 +541,13 @@ const SKHynix = () => {
                             관련 기업 분석
                         </h3>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-                            <Link to="/stocks/005930" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>
+                            <Link to="/005930" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>
                                 삼성전자 (005930)
                             </Link>
-                            <Link to="/stocks/042700" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>
+                            <Link to="/042700" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>
                                 한미반도체 (042700)
                             </Link>
-                            <Link to="/stocks/403870" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>
+                            <Link to="/403870" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>
                                 HPSP (403870)
                             </Link>
                         </div>

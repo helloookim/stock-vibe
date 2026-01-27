@@ -184,9 +184,8 @@ const App = () => {
                 setEpsData(eps || {});
                 setMarketCapData(marketCap || {});
 
-                // Check if URL has a stock code (now under /stocks/ prefix)
-                const pathname = window.location.pathname;
-                const pathCode = pathname.startsWith('/stocks/') ? pathname.slice(8) : '';
+                // Check if URL has a stock code
+                const pathCode = window.location.pathname.slice(1);
 
                 // Only set default company if:
                 // 1. No code in URL, OR
@@ -223,8 +222,7 @@ const App = () => {
     useEffect(() => {
         if (dataLoading) return; // Wait for data to load
 
-        const pathname = location.pathname;
-        const pathCode = pathname.startsWith('/stocks/') ? pathname.slice(8) : '';
+        const pathCode = location.pathname.slice(1);
 
         if (pathCode && financialRawData[pathCode]) {
             // Valid stock code - update if different
@@ -245,8 +243,7 @@ const App = () => {
         if (isInvalidCode) return;
 
         if (!dataLoading && selectedCode) {
-            const pathname = location.pathname;
-            const pathCode = pathname.startsWith('/stocks/') ? pathname.slice(8) : '';
+            const pathCode = location.pathname.slice(1);
 
             // If URL has an invalid code, don't navigate (let 404 show)
             if (pathCode && !financialRawData[pathCode]) {
@@ -261,7 +258,7 @@ const App = () => {
 
             // User clicked a stock - update URL if different
             if (pathCode !== selectedCode) {
-                navigate(`/stocks/${selectedCode}`, { replace: true });
+                navigate(`/${selectedCode}`, { replace: true });
             }
         }
     }, [selectedCode, dataLoading, navigate, location.pathname, isInvalidCode, financialRawData]);
@@ -312,8 +309,7 @@ const App = () => {
         if (isInvalidCode) return;
 
         // Only set default company if no stock code in URL
-        const pathname = location.pathname;
-        const pathCode = pathname.startsWith('/stocks/') ? pathname.slice(8) : '';
+        const pathCode = location.pathname.slice(1);
 
         // If URL has an invalid code, don't set default (let 404 show)
         if (pathCode && Object.keys(financialRawData).length > 0 && !financialRawData[pathCode]) {
@@ -564,8 +560,8 @@ const App = () => {
                 <meta property="og:title" content={currentCompany?.name ? `${currentCompany.name} (${selectedCode}) 재무제표 & 실적 분석 | KStockView` : 'KStockView - 한국 주식 재무제표 분석'} />
                 <meta property="og:description" content={currentCompany?.name ? `${currentCompany.name}의 매출액, 영업이익, EPS 등 재무제표 실적을 차트로 확인하세요.` : '한국 상장 기업의 재무제표와 실적 데이터를 시각화하여 분석합니다.'} />
                 <meta property="og:type" content="website" />
-                <meta property="og:url" content={`https://kstockview.com/stocks/${selectedCode || ''}`} />
-                <link rel="canonical" href={`https://kstockview.com/stocks/${selectedCode || ''}`} />
+                <meta property="og:url" content={`https://kstockview.com/${selectedCode || ''}`} />
+                <link rel="canonical" href={`https://kstockview.com/${selectedCode || ''}`} />
             </Helmet>
             <div className="app-container">
                 {/* Mobile Header with Hamburger Menu */}

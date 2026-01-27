@@ -37,7 +37,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
                     <Route path="/blog/kia" element={<Kia />} />
                     <Route path="/blog/naver" element={<Naver />} />
                     <Route path="/blog/kakao" element={<Kakao />} />
-                    <Route path="/stocks/:stockCode" element={<App />} />
+                    <Route path="/:stockCode" element={<App />} />
                     <Route path="*" element={<NotFound />} />
                 </Routes>
             </BrowserRouter>

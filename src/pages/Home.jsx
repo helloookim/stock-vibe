@@ -79,7 +79,7 @@ const Home = () => {
 
     const handleStockSelect = (code) => {
         setIsMobileMenuOpen(false);
-        navigate(`/stocks/${code}`);
+        navigate(`/${code}`);
     };
 
     return (
@@ -377,7 +377,7 @@ const Home = () => {
                                     {popularStocks.map((stock) => (
                                         <Link
                                             key={stock.code}
-                                            to={`/stocks/${stock.code}`}
+                                            to={`/${stock.code}`}
                                             style={{
                                                 backgroundColor: 'rgba(30, 41, 59, 0.6)',
                                                 border: '1px solid rgba(255, 255, 255, 0.1)',

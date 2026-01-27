@@ -298,7 +298,7 @@ const SamsungBiologics = () => {
                                 상장 이후 분기별 재무 데이터를 인터랙티브 차트로 확인하세요.
                                 공장 가동에 따른 실적 성장 추이를 직접 분석해보세요.
                             </p>
-                            <Link to="/stocks/207940" style={{
+                            <Link to="/207940" style={{
                                 display: 'inline-flex', alignItems: 'center', gap: '8px',
                                 background: 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)',
                                 color: '#fff', padding: '14px 32px', borderRadius: '12px',
@@ -324,9 +324,9 @@ const SamsungBiologics = () => {
                     <div style={{ marginTop: '40px', padding: '30px', background: 'rgba(30, 41, 59, 0.6)', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
                         <h3 style={{ color: '#e2e8f0', fontSize: '1.2rem', marginBottom: '20px' }}>관련 기업 분석</h3>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-                            <Link to="/stocks/068270" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>셀트리온 (068270)</Link>
-                            <Link to="/stocks/326030" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>SK바이오팜 (326030)</Link>
-                            <Link to="/stocks/005930" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>삼성전자 (005930)</Link>
+                            <Link to="/068270" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>셀트리온 (068270)</Link>
+                            <Link to="/326030" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>SK바이오팜 (326030)</Link>
+                            <Link to="/005930" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>삼성전자 (005930)</Link>
                         </div>
                     </div>
 

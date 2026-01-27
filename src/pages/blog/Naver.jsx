@@ -265,7 +265,7 @@ const Naver = () => {
                             <p style={{ color: '#94a3b8', marginBottom: '25px', fontSize: '0.95rem' }}>
                                 분기별/연간 재무 데이터를 인터랙티브 차트로 확인하세요.
                             </p>
-                            <Link to="/stocks/035420" style={{
+                            <Link to="/035420" style={{
                                 display: 'inline-flex', alignItems: 'center', gap: '8px',
                                 background: 'linear-gradient(135deg, #22c55e 0%, #10b981 100%)',
                                 color: '#fff', padding: '14px 32px', borderRadius: '12px',
@@ -290,9 +290,9 @@ const Naver = () => {
                     <div style={{ marginTop: '40px', padding: '30px', background: 'rgba(30, 41, 59, 0.6)', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
                         <h3 style={{ color: '#e2e8f0', fontSize: '1.2rem', marginBottom: '20px' }}>관련 기업 분석</h3>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-                            <Link to="/stocks/035720" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>카카오 (035720)</Link>
-                            <Link to="/stocks/259960" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>크래프톤 (259960)</Link>
-                            <Link to="/stocks/036570" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>엔씨소프트 (036570)</Link>
+                            <Link to="/035720" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>카카오 (035720)</Link>
+                            <Link to="/259960" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>크래프톤 (259960)</Link>
+                            <Link to="/036570" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>엔씨소프트 (036570)</Link>
                         </div>
                     </div>
 

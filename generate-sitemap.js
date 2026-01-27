@@ -96,7 +96,7 @@ sitemap += `  <!-- Stock Pages -->
 const sortedCodes = Array.from(stockCodes).sort();
 sortedCodes.forEach(code => {
   sitemap += `  <url>
-    <loc>${baseUrl}/stocks/${code}</loc>
+    <loc>${baseUrl}/${code}</loc>
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
