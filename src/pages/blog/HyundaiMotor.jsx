@@ -311,7 +311,7 @@ const HyundaiMotor = () => {
                                 2016년부터 현재까지의 분기별/연간 재무 데이터를 인터랙티브 차트로 확인하세요.
                                 수익성 개선 추이와 함께 전기차 전환기의 실적 변화를 직접 분석해보세요.
                             </p>
-                            <Link to="/005380" style={{
+                            <Link to="/stocks/005380" style={{
                                 display: 'inline-flex', alignItems: 'center', gap: '8px',
                                 background: 'linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%)',
                                 color: '#fff', padding: '14px 32px', borderRadius: '12px',
@@ -340,9 +340,9 @@ const HyundaiMotor = () => {
                     <div style={{ marginTop: '40px', padding: '30px', background: 'rgba(30, 41, 59, 0.6)', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
                         <h3 style={{ color: '#e2e8f0', fontSize: '1.2rem', marginBottom: '20px' }}>관련 기업 분석</h3>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-                            <Link to="/000270" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>기아 (000270)</Link>
-                            <Link to="/012330" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>현대모비스 (012330)</Link>
-                            <Link to="/373220" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>LG에너지솔루션 (373220)</Link>
+                            <Link to="/stocks/000270" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>기아 (000270)</Link>
+                            <Link to="/stocks/012330" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>현대모비스 (012330)</Link>
+                            <Link to="/stocks/373220" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>LG에너지솔루션 (373220)</Link>
                         </div>
                     </div>
 

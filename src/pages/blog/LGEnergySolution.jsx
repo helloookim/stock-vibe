@@ -290,7 +290,7 @@ const LGEnergySolution = () => {
                                 상장 이후 분기별 재무 데이터를 인터랙티브 차트로 확인하세요.
                                 배터리 산업 사이클과 함께 변화하는 실적 추이를 직접 분석해보세요.
                             </p>
-                            <Link to="/373220" style={{
+                            <Link to="/stocks/373220" style={{
                                 display: 'inline-flex', alignItems: 'center', gap: '8px',
                                 background: 'linear-gradient(135deg, #22c55e 0%, #14b8a6 100%)',
                                 color: '#fff', padding: '14px 32px', borderRadius: '12px',
@@ -317,9 +317,9 @@ const LGEnergySolution = () => {
                     <div style={{ marginTop: '40px', padding: '30px', background: 'rgba(30, 41, 59, 0.6)', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
                         <h3 style={{ color: '#e2e8f0', fontSize: '1.2rem', marginBottom: '20px' }}>관련 기업 분석</h3>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-                            <Link to="/006400" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>삼성SDI (006400)</Link>
-                            <Link to="/051910" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>LG화학 (051910)</Link>
-                            <Link to="/005380" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>현대자동차 (005380)</Link>
+                            <Link to="/stocks/006400" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>삼성SDI (006400)</Link>
+                            <Link to="/stocks/051910" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>LG화학 (051910)</Link>
+                            <Link to="/stocks/005380" style={{ color: '#60a5fa', background: '#1e3a5f', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>현대자동차 (005380)</Link>
                         </div>
                     </div>
 
