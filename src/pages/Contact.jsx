@@ -1,9 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Mail, MessageSquare } from 'lucide-react';
+import LanguageToggle from '../components/LanguageToggle';
 
 const Contact = () => {
+    const { t } = useTranslation();
     // Override body overflow for this page
     React.useEffect(() => {
         document.body.style.overflow = 'auto';
@@ -17,8 +20,8 @@ const Contact = () => {
     return (
         <>
             <Helmet>
-                <title>문의하기 | KStockView</title>
-                <meta name="description" content="KStockView 서비스 문의 및 연락처 정보" />
+                <title>{t('contact.pageTitle')}</title>
+                <meta name="description" content={t('contact.pageDesc')} />
             </Helmet>
             <div style={{
                 minHeight: '100vh',
@@ -51,8 +54,9 @@ const Contact = () => {
                         onMouseLeave={(e) => e.target.style.color = '#60a5fa'}
                     >
                         <ArrowLeft size={18} />
-                        홈으로 돌아가기
+                        {t('contact.goHome')}
                     </Link>
+                    <LanguageToggle style={{ marginBottom: '30px' }} />
 
                     {/* Header */}
                     <header style={{
@@ -69,10 +73,10 @@ const Contact = () => {
                             color: 'transparent',
                             marginBottom: '10px'
                         }}>
-                            문의하기
+                            {t('contact.title')}
                         </h1>
                         <p style={{ color: '#94a3b8', fontSize: window.innerWidth > 768 ? '0.9rem' : '0.8rem' }}>
-                            서비스 이용과 관련하여 문의사항이 있으시면 연락주시기 바랍니다.
+                            {t('contact.subtitle')}
                         </p>
                     </header>
 
@@ -99,7 +103,7 @@ const Contact = () => {
                                     fontSize: window.innerWidth > 768 ? '1.5rem' : '1.2rem',
                                     margin: 0
                                 }}>
-                                    이메일 문의
+                                    {t('contact.emailInquiry')}
                                 </h2>
                             </div>
                             <div style={{
@@ -110,7 +114,7 @@ const Contact = () => {
                                 textAlign: 'center'
                             }}>
                                 <p style={{ color: '#94a3b8', marginBottom: '15px', fontSize: '0.9rem' }}>
-                                    문의 이메일
+                                    {t('contact.inquiryEmail')}
                                 </p>
                                 <a
                                     href="mailto:contact@kstockview.com"
@@ -155,7 +159,7 @@ const Contact = () => {
                                     fontSize: window.innerWidth > 768 ? '1.5rem' : '1.2rem',
                                     margin: 0
                                 }}>
-                                    문의 가능 내용
+                                    {t('contact.inquiryTypes')}
                                 </h2>
                             </div>
                             <ul style={{
@@ -164,11 +168,11 @@ const Contact = () => {
                                 lineHeight: '2',
                                 fontSize: '1rem'
                             }}>
-                                <li>데이터 오류 신고</li>
-                                <li>서비스 개선 제안</li>
-                                <li>기술적 문제 보고</li>
-                                <li>광고 및 제휴 문의</li>
-                                <li>기타 문의사항</li>
+                                <li>{t('contact.type1')}</li>
+                                <li>{t('contact.type2')}</li>
+                                <li>{t('contact.type3')}</li>
+                                <li>{t('contact.type4')}</li>
+                                <li>{t('contact.type5')}</li>
                             </ul>
                         </section>
 
@@ -180,9 +184,7 @@ const Contact = () => {
                                 border: '1px solid rgba(239, 68, 68, 0.3)',
                                 borderRadius: '8px'
                             }}>
-                                <p style={{ color: '#fca5a5', margin: 0, fontSize: '0.9rem' }}>
-                                    <strong>※ 주의사항:</strong> 개별 종목 추천이나 투자 상담은 제공하지 않습니다.
-                                </p>
+                                <p style={{ color: '#fca5a5', margin: 0, fontSize: '0.9rem' }} dangerouslySetInnerHTML={{ __html: t('contact.notice') }} />
                             </div>
                         </section>
 
@@ -194,7 +196,7 @@ const Contact = () => {
                                 textAlign: 'center',
                                 margin: 0
                             }}>
-                                보통 영업일 기준 1-3일 이내에 답변드립니다.
+                                {t('contact.responseTime')}
                             </p>
                         </section>
                     </div>

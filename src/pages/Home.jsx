@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 import { Search, Menu, X, BarChart3, TrendingUp, PieChart, ArrowUpDown, ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
 import { loadAllFinancialData } from '../dataLoader';
+import LanguageToggle from '../components/LanguageToggle';
 
 const Home = () => {
+    const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -85,10 +88,11 @@ const Home = () => {
     return (
         <>
             <Helmet>
-                <title>KStockView - 한국 주식 재무제표 & 실적 분석</title>
-                <meta name="description" content="한국 상장 기업의 재무제표와 실적 데이터를 차트로 시각화하여 분석합니다. 매출액, 영업이익, EPS 등 핵심 재무지표를 한눈에 확인하세요." />
-                <meta property="og:title" content="KStockView - 한국 주식 재무제표 & 실적 분석" />
-                <meta property="og:description" content="한국 상장 기업의 재무제표와 실적 데이터를 차트로 시각화하여 분석합니다." />
+                <html lang={i18n.language} />
+                <title>{t('helmet.homeTitle')}</title>
+                <meta name="description" content={t('helmet.homeDesc')} />
+                <meta property="og:title" content={t('helmet.homeTitle')} />
+                <meta property="og:description" content={t('helmet.appDescDefault')} />
                 <meta property="og:type" content="website" />
                 <meta property="og:url" content="https://kstockview.com" />
                 <link rel="canonical" href="https://kstockview.com" />
@@ -105,6 +109,7 @@ const Home = () => {
                         {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                     </button>
                     <Link to="/" className="mobile-app-title" style={{ textDecoration: 'none', color: 'inherit' }}>KSTOCKVIEW</Link>
+                    <LanguageToggle />
                 </div>
 
                 {/* Mobile Overlay */}
@@ -118,7 +123,10 @@ const Home = () => {
                 {/* SIDEBAR */}
                 <aside className={`sidebar ${sidebarCollapsed ? 'collapsed' : ''} ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
                     <div className="sidebar-header">
-                        <Link to="/" className="app-title" style={{ textDecoration: 'none', color: 'inherit' }}>KSTOCKVIEW</Link>
+                        <div className="sidebar-header-top">
+                            <Link to="/" className="app-title" style={{ textDecoration: 'none', color: 'inherit' }}>KSTOCKVIEW</Link>
+                            <LanguageToggle />
+                        </div>
                         <div className="sort-dropdown-container">
                             <button
                                 className="sort-dropdown-btn"
@@ -126,9 +134,9 @@ const Home = () => {
                             >
                                 <ArrowUpDown size={16} />
                                 <span>
-                                    {sortBy === 'revenue' ? '매출순' :
-                                        sortBy === 'op_profit' ? '영업이익순' :
-                                        sortBy === 'market_cap' ? '시가총액순' : '코드순'}
+                                    {sortBy === 'revenue' ? t('sidebar.sortByRevenue') :
+                                        sortBy === 'op_profit' ? t('sidebar.sortByOpProfit') :
+                                        sortBy === 'market_cap' ? t('sidebar.sortByMarketCap') : t('sidebar.sortByCode')}
                                 </span>
                             </button>
                             {sortDropdownOpen && (
@@ -137,25 +145,25 @@ const Home = () => {
                                         className={`sort-option ${sortBy === 'revenue' ? 'active' : ''}`}
                                         onClick={() => { setSortBy('revenue'); setSortDropdownOpen(false); }}
                                     >
-                                        매출순
+                                        {t('sidebar.sortByRevenue')}
                                     </button>
                                     <button
                                         className={`sort-option ${sortBy === 'market_cap' ? 'active' : ''}`}
                                         onClick={() => { setSortBy('market_cap'); setSortDropdownOpen(false); }}
                                     >
-                                        시가총액순
+                                        {t('sidebar.sortByMarketCap')}
                                     </button>
                                     <button
                                         className={`sort-option ${sortBy === 'op_profit' ? 'active' : ''}`}
                                         onClick={() => { setSortBy('op_profit'); setSortDropdownOpen(false); }}
                                     >
-                                        영업이익순
+                                        {t('sidebar.sortByOpProfit')}
                                     </button>
                                     <button
                                         className={`sort-option ${sortBy === 'code' ? 'active' : ''}`}
                                         onClick={() => { setSortBy('code'); setSortDropdownOpen(false); }}
                                     >
-                                        코드순
+                                        {t('sidebar.sortByCode')}
                                     </button>
                                 </div>
                             )}
@@ -166,7 +174,7 @@ const Home = () => {
                         <Search size={18} className="search-icon" />
                         <input
                             type="text"
-                            placeholder="티커 또는 회사명 검색..."
+                            placeholder={t('sidebar.searchPlaceholder')}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -175,7 +183,7 @@ const Home = () => {
                     <div className="ticker-list">
                         {dataLoading ? (
                             <div style={{ textAlign: 'center', padding: '20px', color: '#94a3b8' }}>
-                                로딩 중...
+                                {t('common.loadingSidebar')}
                             </div>
                         ) : (
                             companyList.map((comp) => (
@@ -195,7 +203,7 @@ const Home = () => {
                     <button
                         className="sidebar-toggle"
                         onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                        title={sidebarCollapsed ? "사이드바 열기" : "사이드바 접기"}
+                        title={sidebarCollapsed ? t('sidebar.openSidebar') : t('sidebar.collapseSidebar')}
                     >
                         {sidebarCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
                     </button>
@@ -236,8 +244,8 @@ const Home = () => {
                                 maxWidth: '600px',
                                 lineHeight: '1.6'
                             }}>
-                                한국 상장 기업의 재무제표와 실적 데이터를<br />
-                                차트로 시각화하여 분석합니다
+                                {t('home.tagline')}<br />
+                                {t('home.tagline2')}
                             </p>
 
                             {/* Free Service Badge */}
@@ -257,7 +265,7 @@ const Home = () => {
                                     fontSize: '0.95rem',
                                     fontWeight: '600'
                                 }}>
-                                    회원가입 없이 무료로 이용 가능
+                                    {t('home.freeService')}
                                 </span>
                             </div>
 
@@ -278,7 +286,7 @@ const Home = () => {
                                     fontSize: '0.95rem'
                                 }}>
                                     <BarChart3 size={20} style={{ color: '#3b82f6' }} />
-                                    <span>매출액 & 영업이익</span>
+                                    <span>{t('home.featureRevenue')}</span>
                                 </div>
                                 <div style={{
                                     display: 'flex',
@@ -288,7 +296,7 @@ const Home = () => {
                                     fontSize: '0.95rem'
                                 }}>
                                     <TrendingUp size={20} style={{ color: '#10b981' }} />
-                                    <span>YoY 성장률</span>
+                                    <span>{t('home.featureYoy')}</span>
                                 </div>
                                 <div style={{
                                     display: 'flex',
@@ -298,13 +306,13 @@ const Home = () => {
                                     fontSize: '0.95rem'
                                 }}>
                                     <PieChart size={20} style={{ color: '#8b5cf6' }} />
-                                    <span>영업이익률 & EPS</span>
+                                    <span>{t('home.featureMargin')}</span>
                                 </div>
                             </div>
 
                             {/* How to Use */}
                             <div className="chart-section" style={{ maxWidth: '500px', width: '100%' }}>
-                                <h3>사용 방법</h3>
+                                <h3>{t('home.howToUse')}</h3>
                                 <div style={{
                                     display: 'flex',
                                     flexDirection: 'column',
@@ -326,11 +334,9 @@ const Home = () => {
                                         </div>
                                         <div>
                                             <p style={{ color: '#e2e8f0', margin: '0 0 4px 0', fontWeight: '500' }}>
-                                                종목 검색
+                                                {t('home.searchStocks')}
                                             </p>
-                                            <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.9rem', lineHeight: '1.5' }}>
-                                                왼쪽 <strong style={{ color: '#60a5fa' }}>사이드바</strong>에서 종목을 검색하거나 선택하세요
-                                            </p>
+                                            <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.9rem', lineHeight: '1.5' }} dangerouslySetInnerHTML={{ __html: t('home.searchStocksDesc') }} />
                                         </div>
                                     </div>
 
@@ -348,10 +354,10 @@ const Home = () => {
                                         </div>
                                         <div>
                                             <p style={{ color: '#e2e8f0', margin: '0 0 4px 0', fontWeight: '500' }}>
-                                                검색 & 정렬
+                                                {t('home.searchAndSort')}
                                             </p>
                                             <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.9rem', lineHeight: '1.5' }}>
-                                                회사명 또는 종목코드로 검색하고, 매출/시총/영업이익 순으로 정렬할 수 있습니다
+                                                {t('home.searchAndSortDesc')}
                                             </p>
                                         </div>
                                     </div>
@@ -366,7 +372,7 @@ const Home = () => {
                                     marginBottom: '16px',
                                     fontWeight: '500'
                                 }}>
-                                    인기 종목 바로가기
+                                    {t('home.popularStocks')}
                                 </h3>
                                 <div style={{
                                     display: 'flex',
@@ -424,7 +430,7 @@ const Home = () => {
                         }}>
                             <div style={{ marginBottom: '20px' }}>
                                 <h3 style={{ color: '#e2e8f0', fontSize: '1.2rem', marginBottom: '8px' }}>KSTOCKVIEW</h3>
-                                <p style={{ color: '#94a3b8', fontSize: '0.85rem', margin: 0 }}>한국 상장 기업 재무 정보 조회 서비스</p>
+                                <p style={{ color: '#94a3b8', fontSize: '0.85rem', margin: 0 }}>{t('footer.serviceDesc')}</p>
                             </div>
 
                             <div style={{
@@ -436,15 +442,15 @@ const Home = () => {
                                 fontSize: '0.85rem'
                             }}>
                                 <Link to="/privacy" style={{ color: '#94a3b8', textDecoration: 'underline' }}>
-                                    개인정보처리방침
+                                    {t('footer.privacyPolicy')}
                                 </Link>
                                 <span style={{ color: '#475569' }}>|</span>
                                 <Link to="/terms" style={{ color: '#94a3b8', textDecoration: 'underline' }}>
-                                    이용약관
+                                    {t('footer.terms')}
                                 </Link>
                                 <span style={{ color: '#475569' }}>|</span>
                                 <Link to="/contact" style={{ color: '#94a3b8', textDecoration: 'underline' }}>
-                                    문의하기
+                                    {t('footer.contact')}
                                 </Link>
                             </div>
 

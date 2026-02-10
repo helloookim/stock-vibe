@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     ComposedChart, Line, ReferenceLine, AreaChart, Area
@@ -9,6 +10,7 @@ import { Search, ArrowUpDown, ChevronLeft, ChevronRight, Menu, X, Info } from 'l
 import { loadAllFinancialData, loadAllAnnualFinancialData, loadAllEpsData } from './dataLoader';
 import NotFound from './pages/NotFound';
 import ShareButtons from './components/ShareButtons';
+import LanguageToggle from './components/LanguageToggle';
 
 // Info Tooltip Component
 const InfoTooltip = ({ text }) => {
@@ -126,6 +128,7 @@ const CustomTooltip = ({ active, payload, label, valueFormatter, yoyKey }) => {
 };
 
 const App = () => {
+    const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -529,9 +532,18 @@ const App = () => {
             .slice(0, 15);
     }, [currentCompany, selectedCode]);
 
-    const formatKoreanCurrency = (val) => {
-        if (!val && val !== 0) return '0억';
+    const formatCurrency = (val) => {
+        if (!val && val !== 0) return t('currency.zeroEok');
         const absoluteVal = Math.abs(val);
+        const isEn = i18n.language === 'en';
+        if (isEn) {
+            // English: show in billions (억 ≈ 0.1B), display as X.XB or X.XT
+            if (absoluteVal >= 10000) {
+                const t_val = absoluteVal / 10000;
+                return `${val < 0 ? '-' : ''}${t_val.toLocaleString(undefined, { maximumFractionDigits: 1 })}T`;
+            }
+            return `${val.toLocaleString(undefined, { maximumFractionDigits: 1 })}B`;
+        }
         if (absoluteVal >= 10000) {
             const jo = Math.floor(absoluteVal / 10000);
             const eok = Math.round(absoluteVal % 10000);
@@ -545,8 +557,8 @@ const App = () => {
         return (
             <div className="app-container" style={{ alignItems: 'center', justifyContent: 'center' }}>
                 <div style={{ textAlign: 'center' }}>
-                    <h2 style={{ color: '#60a5fa', marginBottom: '20px' }}>데이터 로딩 중...</h2>
-                    <p style={{ color: '#94a3b8' }}>잠시만 기다려주세요</p>
+                    <h2 style={{ color: '#60a5fa', marginBottom: '20px' }}>{t('common.loading')}</h2>
+                    <p style={{ color: '#94a3b8' }}>{t('common.loadingWait')}</p>
                 </div>
             </div>
         );
@@ -560,10 +572,11 @@ const App = () => {
     return (
         <>
             <Helmet>
-                <title>{currentCompany?.name ? `${currentCompany.name} (${selectedCode}) 재무제표 & 실적 분석 - 매출액, 영업이익 | KStockView` : 'KStockView - 한국 주식 재무제표 & 실적 분석'}</title>
-                <meta name="description" content={currentCompany?.name ? `${currentCompany.name}(${selectedCode})의 분기별/연간 재무제표, 매출액, 영업이익, 영업이익률, EPS 등 실적 데이터를 차트로 분석합니다.` : '한국 상장 기업의 재무제표와 실적 데이터를 시각화하여 분석합니다.'} />
-                <meta property="og:title" content={currentCompany?.name ? `${currentCompany.name} (${selectedCode}) 재무제표 & 실적 분석 | KStockView` : 'KStockView - 한국 주식 재무제표 분석'} />
-                <meta property="og:description" content={currentCompany?.name ? `${currentCompany.name}의 매출액, 영업이익, EPS 등 재무제표 실적을 차트로 확인하세요.` : '한국 상장 기업의 재무제표와 실적 데이터를 시각화하여 분석합니다.'} />
+                <html lang={i18n.language} />
+                <title>{currentCompany?.name ? t('helmet.appTitle', { name: currentCompany.name, code: selectedCode }) : t('helmet.appTitleDefault')}</title>
+                <meta name="description" content={currentCompany?.name ? t('helmet.appDesc', { name: currentCompany.name, code: selectedCode }) : t('helmet.appDescDefault')} />
+                <meta property="og:title" content={currentCompany?.name ? t('helmet.ogTitle', { name: currentCompany.name, code: selectedCode }) : t('helmet.ogTitleDefault')} />
+                <meta property="og:description" content={currentCompany?.name ? t('helmet.ogDesc', { name: currentCompany.name }) : t('helmet.appDescDefault')} />
                 <meta property="og:type" content="website" />
                 <meta property="og:url" content={`https://kstockview.com/stocks/${selectedCode || ''}`} />
                 <link rel="canonical" href={`https://kstockview.com/stocks/${selectedCode || ''}`} />
@@ -579,6 +592,7 @@ const App = () => {
                         {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                     </button>
                     <Link to="/" className="mobile-app-title" style={{ textDecoration: 'none', color: 'inherit' }}>KSTOCKVIEW</Link>
+                    <LanguageToggle />
                 </div>
 
                 {/* Mobile Overlay */}
@@ -592,7 +606,10 @@ const App = () => {
                 {/* SIDEBAR */}
                 <aside className={`sidebar ${sidebarCollapsed ? 'collapsed' : ''} ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
                     <div className="sidebar-header">
-                        <Link to="/" className="app-title" style={{ textDecoration: 'none', color: 'inherit' }}>KSTOCKVIEW</Link>
+                        <div className="sidebar-header-top">
+                            <Link to="/" className="app-title" style={{ textDecoration: 'none', color: 'inherit' }}>KSTOCKVIEW</Link>
+                            <LanguageToggle />
+                        </div>
                         <div className="sort-dropdown-container">
                             <button
                                 className="sort-dropdown-btn"
@@ -600,9 +617,9 @@ const App = () => {
                             >
                                 <ArrowUpDown size={16} />
                                 <span>
-                                    {sortBy === 'revenue' ? '매출순' :
-                                        sortBy === 'op_profit' ? '영업이익순' :
-                                            sortBy === 'market_cap' ? '시가총액순' : '코드순'}
+                                    {sortBy === 'revenue' ? t('sidebar.sortByRevenue') :
+                                        sortBy === 'op_profit' ? t('sidebar.sortByOpProfit') :
+                                            sortBy === 'market_cap' ? t('sidebar.sortByMarketCap') : t('sidebar.sortByCode')}
                                 </span>
                             </button>
                             {sortDropdownOpen && (
@@ -611,25 +628,25 @@ const App = () => {
                                         className={`sort-option ${sortBy === 'revenue' ? 'active' : ''}`}
                                         onClick={() => { setSortBy('revenue'); setSortDropdownOpen(false); }}
                                     >
-                                        매출순
+                                        {t('sidebar.sortByRevenue')}
                                     </button>
                                     <button
                                         className={`sort-option ${sortBy === 'market_cap' ? 'active' : ''}`}
                                         onClick={() => { setSortBy('market_cap'); setSortDropdownOpen(false); }}
                                     >
-                                        시가총액순
+                                        {t('sidebar.sortByMarketCap')}
                                     </button>
                                     <button
                                         className={`sort-option ${sortBy === 'op_profit' ? 'active' : ''}`}
                                         onClick={() => { setSortBy('op_profit'); setSortDropdownOpen(false); }}
                                     >
-                                        영업이익순
+                                        {t('sidebar.sortByOpProfit')}
                                     </button>
                                     <button
                                         className={`sort-option ${sortBy === 'code' ? 'active' : ''}`}
                                         onClick={() => { setSortBy('code'); setSortDropdownOpen(false); }}
                                     >
-                                        코드순
+                                        {t('sidebar.sortByCode')}
                                     </button>
                                 </div>
                             )}
@@ -640,7 +657,7 @@ const App = () => {
                         <Search size={18} className="search-icon" />
                         <input
                             type="text"
-                            placeholder="티커 또는 회사명 검색..."
+                            placeholder={t('sidebar.searchPlaceholder')}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -671,7 +688,7 @@ const App = () => {
                     <button
                         className="sidebar-toggle"
                         onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                        title={sidebarCollapsed ? "사이드바 열기" : "사이드바 접기"}
+                        title={sidebarCollapsed ? t('sidebar.openSidebar') : t('sidebar.collapseSidebar')}
                     >
                         {sidebarCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
                     </button>
@@ -684,7 +701,7 @@ const App = () => {
                             <div className="company-info">
                                 <h1>{currentCompany?.name}</h1>
                                 <span className="company-code">{selectedCode}</span>
-                                <span className="company-sector">{currentCompany?.sector || '일반'}</span>
+                                <span className="company-sector">{currentCompany?.sector || t('common.general')}</span>
                                 <ShareButtons
                                     companyName={currentCompany?.name || ''}
                                     stockCode={selectedCode}
@@ -712,7 +729,7 @@ const App = () => {
                                         transition: 'all 0.2s'
                                     }}
                                 >
-                                    분기별
+                                    {t('analysis.quarterly')}
                                 </button>
                                 <button
                                     onClick={() => setViewMode('annual')}
@@ -728,13 +745,13 @@ const App = () => {
                                         transition: 'all 0.2s'
                                     }}
                                 >
-                                    연간
+                                    {t('analysis.annual')}
                                 </button>
                             </div>
                         </div>
 
                         <div className="year-slider">
-                            <label>기간: {yearRange[0]} - {yearRange[1]}</label>
+                            <label>{t('common.period')}: {yearRange[0]} - {yearRange[1]}</label>
                             <div className="dual-slider-container">
                                 <input
                                     type="range"
@@ -772,19 +789,19 @@ const App = () => {
                         {/* Summary Cards */}
                         <div className="summary-cards">
                             <div className="summary-card">
-                                <span className="card-label">최근 매출액</span>
+                                <span className="card-label">{t('analysis.latestRevenue')}</span>
                                 <span className="card-value">
-                                    {chartData.length > 0 ? formatKoreanCurrency(chartData[chartData.length - 1].revenue_eok) : '0억'}
+                                    {chartData.length > 0 ? formatCurrency(chartData[chartData.length - 1].revenue_eok) : t('currency.zeroEok')}
                                 </span>
                             </div>
                             <div className="summary-card">
-                                <span className="card-label">최근 영업이익</span>
+                                <span className="card-label">{t('analysis.latestOpProfit')}</span>
                                 <span className="card-value">
-                                    {chartData.length > 0 ? formatKoreanCurrency(chartData[chartData.length - 1].op_profit_eok) : '0억'}
+                                    {chartData.length > 0 ? formatCurrency(chartData[chartData.length - 1].op_profit_eok) : t('currency.zeroEok')}
                                 </span>
                             </div>
                             <div className="summary-card">
-                                <span className="card-label">영업이익률</span>
+                                <span className="card-label">{t('analysis.opMarginLabel')}</span>
                                 <span className="card-value">
                                     {chartData.length > 0 ? chartData[chartData.length - 1].op_margin : 0}%
                                 </span>
@@ -794,14 +811,14 @@ const App = () => {
                         {/* Main Chart: Bar (Revenue) with YoY */}
                         <div className="chart-section">
                             <h3>
-                                {viewMode === 'annual' ? '연간' : '분기별'} 매출액 & YoY 변동률
-                                <InfoTooltip text="매출액은 기업이 제품이나 서비스를 판매하고 벌어들인 총 금액입니다. 기업의 외형적인 성장세를 판단하는 가장 기초적인 지표로, 매출이 꾸준히 늘어나는 기업은 시장 점유율이 확대되고 있다는 긍정적인 신호일 수 있습니다." />
+                                {t('analysis.revenueYoy', { mode: viewMode === 'annual' ? t('analysis.annual') : t('analysis.quarterly') })}
+                                <InfoTooltip text={t('tooltips.revenueExplain')} />
                             </h3>
                             <div className="chart-legend">
-                                <span><span className="legend-bar"></span> 매출액 (억원)</span>
+                                <span><span className="legend-bar"></span> {t('analysis.revenueLegend')}</span>
                                 <span>
-                                    <span className="legend-line-dual"><span style={{ background: '#10b981' }}></span><span style={{ background: '#ef4444' }}></span></span> YoY 변동률 (%)
-                                    <InfoTooltip text="YoY(Year on Year)는 전년 동기 대비 변동률입니다. 작년 같은 분기와 비교하여 얼마나 성장했는지를 나타내며, 계절적 요인을 배제하고 회사의 실질적인 성장 추세를 파악하는 데 필수적입니다." />
+                                    <span className="legend-line-dual"><span style={{ background: '#10b981' }}></span><span style={{ background: '#ef4444' }}></span></span> {t('analysis.yoyLegend')}
+                                    <InfoTooltip text={t('tooltips.yoyExplain')} />
                                 </span>
                             </div>
                             <div className="chart-wrapper">
@@ -821,9 +838,9 @@ const App = () => {
                                             tickFormatter={(val) => {
                                                 const maxVal = Math.max(...chartData.map(d => d.revenue_eok));
                                                 if (maxVal >= 10000) {
-                                                    return `${(val / 10000).toFixed(1)}조`;
+                                                    return `${(val / 10000).toFixed(1)}${t('currency.jo')}`;
                                                 }
-                                                return `${val.toFixed(0)}억`;
+                                                return `${val.toFixed(0)}${t('currency.eok')}`;
                                             }}
                                             domain={[0, 'dataMax']}
                                             padding={{ top: 20, bottom: 0 }}
@@ -833,14 +850,14 @@ const App = () => {
                                             content={<CustomTooltip
                                                 valueFormatter={(value) => {
                                                     if (Math.abs(value) >= 10000) {
-                                                        return `${(value / 10000).toLocaleString(undefined, { maximumFractionDigits: 2 })} 조원`;
+                                                        return `${(value / 10000).toLocaleString(undefined, { maximumFractionDigits: 2 })} ${t('currency.joWon')}`;
                                                     }
-                                                    return `${value.toLocaleString(undefined, { maximumFractionDigits: 1 })} 억원`;
+                                                    return `${value.toLocaleString(undefined, { maximumFractionDigits: 1 })} ${t('currency.eokWon')}`;
                                                 }}
                                                 yoyKey="rev_change"
                                             />}
                                         />
-                                        <Bar dataKey="revenue_eok" name="매출액" fill="url(#barGrad)" radius={[4, 4, 0, 0]} />
+                                        <Bar dataKey="revenue_eok" name={t('analysis.revenueBarName')} fill="url(#barGrad)" radius={[4, 4, 0, 0]} />
                                     </BarChart>
                                 </ResponsiveContainer>
                                 <ResponsiveContainer width="100%" height={isMobile ? 120 : 180}>
@@ -881,12 +898,12 @@ const App = () => {
                         {/* Operating Profit Bar Chart with YoY */}
                         <div className="chart-section">
                             <h3>
-                                {viewMode === 'annual' ? '연간' : '분기별'} 영업이익 & YoY 변동률
-                                <InfoTooltip text="영업이익은 매출액에서 원가와 판매관리비(인건비, 마케팅비 등)를 뺀 금액입니다. 회사가 본업인 장사를 통해 실제로 얼마나 돈을 벌었는지를 보여주는 가장 중요한 수익성 지표입니다." />
+                                {t('analysis.opProfitYoy', { mode: viewMode === 'annual' ? t('analysis.annual') : t('analysis.quarterly') })}
+                                <InfoTooltip text={t('tooltips.opProfitExplain')} />
                             </h3>
                             <div className="chart-legend">
-                                <span><span className="legend-bar" style={{ background: 'rgba(16, 185, 129, 0.6)' }}></span> 영업이익 (억원)</span>
-                                <span><span className="legend-line-dual"><span style={{ background: '#3b82f6' }}></span><span style={{ background: '#ef4444' }}></span></span> YoY 변동률 (%)</span>
+                                <span><span className="legend-bar" style={{ background: 'rgba(16, 185, 129, 0.6)' }}></span> {t('analysis.opProfitLegend')}</span>
+                                <span><span className="legend-line-dual"><span style={{ background: '#3b82f6' }}></span><span style={{ background: '#ef4444' }}></span></span> {t('analysis.yoyLegend')}</span>
                             </div>
                             <div className="chart-wrapper">
                                 <ResponsiveContainer width="100%" height={250}>
@@ -906,9 +923,9 @@ const App = () => {
                                             tickFormatter={(val) => {
                                                 const maxVal = Math.max(...chartData.map(d => Math.abs(d.op_profit_eok)));
                                                 if (maxVal >= 10000) {
-                                                    return `${(val / 10000).toFixed(1)}조`;
+                                                    return `${(val / 10000).toFixed(1)}${t('currency.jo')}`;
                                                 }
-                                                return `${val.toFixed(0)}억`;
+                                                return `${val.toFixed(0)}${t('currency.eok')}`;
                                             }}
                                             padding={{ top: 20, bottom: 20 }}
                                             width={isMobile ? 50 : 65}
@@ -917,15 +934,15 @@ const App = () => {
                                             content={<CustomTooltip
                                                 valueFormatter={(value) => {
                                                     if (Math.abs(value) >= 10000) {
-                                                        return `${(value / 10000).toLocaleString(undefined, { maximumFractionDigits: 2 })} 조원`;
+                                                        return `${(value / 10000).toLocaleString(undefined, { maximumFractionDigits: 2 })} ${t('currency.joWon')}`;
                                                     }
-                                                    return `${value.toLocaleString(undefined, { maximumFractionDigits: 1 })} 억원`;
+                                                    return `${value.toLocaleString(undefined, { maximumFractionDigits: 1 })} ${t('currency.eokWon')}`;
                                                 }}
                                                 yoyKey="op_change"
                                             />}
                                         />
                                         <ReferenceLine y={0} stroke="#64748b" />
-                                        <Bar dataKey="op_profit_eok" name="영업이익" fill="url(#barGradGreen)" radius={[4, 4, 0, 0]} />
+                                        <Bar dataKey="op_profit_eok" name={t('analysis.opProfitBarName')} fill="url(#barGradGreen)" radius={[4, 4, 0, 0]} />
                                     </BarChart>
                                 </ResponsiveContainer>
                                 <ResponsiveContainer width="100%" height={isMobile ? 120 : 180}>
@@ -966,8 +983,8 @@ const App = () => {
                         {/* Profit Margin Chart (Full Width) */}
                         <div className="chart-section profit-margin-chart">
                             <h3>
-                                {viewMode === 'annual' ? '연간' : '분기별'} 영업이익률 (%)
-                                <InfoTooltip text="영업이익률은 매출액 대비 영업이익의 비율(%)입니다. 같은 매출을 올려도 영업이익률이 높은 회사가 더 효율적으로 돈을 버는 회사입니다." />
+                                {t('analysis.opMarginChart', { mode: viewMode === 'annual' ? t('analysis.annual') : t('analysis.quarterly') })}
+                                <InfoTooltip text={t('tooltips.opMarginExplain')} />
                             </h3>
                             <div className="chart-wrapper">
                                 <ResponsiveContainer width="100%" height={300}>
@@ -990,10 +1007,10 @@ const App = () => {
                                         />
                                         <Tooltip
                                             contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569', borderRadius: '8px' }}
-                                            formatter={(value) => [`${value}%`, '영업이익률']}
+                                            formatter={(value) => [`${value}%`, t('analysis.opMarginTooltip')]}
                                         />
                                         <ReferenceLine y={0} stroke="#64748b" />
-                                        <Area type="monotone" dataKey="op_margin" name="영업이익률" stroke="#8b5cf6" fillOpacity={1} fill="url(#marginGrad)" />
+                                        <Area type="monotone" dataKey="op_margin" name={t('analysis.opMarginTooltip')} stroke="#8b5cf6" fillOpacity={1} fill="url(#marginGrad)" />
                                     </AreaChart>
                                 </ResponsiveContainer>
                             </div>
@@ -1003,12 +1020,12 @@ const App = () => {
                         {epsChartData.length > 0 && (
                             <div className="chart-section">
                                 <h3>
-                                    분기별 주당순이익 (EPS) & YoY 변동률
-                                    <InfoTooltip text="EPS(Earning Per Share)는 기업이 벌어들인 순이익을 발행 주식 수로 나눈 값입니다. '내가 가진 주식 1주가 얼마를 벌었나'를 나타내며, EPS가 증가해야 주가도 오를 가능성이 높습니다. 단, 주식 발행량 증가나 주식 분할에 따라 주당순이익이 크게 변동할 수 있으므로, EPS 변화를 해석할 때는 주식 수 변동 여부도 함께 확인해야 합니다." />
+                                    {t('analysis.epsYoy')}
+                                    <InfoTooltip text={t('tooltips.epsExplain')} />
                                 </h3>
                                 <div className="chart-legend">
-                                    <span><span className="legend-bar" style={{ background: 'rgba(245, 158, 11, 0.6)' }}></span> EPS (원)</span>
-                                    <span><span className="legend-line-dual"><span style={{ background: '#10b981' }}></span><span style={{ background: '#ef4444' }}></span></span> YoY 변동률 (%)</span>
+                                    <span><span className="legend-bar" style={{ background: 'rgba(245, 158, 11, 0.6)' }}></span> {t('analysis.epsLegend')}</span>
+                                    <span><span className="legend-line-dual"><span style={{ background: '#10b981' }}></span><span style={{ background: '#ef4444' }}></span></span> {t('analysis.yoyLegend')}</span>
                                 </div>
                                 <div className="chart-wrapper">
                                     <ResponsiveContainer width="100%" height={250}>
@@ -1024,14 +1041,14 @@ const App = () => {
                                             <YAxis
                                                 stroke="#94a3b8"
                                                 fontSize={11}
-                                                tickFormatter={(val) => `${val.toLocaleString()}원`}
+                                                tickFormatter={(val) => `${val.toLocaleString()} ${t('currency.won')}`}
                                                 domain={isDefaultRange ? [0, 'auto'] : ['auto', 'auto']}
                                                 padding={{ top: 20, bottom: 20 }}
                                                 width={isMobile ? 50 : 65}
                                             />
                                             <Tooltip
                                                 content={<CustomTooltip
-                                                    valueFormatter={(value) => `${value.toLocaleString()}원`}
+                                                    valueFormatter={(value) => `${value.toLocaleString()} ${t('currency.won')}`}
                                                     yoyKey="eps_change"
                                                 />}
                                             />
@@ -1077,7 +1094,7 @@ const App = () => {
 
                         {/* Peer Companies Section */}
                         <div className="peers-section">
-                            <h3>동종업계 기업</h3>
+                            <h3>{t('analysis.peers')}</h3>
                             <div className="peers-list">
                                 {peerCompanies.map(peer => (
                                     <button
@@ -1098,7 +1115,7 @@ const App = () => {
                                         <span className="peer-name">{peer.name}</span>
                                     </button>
                                 ))}
-                                {peerCompanies.length === 0 && <span className="no-peers">동종업계 기업 없음</span>}
+                                {peerCompanies.length === 0 && <span className="no-peers">{t('analysis.noPeers')}</span>}
                             </div>
                         </div>
 
@@ -1115,7 +1132,7 @@ const App = () => {
                         }}>
                             <div style={{ marginBottom: '20px' }}>
                                 <h3 style={{ color: '#e2e8f0', fontSize: '1.2rem', marginBottom: '8px' }}>KSTOCKVIEW</h3>
-                                <p style={{ color: '#94a3b8', fontSize: '0.85rem', margin: 0 }}>한국 상장 기업 재무 정보 조회 서비스</p>
+                                <p style={{ color: '#94a3b8', fontSize: '0.85rem', margin: 0 }}>{t('footer.serviceDesc')}</p>
                             </div>
 
                             {/* Data Source Notice */}
@@ -1127,11 +1144,11 @@ const App = () => {
                                 borderRadius: '8px'
                             }}>
                                 <p style={{ margin: '0 0 8px 0', fontWeight: '600', color: '#cbd5e1' }}>
-                                    📊 데이터 출처 및 저작권 고지
+                                    {t('footer.dataSourceTitle')}
                                 </p>
-                                <p style={{ margin: 0, fontSize: '0.75rem' }}>
-                                    본 서비스는 <strong style={{ color: '#94a3b8' }}>금융감독원 Open DART</strong>의 공공데이터를 기반으로 제공됩니다.<br />
-                                    (Source: Financial Supervisory Service Open DART)
+                                <p style={{ margin: 0, fontSize: '0.75rem' }} dangerouslySetInnerHTML={{ __html: t('footer.dataSourceText') }} />
+                                <p style={{ margin: '4px 0 0 0', fontSize: '0.75rem' }}>
+                                    {t('footer.dataSourceEn')}
                                 </p>
                             </div>
 
@@ -1146,23 +1163,20 @@ const App = () => {
                                 lineHeight: '1.7'
                             }}>
                                 <h4 style={{ color: '#ef4444', marginBottom: '12px', fontSize: '0.9rem', fontWeight: '600' }}>
-                                    ⚠️ 면책 조항 (Disclaimer)
+                                    {t('footer.disclaimerTitle')}
                                 </h4>
                                 <div style={{ textAlign: 'left', maxWidth: '800px', margin: '0 auto', color: '#94a3b8' }}>
                                     <p style={{ margin: '0 0 10px 0' }}>
-                                        <strong>1. 데이터 정확성 면책:</strong> 본 서비스는 금융감독원 DART의 공시 자료를 자동 처리하여 제공하며,
-                                        데이터 수집·가공·표시 과정에서 발생할 수 있는 오류, 누락, 지연에 대해 <strong style={{ color: '#ef4444' }}>어떠한 법적 책임도 지지 않습니다.</strong>
+                                        <strong>{t('footer.disclaimer1Title')}</strong> <span dangerouslySetInnerHTML={{ __html: t('footer.disclaimer1') }} />
                                     </p>
                                     <p style={{ margin: '0 0 10px 0' }}>
-                                        <strong>2. 손해배상 면책:</strong> 본 서비스의 데이터 오류로 인해 발생한 직접적·간접적·부수적·파생적 손해
-                                        (투자 손실, 기회 손실 등 일체 포함)에 대해 운영자는 <strong style={{ color: '#ef4444' }}>법적 책임을 지지 않습니다.</strong>
+                                        <strong>{t('footer.disclaimer2Title')}</strong> <span dangerouslySetInnerHTML={{ __html: t('footer.disclaimer2') }} />
                                     </p>
                                     <p style={{ margin: '0 0 10px 0' }}>
-                                        <strong>3. 투자 판단 책임:</strong> 제공되는 정보는 투자 조언이 아니며,
-                                        모든 투자 결정 및 그 결과(손익)에 대한 법적 책임은 <strong style={{ color: '#ef4444' }}>전적으로 이용자 본인</strong>에게 있습니다.
+                                        <strong>{t('footer.disclaimer3Title')}</strong> <span dangerouslySetInnerHTML={{ __html: t('footer.disclaimer3') }} />
                                     </p>
                                     <p style={{ margin: 0 }}>
-                                        <strong>4. 검증 의무:</strong> 실제 투자 전 반드시 공식 증권사, 금융감독원, 한국거래소 등의 공식 자료를 직접 확인하시기 바랍니다.
+                                        <strong>{t('footer.disclaimer4Title')}</strong> {t('footer.disclaimer4')}
                                     </p>
                                 </div>
                             </div>
@@ -1186,7 +1200,7 @@ const App = () => {
                                     onMouseEnter={(e) => e.target.style.color = '#e2e8f0'}
                                     onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
                                 >
-                                    개인정보처리방침
+                                    {t('footer.privacyPolicy')}
                                 </a>
                                 <span style={{ color: '#475569' }}>|</span>
                                 <a
@@ -1199,7 +1213,7 @@ const App = () => {
                                     onMouseEnter={(e) => e.target.style.color = '#e2e8f0'}
                                     onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
                                 >
-                                    이용약관
+                                    {t('footer.terms')}
                                 </a>
                                 <span style={{ color: '#475569' }}>|</span>
                                 <a
@@ -1212,7 +1226,7 @@ const App = () => {
                                     onMouseEnter={(e) => e.target.style.color = '#e2e8f0'}
                                     onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
                                 >
-                                    문의하기
+                                    {t('footer.contact')}
                                 </a>
                             </div>
 

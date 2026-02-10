@@ -1,9 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 import { Home, AlertCircle, Search, TrendingUp, FileText } from 'lucide-react';
 
 const NotFound = () => {
+    const { t } = useTranslation();
     const popularStocks = [
         { code: '005930', name: '삼성전자' },
         { code: '000660', name: 'SK하이닉스' },
@@ -16,9 +18,9 @@ const NotFound = () => {
     return (
         <>
             <Helmet>
-                <title>페이지를 찾을 수 없습니다 - KStockView</title>
+                <title>{t('notFound.pageTitle')}</title>
                 <meta name="robots" content="noindex" />
-                <meta name="description" content="요청하신 페이지를 찾을 수 없습니다. KStockView 홈으로 이동하여 한국 주식 재무제표를 분석해보세요." />
+                <meta name="description" content={t('notFound.pageDesc')} />
             </Helmet>
 
             <div style={{
@@ -63,7 +65,7 @@ const NotFound = () => {
                     fontWeight: '600',
                     margin: '0 0 12px 0'
                 }}>
-                    페이지를 찾을 수 없습니다
+                    {t('notFound.title')}
                 </h2>
 
                 <p style={{
@@ -73,7 +75,7 @@ const NotFound = () => {
                     lineHeight: '1.6',
                     margin: '0 0 24px 0'
                 }}>
-                    요청하신 페이지가 존재하지 않거나, 이동되었거나, 삭제되었을 수 있습니다.
+                    {t('notFound.message')}
                 </p>
 
                 {/* Home Button */}
@@ -103,7 +105,7 @@ const NotFound = () => {
                     }}
                 >
                     <Home size={20} />
-                    홈으로 돌아가기
+                    {t('notFound.goHome')}
                 </Link>
 
                 {/* Helpful Links Section */}
@@ -129,7 +131,7 @@ const NotFound = () => {
                         }}>
                             <TrendingUp size={20} style={{ color: '#10b981' }} />
                             <h3 style={{ color: '#e2e8f0', fontSize: '1rem', fontWeight: '600', margin: 0 }}>
-                                인기 종목 바로가기
+                                {t('notFound.popularStocks')}
                             </h3>
                         </div>
                         <div style={{
@@ -204,7 +206,7 @@ const NotFound = () => {
                             }}
                         >
                             <FileText size={16} />
-                            종목 분석 리포트
+                            {t('notFound.reports')}
                         </Link>
                         <Link
                             to="/"
@@ -230,7 +232,7 @@ const NotFound = () => {
                             }}
                         >
                             <Search size={16} />
-                            종목 검색
+                            {t('notFound.searchStocks')}
                         </Link>
                     </div>
                 </div>
