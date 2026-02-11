@@ -147,11 +147,8 @@ const App = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     const [viewMode, setViewMode] = useState('quarterly'); // 'quarterly' or 'annual'
-    const [pageViewCount, setPageViewCount] = useState(() => {
-        return parseInt(sessionStorage.getItem('kstockview_pageviews') || '0', 10);
-    });
     const [showDonationPopup, setShowDonationPopup] = useState(false);
-    const donationShownRef = useRef(false);
+    const viewedStocksRef = useRef(new Set());
 
     // Track the source of selectedCode changes to prevent loops
     const isUrlChangeRef = useRef(false);
@@ -248,15 +245,20 @@ const App = () => {
         }
     }, [location.pathname, financialRawData, dataLoading]);
 
-    // Track page views and show donation popup at 10 views
+    // Track unique stock views and show donation popup at 10 unique views (1-day cooldown)
     useEffect(() => {
         if (!selectedCode || dataLoading) return;
-        const newCount = pageViewCount + 1;
-        setPageViewCount(newCount);
-        sessionStorage.setItem('kstockview_pageviews', String(newCount));
-        if (newCount >= 10 && !donationShownRef.current) {
-            donationShownRef.current = true;
+        // Skip if already viewed this stock
+        if (viewedStocksRef.current.has(selectedCode)) return;
+        viewedStocksRef.current.add(selectedCode);
+
+        // Check 1-day cooldown
+        const lastShown = localStorage.getItem('kstockview_donation_shown');
+        if (lastShown && Date.now() - parseInt(lastShown, 10) < 24 * 60 * 60 * 1000) return;
+
+        if (viewedStocksRef.current.size >= 10) {
             setShowDonationPopup(true);
+            localStorage.setItem('kstockview_donation_shown', String(Date.now()));
         }
     }, [selectedCode]);
 
@@ -1277,7 +1279,7 @@ const App = () => {
 
             {/* Donation Popup Modal */}
             {showDonationPopup && (
-                <div className="donation-overlay" onClick={() => setShowDonationPopup(false)}>
+                <div className="donation-overlay">
                     <div className="donation-popup" onClick={(e) => e.stopPropagation()}>
                         <div className="donation-glow" />
                         <button className="donation-close" onClick={() => setShowDonationPopup(false)}>
