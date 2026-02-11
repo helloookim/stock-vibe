@@ -1092,6 +1092,25 @@ const App = () => {
                             </div>
                         )}
 
+                        {/* Browse Other Stocks - Mobile Only */}
+                        <div className="browse-stocks-mobile" onClick={() => setIsMobileMenuOpen(true)}>
+                            <div className="browse-stocks-icon-wrap">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="11" cy="11" r="8"/>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                                </svg>
+                            </div>
+                            <div className="browse-stocks-text">
+                                <span className="browse-stocks-title">{t('analysis.browseStocks')}</span>
+                                <span className="browse-stocks-desc">{t('analysis.browseStocksDesc')}</span>
+                            </div>
+                            <div className="browse-stocks-arrow">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="9 18 15 12 9 6"/>
+                                </svg>
+                            </div>
+                        </div>
+
                         {/* Peer Companies Section */}
                         <div className="peers-section">
                             <h3>{t('analysis.peers')}</h3>
