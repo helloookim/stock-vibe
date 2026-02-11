@@ -147,6 +147,11 @@ const App = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     const [viewMode, setViewMode] = useState('quarterly'); // 'quarterly' or 'annual'
+    const [pageViewCount, setPageViewCount] = useState(() => {
+        return parseInt(sessionStorage.getItem('kstockview_pageviews') || '0', 10);
+    });
+    const [showDonationPopup, setShowDonationPopup] = useState(false);
+    const donationShownRef = useRef(false);
 
     // Track the source of selectedCode changes to prevent loops
     const isUrlChangeRef = useRef(false);
@@ -242,6 +247,18 @@ const App = () => {
             setIsInvalidCode(true);
         }
     }, [location.pathname, financialRawData, dataLoading]);
+
+    // Track page views and show donation popup at 10 views
+    useEffect(() => {
+        if (!selectedCode || dataLoading) return;
+        const newCount = pageViewCount + 1;
+        setPageViewCount(newCount);
+        sessionStorage.setItem('kstockview_pageviews', String(newCount));
+        if (newCount >= 10 && !donationShownRef.current) {
+            donationShownRef.current = true;
+            setShowDonationPopup(true);
+        }
+    }, [selectedCode]);
 
     // Sync URL with selected code (only on user selection)
     useEffect(() => {
@@ -1257,6 +1274,53 @@ const App = () => {
                     </div>
                 </main>
             </div>
+
+            {/* Donation Popup Modal */}
+            {showDonationPopup && (
+                <div className="donation-overlay" onClick={() => setShowDonationPopup(false)}>
+                    <div className="donation-popup" onClick={(e) => e.stopPropagation()}>
+                        <div className="donation-glow" />
+                        <button className="donation-close" onClick={() => setShowDonationPopup(false)}>
+                            <X size={18} />
+                        </button>
+
+                        <div className="donation-header">
+                            <div className="donation-emoji">☕</div>
+                            <span className="donation-badge">{t('donation.badge')}</span>
+                            <h2 className="donation-title">{t('donation.headline')}</h2>
+                            <p className="donation-subtitle">{t('donation.subtitle')}</p>
+                        </div>
+
+                        <div className="donation-divider" />
+
+                        <div className="donation-body">
+                            <p>{t('donation.body1')}</p>
+                            <p>{t('donation.body2')}</p>
+                        </div>
+
+                        <div className="donation-qr-section">
+                            <div className="donation-qr-card">
+                                <img src="/kakaopay_QR.png" alt="KakaoPay QR" />
+                                <span className="donation-qr-label">KakaoPay</span>
+                            </div>
+                            <p className="donation-cta">{t('donation.cta')}</p>
+                        </div>
+
+                        <a
+                            href="https://qr.kakaopay.com/FILRgbaC9"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="donation-link"
+                        >
+                            {t('donation.linkText')}
+                        </a>
+
+                        <button className="donation-dismiss" onClick={() => setShowDonationPopup(false)}>
+                            {t('donation.dismiss')}
+                        </button>
+                    </div>
+                </div>
+            )}
         </>
     );
 };
