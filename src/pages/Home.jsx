@@ -17,6 +17,15 @@ const Home = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [sortBy, setSortBy] = useState('revenue');
     const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
+
+    // Detect mobile screen size
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     const popularStocks = [
         { code: '005930', name: '삼성전자' },
@@ -212,252 +221,148 @@ const Home = () => {
                 {/* MAIN CONTENT */}
                 <main className="main-content">
                     <div className="charts-container">
-                        {/* Hero Section */}
-                        <div style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            minHeight: '60vh',
-                            textAlign: 'center',
-                            padding: '20px'
-                        }}>
-                            {/* Logo */}
-                            <h1 style={{
-                                fontSize: 'clamp(2.5rem, 8vw, 4rem)',
-                                fontWeight: '700',
-                                background: 'linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
-                                backgroundClip: 'text',
-                                marginBottom: '16px',
-                                letterSpacing: '-0.02em'
-                            }}>
-                                KSTOCKVIEW
-                            </h1>
+                        <div className="home-page">
 
-                            {/* Tagline */}
-                            <p style={{
-                                fontSize: 'clamp(1rem, 3vw, 1.25rem)',
-                                color: '#94a3b8',
-                                marginBottom: '20px',
-                                maxWidth: '600px',
-                                lineHeight: '1.6'
-                            }}>
-                                {t('home.tagline')}<br />
-                                {t('home.tagline2')}
-                            </p>
+                            {/* Hero Section */}
+                            <section className="home-hero">
+                                <h1 className="home-hero-logo">KSTOCKVIEW</h1>
+                                <p className="home-hero-tagline">
+                                    {t('home.tagline')}<br />
+                                    {t('home.tagline2')}
+                                </p>
+                                <div className="home-hero-badge">
+                                    <CheckCircle size={18} className="home-hero-badge-icon" />
+                                    <span className="home-hero-badge-text">{t('home.freeService')}</span>
+                                </div>
+                                <button
+                                    className="home-cta-primary"
+                                    onClick={() => {
+                                        if (isMobile) {
+                                            setIsMobileMenuOpen(true);
+                                        } else {
+                                            setSidebarCollapsed(false);
+                                            setTimeout(() => {
+                                                const searchInput = document.querySelector('.search-box input');
+                                                if (searchInput) searchInput.focus();
+                                            }, 100);
+                                        }
+                                    }}
+                                >
+                                    <Search size={20} />
+                                    {t('home.ctaButton')}
+                                </button>
+                            </section>
 
-                            {/* Free Service Badge */}
-                            <div style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                                border: '1px solid rgba(16, 185, 129, 0.3)',
-                                borderRadius: '12px',
-                                padding: '12px 20px',
-                                marginBottom: '40px'
-                            }}>
-                                <CheckCircle size={20} style={{ color: '#10b981' }} />
-                                <span style={{
-                                    color: '#10b981',
-                                    fontSize: '0.95rem',
-                                    fontWeight: '600'
-                                }}>
-                                    {t('home.freeService')}
-                                </span>
-                            </div>
-
-                            {/* Features */}
-                            <div style={{
-                                display: 'flex',
-                                gap: '24px',
-                                flexWrap: 'wrap',
-                                justifyContent: 'center',
-                                marginBottom: '48px',
-                                maxWidth: '800px'
-                            }}>
-                                <div style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px',
-                                    color: '#94a3b8',
-                                    fontSize: '0.95rem'
-                                }}>
-                                    <BarChart3 size={20} style={{ color: '#3b82f6' }} />
-                                    <span>{t('home.featureRevenue')}</span>
+                            {/* Feature Cards */}
+                            <section className="home-features-section">
+                                <p className="home-features-title">{t('home.featuresLabel')}</p>
+                                <div className="home-features-grid">
+                                    <div className="home-feature-card">
+                                        <div className="home-feature-icon home-feature-icon--blue">
+                                            <BarChart3 size={24} />
+                                        </div>
+                                        <div className="home-feature-card-text">
+                                            <h3 className="home-feature-title">{t('home.featureRevenue')}</h3>
+                                            <p className="home-feature-desc">{t('home.featureRevenueDesc')}</p>
+                                        </div>
+                                    </div>
+                                    <div className="home-feature-card">
+                                        <div className="home-feature-icon home-feature-icon--green">
+                                            <TrendingUp size={24} />
+                                        </div>
+                                        <div className="home-feature-card-text">
+                                            <h3 className="home-feature-title">{t('home.featureYoy')}</h3>
+                                            <p className="home-feature-desc">{t('home.featureYoyDesc')}</p>
+                                        </div>
+                                    </div>
+                                    <div className="home-feature-card">
+                                        <div className="home-feature-icon home-feature-icon--purple">
+                                            <PieChart size={24} />
+                                        </div>
+                                        <div className="home-feature-card-text">
+                                            <h3 className="home-feature-title">{t('home.featureMargin')}</h3>
+                                            <p className="home-feature-desc">{t('home.featureMarginDesc')}</p>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px',
-                                    color: '#94a3b8',
-                                    fontSize: '0.95rem'
-                                }}>
-                                    <TrendingUp size={20} style={{ color: '#10b981' }} />
-                                    <span>{t('home.featureYoy')}</span>
-                                </div>
-                                <div style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px',
-                                    color: '#94a3b8',
-                                    fontSize: '0.95rem'
-                                }}>
-                                    <PieChart size={20} style={{ color: '#8b5cf6' }} />
-                                    <span>{t('home.featureMargin')}</span>
-                                </div>
-                            </div>
+                            </section>
 
                             {/* How to Use */}
-                            <div className="chart-section" style={{ maxWidth: '500px', width: '100%' }}>
-                                <h3>{t('home.howToUse')}</h3>
-                                <div style={{
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: '16px',
-                                    textAlign: 'left',
-                                    padding: '10px 0'
-                                }}>
-                                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                                        <div style={{
-                                            backgroundColor: '#3b82f6',
-                                            borderRadius: '8px',
-                                            padding: '8px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            flexShrink: 0
-                                        }}>
-                                            <Menu size={20} color="#fff" />
+                            <section className="home-howto-section">
+                                <div className="home-howto-header">
+                                    <p className="home-howto-label">{t('home.howToUseLabel')}</p>
+                                    <h2 className="home-howto-title">{t('home.howToUse')}</h2>
+                                </div>
+                                <div className="home-howto-steps">
+                                    <div
+                                        className={`home-howto-step ${isMobile ? 'home-howto-step--clickable' : ''}`}
+                                        onClick={() => { if (isMobile) setIsMobileMenuOpen(true); }}
+                                    >
+                                        <div className="home-howto-step-number home-howto-step-number--blue">1</div>
+                                        <div className="home-howto-step-content">
+                                            <p className="home-howto-step-title">{t('home.searchStocks')}</p>
+                                            <p className="home-howto-step-desc" dangerouslySetInnerHTML={{ __html: t('home.searchStocksDesc') }} />
                                         </div>
-                                        <div>
-                                            <p style={{ color: '#e2e8f0', margin: '0 0 4px 0', fontWeight: '500' }}>
-                                                {t('home.searchStocks')}
-                                            </p>
-                                            <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.9rem', lineHeight: '1.5' }} dangerouslySetInnerHTML={{ __html: t('home.searchStocksDesc') }} />
-                                        </div>
+                                        {isMobile && (
+                                            <div className="home-howto-step-arrow">
+                                                <ChevronRight size={18} />
+                                            </div>
+                                        )}
                                     </div>
-
-                                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                                        <div style={{
-                                            backgroundColor: '#10b981',
-                                            borderRadius: '8px',
-                                            padding: '8px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            flexShrink: 0
-                                        }}>
-                                            <Search size={20} color="#fff" />
+                                    <div
+                                        className={`home-howto-step ${isMobile ? 'home-howto-step--clickable' : ''}`}
+                                        onClick={() => { if (isMobile) setIsMobileMenuOpen(true); }}
+                                    >
+                                        <div className="home-howto-step-number home-howto-step-number--green">2</div>
+                                        <div className="home-howto-step-content">
+                                            <p className="home-howto-step-title">{t('home.searchAndSort')}</p>
+                                            <p className="home-howto-step-desc">{t('home.searchAndSortDesc')}</p>
                                         </div>
-                                        <div>
-                                            <p style={{ color: '#e2e8f0', margin: '0 0 4px 0', fontWeight: '500' }}>
-                                                {t('home.searchAndSort')}
-                                            </p>
-                                            <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.9rem', lineHeight: '1.5' }}>
-                                                {t('home.searchAndSortDesc')}
-                                            </p>
-                                        </div>
+                                        {isMobile && (
+                                            <div className="home-howto-step-arrow">
+                                                <ChevronRight size={18} />
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
-                            </div>
+                            </section>
 
                             {/* Popular Stocks */}
-                            <div style={{ width: '100%', maxWidth: '600px', marginTop: '30px' }}>
-                                <h3 style={{
-                                    fontSize: '0.95rem',
-                                    color: '#94a3b8',
-                                    marginBottom: '16px',
-                                    fontWeight: '500'
-                                }}>
-                                    {t('home.popularStocks')}
-                                </h3>
-                                <div style={{
-                                    display: 'flex',
-                                    flexWrap: 'wrap',
-                                    gap: '10px',
-                                    justifyContent: 'center'
-                                }}>
+                            <section className="home-popular-section">
+                                <p className="home-popular-label">{t('home.popularStocks')}</p>
+                                <div className="home-popular-grid">
                                     {popularStocks.map((stock) => (
                                         <Link
                                             key={stock.code}
                                             to={`/stocks/${stock.code}`}
-                                            style={{
-                                                backgroundColor: 'rgba(30, 41, 59, 0.6)',
-                                                border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                borderRadius: '8px',
-                                                padding: '10px 16px',
-                                                color: '#e2e8f0',
-                                                textDecoration: 'none',
-                                                fontSize: '0.9rem',
-                                                transition: 'all 0.2s',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '8px'
-                                            }}
-                                            onMouseEnter={(e) => {
-                                                e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.15)';
-                                                e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.3)';
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                e.currentTarget.style.backgroundColor = 'rgba(30, 41, 59, 0.6)';
-                                                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                                            }}
+                                            className="home-popular-chip"
                                         >
-                                            <span style={{ color: '#60a5fa', fontWeight: '600', fontSize: '0.8rem' }}>
-                                                {stock.code}
-                                            </span>
-                                            <span>{stock.name}</span>
+                                            <span className="home-popular-chip-code">{stock.code}</span>
+                                            <span className="home-popular-chip-name">{stock.name}</span>
                                         </Link>
                                     ))}
                                 </div>
-                            </div>
+                            </section>
+
+                            {/* Footer */}
+                            <footer className="home-footer">
+                                <div className="home-footer-brand">
+                                    <h3>KSTOCKVIEW</h3>
+                                    <p>{t('footer.serviceDesc')}</p>
+                                </div>
+                                <div className="home-footer-links">
+                                    <Link to="/privacy">{t('footer.privacyPolicy')}</Link>
+                                    <span className="home-footer-divider">|</span>
+                                    <Link to="/terms">{t('footer.terms')}</Link>
+                                    <span className="home-footer-divider">|</span>
+                                    <Link to="/contact">{t('footer.contact')}</Link>
+                                </div>
+                                <p className="home-footer-copyright">
+                                    &copy; 2026 KSTOCKVIEW. All rights reserved.
+                                </p>
+                            </footer>
 
                         </div>
-
-                        {/* Footer */}
-                        <footer style={{
-                            marginTop: '60px',
-                            padding: '30px 20px',
-                            borderTop: '1px solid #334155',
-                            textAlign: 'center',
-                            backgroundColor: '#0f172a',
-                            color: '#64748b',
-                            fontSize: '0.8rem',
-                            lineHeight: '1.6'
-                        }}>
-                            <div style={{ marginBottom: '20px' }}>
-                                <h3 style={{ color: '#e2e8f0', fontSize: '1.2rem', marginBottom: '8px' }}>KSTOCKVIEW</h3>
-                                <p style={{ color: '#94a3b8', fontSize: '0.85rem', margin: 0 }}>{t('footer.serviceDesc')}</p>
-                            </div>
-
-                            <div style={{
-                                display: 'flex',
-                                justifyContent: 'center',
-                                gap: '20px',
-                                flexWrap: 'wrap',
-                                marginBottom: '20px',
-                                fontSize: '0.85rem'
-                            }}>
-                                <Link to="/privacy" style={{ color: '#94a3b8', textDecoration: 'underline' }}>
-                                    {t('footer.privacyPolicy')}
-                                </Link>
-                                <span style={{ color: '#475569' }}>|</span>
-                                <Link to="/terms" style={{ color: '#94a3b8', textDecoration: 'underline' }}>
-                                    {t('footer.terms')}
-                                </Link>
-                                <span style={{ color: '#475569' }}>|</span>
-                                <Link to="/contact" style={{ color: '#94a3b8', textDecoration: 'underline' }}>
-                                    {t('footer.contact')}
-                                </Link>
-                            </div>
-
-                            <div style={{ color: '#64748b', fontSize: '0.7rem', marginTop: '20px', opacity: 0.8 }}>
-                                <p style={{ margin: '5px 0' }}>© 2026 KSTOCKVIEW. All rights reserved.</p>
-                            </div>
-                        </footer>
                     </div>
                 </main>
             </div>
