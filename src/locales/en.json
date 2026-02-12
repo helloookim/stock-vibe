@@ -54,7 +54,8 @@
     },
     "home": {
         "tagline": "Visualize and analyze financial statements",
-        "tagline2": "of Korean listed companies with charts",
+        "tagline2": "of Korean & US listed companies with charts",
+        "usPopularStocks": "US Popular Stocks",
         "freeService": "Free to use, no sign-up required",
         "featureRevenue": "Revenue & Op. Profit",
         "featureYoy": "YoY Growth Rate",
@@ -73,7 +74,7 @@
         "howToUseLabel": "Getting Started"
     },
     "footer": {
-        "serviceDesc": "Korean Listed Company Financial Data Service",
+        "serviceDesc": "Korean & US Listed Company Financial Data Service",
         "dataSourceTitle": "📊 Data Source & Copyright Notice",
         "dataSourceText": "This service is based on public data from <strong style='color:#94a3b8'>Financial Supervisory Service Open DART</strong>.",
         "dataSourceEn": "(Source: Financial Supervisory Service Open DART)",
@@ -139,6 +140,66 @@
         "cta": "Scan the QR code or tap the button below",
         "linkText": "Buy a Coffee via KakaoPay ☕",
         "dismiss": "Maybe next time"
+    },
+    "market": {
+        "kr": "Korea",
+        "us": "US"
+    },
+    "usAnalysis": {
+        "quarterly": "Quarterly",
+        "annual": "Annual",
+        "latestRevenue": "Latest Revenue",
+        "latestOpIncome": "Latest Op. Income",
+        "opMarginLabel": "Op. Margin",
+        "latestEps": "Latest EPS",
+        "revenueYoy": "{{mode}} Revenue & YoY Change",
+        "opIncomeYoy": "{{mode}} Operating Income & YoY Change",
+        "netIncomeYoy": "{{mode}} Net Income & YoY Change",
+        "opMarginChart": "{{mode}} Operating Margin (%)",
+        "epsYoy": "{{mode}} EPS & YoY Change",
+        "revenueLegend": "Revenue (USD)",
+        "opIncomeLegend": "Op. Income (USD)",
+        "netIncomeLegend": "Net Income (USD)",
+        "epsLegend": "EPS (USD)",
+        "yoyLegend": "YoY Change (%)",
+        "opMarginTooltip": "Op. Margin",
+        "revenueBarName": "Revenue",
+        "opIncomeBarName": "Op. Income",
+        "netIncomeBarName": "Net Income",
+        "dataUnavailable": "Under review",
+        "noData": "Financial data is not available for this company",
+        "browseStocks": "Browse Other Stocks",
+        "browseStocksDesc": "Search and analyze other stocks from the sidebar"
+    },
+    "usTooltips": {
+        "revenueExplain": "Revenue is the total income a company earns from selling its products or services. It is the most fundamental indicator for assessing a company's growth. Steadily increasing revenue suggests a company may be expanding its market share.",
+        "opIncomeExplain": "Operating Income is the profit earned from a company's core business operations after deducting operating expenses. It is a key profitability indicator showing how much money a company actually earns from its main business.",
+        "netIncomeExplain": "Net Income is the final profit after deducting all expenses (cost of goods, SG&A, interest, taxes, etc.) from revenue. It represents a company's actual earning power and is the source of dividends and reinvestment.",
+        "opMarginExplain": "Operating Margin is the ratio (%) of operating income to revenue. Even with the same revenue, a company with a higher operating margin earns money more efficiently.",
+        "epsExplain": "EPS (Earnings Per Share) is a company's net income divided by the number of shares outstanding. It represents how much each share has earned. Rising EPS generally suggests higher potential for stock price appreciation."
+    },
+    "usSidebar": {
+        "sortByRank": "Market Cap Rank",
+        "sortByTicker": "Ticker",
+        "sortByName": "Company Name",
+        "searchPlaceholder": "Search ticker or company..."
+    },
+    "usFooter": {
+        "serviceDesc": "Korean & US Listed Company Financial Data Service",
+        "dataSourceTitle": "📊 Data Source",
+        "dataSourceText": "US stock data is automatically parsed from <strong style='color:#94a3b8'>SEC EDGAR Financial Statement Data Sets</strong>.",
+        "disclaimerTitle": "⚠️ Disclaimer",
+        "disclaimer1Title": "1. Data Accuracy:",
+        "disclaimer1": "US stock data on this service is automatically parsed from financial statements filed with the SEC (Financial Statement Data Sets). Errors, omissions, or delays may occur during data collection, processing, and display. The operator assumes <strong style='color:#ef4444'>no legal liability</strong> for any such inaccuracies.",
+        "disclaimer2Title": "2. Investment Responsibility:",
+        "disclaimer2": "The information provided is not investment advice. Legal responsibility for all investment decisions and their outcomes (profits or losses) lies <strong style='color:#ef4444'>entirely with the user</strong>.",
+        "disclaimer3Title": "3. Verification Obligation:",
+        "disclaimer3": "Before making actual investments, please verify information through official sources such as SEC EDGAR, your brokerage, or other authoritative financial data providers."
+    },
+    "usHelmet": {
+        "appTitle": "{{name}} ({{ticker}}) Financial Analysis - Revenue, Net Income, EPS | KStockView",
+        "appDesc": "Analyze {{name}} ({{ticker}}) quarterly/annual revenue, operating income, net income, EPS with charts.",
+        "ogTitle": "{{name}} ({{ticker}}) US Stock Analysis | KStockView"
     },
     "helmet": {
         "appTitle": "{{name}} ({{code}}) Financial Statements & Analysis | KStockView",

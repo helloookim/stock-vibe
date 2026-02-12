@@ -4,7 +4,9 @@ import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import { Search, Menu, X, BarChart3, TrendingUp, PieChart, ArrowUpDown, ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
 import { loadAllFinancialData } from '../dataLoader';
+import { loadUsCompanyIndex } from '../usDataLoader';
 import LanguageToggle from '../components/LanguageToggle';
+import MarketToggle from '../components/MarketToggle';
 
 const Home = () => {
     const { t, i18n } = useTranslation();
@@ -18,6 +20,11 @@ const Home = () => {
     const [sortBy, setSortBy] = useState('revenue');
     const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
+    const [sidebarMarket, setSidebarMarket] = useState('kr');
+    const [usCompanyIndex, setUsCompanyIndex] = useState([]);
+    const [usIndexLoading, setUsIndexLoading] = useState(false);
+    const [usSortBy, setUsSortBy] = useState('rank');
+    const [usSearchTerm, setUsSearchTerm] = useState('');
 
     // Detect mobile screen size
     useEffect(() => {
@@ -34,6 +41,15 @@ const Home = () => {
         { code: '005380', name: '현대자동차' },
         { code: '035420', name: 'NAVER' },
         { code: '035720', name: '카카오' },
+    ];
+
+    const usPopularStocks = [
+        { ticker: 'AAPL', name: 'Apple Inc.' },
+        { ticker: 'NVDA', name: 'NVIDIA CORP' },
+        { ticker: 'MSFT', name: 'MICROSOFT CORP' },
+        { ticker: 'AMZN', name: 'AMAZON COM INC' },
+        { ticker: 'TSLA', name: 'Tesla, Inc.' },
+        { ticker: 'META', name: 'Meta Platforms, Inc.' },
     ];
 
     // Load financial data for sidebar
@@ -89,9 +105,51 @@ const Home = () => {
         return list;
     }, [searchTerm, sortBy, financialRawData, marketCapData]);
 
+    // Load US company index when sidebar switches to US
+    useEffect(() => {
+        if (sidebarMarket !== 'us' || usCompanyIndex.length > 0) return;
+        async function loadUsIndex() {
+            setUsIndexLoading(true);
+            try {
+                const index = await loadUsCompanyIndex();
+                setUsCompanyIndex(index || []);
+            } catch (err) {
+                console.error('Error loading US company index:', err);
+            } finally {
+                setUsIndexLoading(false);
+            }
+        }
+        loadUsIndex();
+    }, [sidebarMarket]);
+
+    const usCompanyList = useMemo(() => {
+        let list = usCompanyIndex.filter(c => {
+            const term = usSearchTerm.toLowerCase();
+            return c.ticker.toLowerCase().includes(term) || c.name.toLowerCase().includes(term);
+        });
+        if (usSortBy === 'ticker') {
+            list = [...list].sort((a, b) => a.ticker.localeCompare(b.ticker));
+        } else if (usSortBy === 'name') {
+            list = [...list].sort((a, b) => a.name.localeCompare(b.name));
+        }
+        return list;
+    }, [usCompanyIndex, usSearchTerm, usSortBy]);
+
     const handleStockSelect = (code) => {
         setIsMobileMenuOpen(false);
         navigate(`/stocks/${code}`);
+    };
+
+    const handleUsStockSelect = (ticker) => {
+        setIsMobileMenuOpen(false);
+        navigate(`/us-stocks/${ticker}`);
+    };
+
+    const handleMarketToggle = (market) => {
+        setSidebarMarket(market);
+        setSearchTerm('');
+        setUsSearchTerm('');
+        setSortDropdownOpen(false);
     };
 
     return (
@@ -136,75 +194,119 @@ const Home = () => {
                             <Link to="/" className="app-title" style={{ textDecoration: 'none', color: 'inherit' }}>KSTOCKVIEW</Link>
                             <LanguageToggle />
                         </div>
-                        <div className="sort-dropdown-container">
-                            <button
-                                className="sort-dropdown-btn"
-                                onClick={() => setSortDropdownOpen(prev => !prev)}
-                            >
-                                <ArrowUpDown size={16} />
-                                <span>
-                                    {sortBy === 'revenue' ? t('sidebar.sortByRevenue') :
-                                        sortBy === 'op_profit' ? t('sidebar.sortByOpProfit') :
-                                        sortBy === 'market_cap' ? t('sidebar.sortByMarketCap') : t('sidebar.sortByCode')}
-                                </span>
-                            </button>
-                            {sortDropdownOpen && (
-                                <div className="sort-dropdown-menu">
+                        <MarketToggle activeMarket={sidebarMarket} onChange={handleMarketToggle} />
+                        {sidebarMarket === 'kr' ? (
+                            <>
+                                <div className="sort-dropdown-container">
                                     <button
-                                        className={`sort-option ${sortBy === 'revenue' ? 'active' : ''}`}
-                                        onClick={() => { setSortBy('revenue'); setSortDropdownOpen(false); }}
+                                        className="sort-dropdown-btn"
+                                        onClick={() => setSortDropdownOpen(prev => !prev)}
                                     >
-                                        {t('sidebar.sortByRevenue')}
+                                        <ArrowUpDown size={16} />
+                                        <span>
+                                            {sortBy === 'revenue' ? t('sidebar.sortByRevenue') :
+                                                sortBy === 'op_profit' ? t('sidebar.sortByOpProfit') :
+                                                sortBy === 'market_cap' ? t('sidebar.sortByMarketCap') : t('sidebar.sortByCode')}
+                                        </span>
                                     </button>
-                                    <button
-                                        className={`sort-option ${sortBy === 'market_cap' ? 'active' : ''}`}
-                                        onClick={() => { setSortBy('market_cap'); setSortDropdownOpen(false); }}
-                                    >
-                                        {t('sidebar.sortByMarketCap')}
-                                    </button>
-                                    <button
-                                        className={`sort-option ${sortBy === 'op_profit' ? 'active' : ''}`}
-                                        onClick={() => { setSortBy('op_profit'); setSortDropdownOpen(false); }}
-                                    >
-                                        {t('sidebar.sortByOpProfit')}
-                                    </button>
-                                    <button
-                                        className={`sort-option ${sortBy === 'code' ? 'active' : ''}`}
-                                        onClick={() => { setSortBy('code'); setSortDropdownOpen(false); }}
-                                    >
-                                        {t('sidebar.sortByCode')}
-                                    </button>
+                                    {sortDropdownOpen && (
+                                        <div className="sort-dropdown-menu">
+                                            <button className={`sort-option ${sortBy === 'revenue' ? 'active' : ''}`}
+                                                onClick={() => { setSortBy('revenue'); setSortDropdownOpen(false); }}>
+                                                {t('sidebar.sortByRevenue')}
+                                            </button>
+                                            <button className={`sort-option ${sortBy === 'market_cap' ? 'active' : ''}`}
+                                                onClick={() => { setSortBy('market_cap'); setSortDropdownOpen(false); }}>
+                                                {t('sidebar.sortByMarketCap')}
+                                            </button>
+                                            <button className={`sort-option ${sortBy === 'op_profit' ? 'active' : ''}`}
+                                                onClick={() => { setSortBy('op_profit'); setSortDropdownOpen(false); }}>
+                                                {t('sidebar.sortByOpProfit')}
+                                            </button>
+                                            <button className={`sort-option ${sortBy === 'code' ? 'active' : ''}`}
+                                                onClick={() => { setSortBy('code'); setSortDropdownOpen(false); }}>
+                                                {t('sidebar.sortByCode')}
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                        </div>
+                            </>
+                        ) : (
+                            <>
+                                <div className="sort-dropdown-container">
+                                    <button className="sort-dropdown-btn" onClick={() => setSortDropdownOpen(prev => !prev)}>
+                                        <ArrowUpDown size={16} />
+                                        <span>
+                                            {usSortBy === 'rank' ? t('usSidebar.sortByRank') :
+                                                usSortBy === 'ticker' ? t('usSidebar.sortByTicker') : t('usSidebar.sortByName')}
+                                        </span>
+                                    </button>
+                                    {sortDropdownOpen && (
+                                        <div className="sort-dropdown-menu">
+                                            <button className={`sort-option ${usSortBy === 'rank' ? 'active' : ''}`}
+                                                onClick={() => { setUsSortBy('rank'); setSortDropdownOpen(false); }}>
+                                                {t('usSidebar.sortByRank')}
+                                            </button>
+                                            <button className={`sort-option ${usSortBy === 'ticker' ? 'active' : ''}`}
+                                                onClick={() => { setUsSortBy('ticker'); setSortDropdownOpen(false); }}>
+                                                {t('usSidebar.sortByTicker')}
+                                            </button>
+                                            <button className={`sort-option ${usSortBy === 'name' ? 'active' : ''}`}
+                                                onClick={() => { setUsSortBy('name'); setSortDropdownOpen(false); }}>
+                                                {t('usSidebar.sortByName')}
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </>
+                        )}
                     </div>
 
                     <div className="search-box">
                         <Search size={18} className="search-icon" />
                         <input
                             type="text"
-                            placeholder={t('sidebar.searchPlaceholder')}
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder={sidebarMarket === 'kr' ? t('sidebar.searchPlaceholder') : t('usSidebar.searchPlaceholder')}
+                            value={sidebarMarket === 'kr' ? searchTerm : usSearchTerm}
+                            onChange={(e) => sidebarMarket === 'kr' ? setSearchTerm(e.target.value) : setUsSearchTerm(e.target.value)}
                         />
                     </div>
 
                     <div className="ticker-list">
-                        {dataLoading ? (
-                            <div style={{ textAlign: 'center', padding: '20px', color: '#94a3b8' }}>
-                                {t('common.loadingSidebar')}
-                            </div>
+                        {sidebarMarket === 'kr' ? (
+                            dataLoading ? (
+                                <div style={{ textAlign: 'center', padding: '20px', color: '#94a3b8' }}>
+                                    {t('common.loadingSidebar')}
+                                </div>
+                            ) : (
+                                companyList.map((comp) => (
+                                    <button
+                                        key={comp.code}
+                                        onClick={() => handleStockSelect(comp.code)}
+                                        className="ticker-item"
+                                    >
+                                        <span className="ticker-code">{comp.code}</span>
+                                        <span className="ticker-name">{comp.name}</span>
+                                    </button>
+                                ))
+                            )
                         ) : (
-                            companyList.map((comp) => (
-                                <button
-                                    key={comp.code}
-                                    onClick={() => handleStockSelect(comp.code)}
-                                    className="ticker-item"
-                                >
-                                    <span className="ticker-code">{comp.code}</span>
-                                    <span className="ticker-name">{comp.name}</span>
-                                </button>
-                            ))
+                            usIndexLoading ? (
+                                <div style={{ textAlign: 'center', padding: '20px', color: '#94a3b8' }}>
+                                    {t('common.loadingSidebar')}
+                                </div>
+                            ) : (
+                                usCompanyList.map((comp) => (
+                                    <button
+                                        key={comp.ticker}
+                                        onClick={() => handleUsStockSelect(comp.ticker)}
+                                        className="ticker-item"
+                                    >
+                                        <span className="ticker-code">{comp.ticker}</span>
+                                        <span className="ticker-name">{comp.name}</span>
+                                    </button>
+                                ))
+                            )
                         )}
                     </div>
 
@@ -327,9 +429,9 @@ const Home = () => {
                                 </div>
                             </section>
 
-                            {/* Popular Stocks */}
+                            {/* Popular Stocks - Korean */}
                             <section className="home-popular-section">
-                                <p className="home-popular-label">{t('home.popularStocks')}</p>
+                                <p className="home-popular-label">🇰🇷 {t('home.popularStocks')}</p>
                                 <div className="home-popular-grid">
                                     {popularStocks.map((stock) => (
                                         <Link
@@ -338,6 +440,23 @@ const Home = () => {
                                             className="home-popular-chip"
                                         >
                                             <span className="home-popular-chip-code">{stock.code}</span>
+                                            <span className="home-popular-chip-name">{stock.name}</span>
+                                        </Link>
+                                    ))}
+                                </div>
+                            </section>
+
+                            {/* Popular Stocks - US */}
+                            <section className="home-popular-section" style={{ marginTop: '0' }}>
+                                <p className="home-popular-label">🇺🇸 {t('home.usPopularStocks')}</p>
+                                <div className="home-popular-grid">
+                                    {usPopularStocks.map((stock) => (
+                                        <Link
+                                            key={stock.ticker}
+                                            to={`/us-stocks/${stock.ticker}`}
+                                            className="home-popular-chip"
+                                        >
+                                            <span className="home-popular-chip-code">{stock.ticker}</span>
                                             <span className="home-popular-chip-name">{stock.name}</span>
                                         </Link>
                                     ))}

@@ -126,6 +126,41 @@ body {
   align-items: center;
 }
 
+/* Market Toggle (KR/US) */
+.market-toggle {
+  display: flex;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 8px;
+}
+.market-toggle-btn {
+  flex: 1;
+  padding: 5px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: transparent;
+  color: #64748b;
+  letter-spacing: 0.5px;
+}
+.market-toggle-btn.active {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+}
+.market-toggle-btn:hover:not(.active) {
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.05);
+}
+.sidebar.collapsed .market-toggle {
+  display: none;
+}
+
 .app-title {
   font-size: 1.5rem;
   font-weight: 900;
@@ -471,6 +506,60 @@ body {
   font-size: 1.5rem;
   font-weight: 800;
   color: #ffffff;
+}
+
+.card-value-placeholder {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #94a3b8;
+  background: rgba(51, 65, 85, 0.5);
+  padding: 4px 14px;
+  border-radius: 6px;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  letter-spacing: 0.02em;
+}
+
+.chart-placeholder {
+  position: relative;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.chart-placeholder-blur {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(51, 65, 85, 0.15) 0px,
+    rgba(51, 65, 85, 0.15) 1px,
+    transparent 1px,
+    transparent 40px
+  ),
+  repeating-linear-gradient(
+    90deg,
+    rgba(51, 65, 85, 0.10) 0px,
+    rgba(51, 65, 85, 0.10) 1px,
+    transparent 1px,
+    transparent 80px
+  );
+  filter: blur(1px);
+}
+
+.chart-placeholder-label {
+  position: relative;
+  z-index: 1;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #94a3b8;
+  background: rgba(30, 41, 59, 0.85);
+  padding: 8px 20px;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
 }
 
 /* Chart Section */
@@ -1362,7 +1451,8 @@ input[type="range"]::-moz-range-thumb {
 /* Extra small mobile devices */
 @media (max-width: 480px) {
   .summary-cards {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
   }
 
   .company-info h1 {
