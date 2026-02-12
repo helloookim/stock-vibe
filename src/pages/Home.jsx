@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import { Search, Menu, X, BarChart3, TrendingUp, PieChart, ArrowUpDown, ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
-import { loadAllFinancialData } from '../dataLoader';
 import { loadUsCompanyIndex } from '../usDataLoader';
 import LanguageToggle from '../components/LanguageToggle';
 import MarketToggle from '../components/MarketToggle';
@@ -13,11 +12,10 @@ const Home = () => {
     const navigate = useNavigate();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-    const [financialRawData, setFinancialRawData] = useState({});
     const [marketCapData, setMarketCapData] = useState({});
     const [dataLoading, setDataLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [sortBy, setSortBy] = useState('revenue');
+    const [sortBy, setSortBy] = useState('market_cap');
     const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     const [sidebarMarket, setSidebarMarket] = useState('kr');
@@ -52,16 +50,12 @@ const Home = () => {
         { ticker: 'META', name: 'Meta Platforms, Inc.' },
     ];
 
-    // Load financial data for sidebar
+    // Load lightweight market cap data for sidebar (587KB instead of 40MB)
     useEffect(() => {
         async function loadData() {
             setDataLoading(true);
             try {
-                const [financial, marketCap] = await Promise.all([
-                    loadAllFinancialData(),
-                    fetch('/market_cap_data.json').then(r => r.json())
-                ]);
-                setFinancialRawData(financial || {});
+                const marketCap = await fetch('/market_cap_data.json').then(r => r.json());
                 setMarketCapData(marketCap || {});
             } catch (error) {
                 console.error('Error loading data:', error);
@@ -73,37 +67,25 @@ const Home = () => {
     }, []);
 
     const companyList = useMemo(() => {
-        let list = Object.entries(financialRawData).map(([code, info]) => {
-            const lastEntry = info.history && info.history.length > 0 ? info.history[info.history.length - 1] : null;
-            const latestRevenue = lastEntry ? (lastEntry.revenue || 0) : 0;
-            const latestOpProfit = lastEntry ? (lastEntry.op_profit || 0) : 0;
-            const marketCap = marketCapData[code]?.market_cap || 0;
-
-            return {
-                code,
-                name: info.name,
-                latestRevenue,
-                latestOpProfit,
-                marketCap
-            };
-        })
+        let list = Object.entries(marketCapData).map(([code, info]) => ({
+            code,
+            name: info.name,
+            marketCap: info.market_cap || 0,
+            rank: info.rank || 9999
+        }))
         .filter(c => {
             const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.code.includes(searchTerm);
             return matchesSearch;
         });
 
-        if (sortBy === 'revenue') {
-            list.sort((a, b) => b.latestRevenue - a.latestRevenue);
-        } else if (sortBy === 'op_profit') {
-            list.sort((a, b) => b.latestOpProfit - a.latestOpProfit);
-        } else if (sortBy === 'market_cap') {
-            list.sort((a, b) => b.marketCap - a.marketCap);
+        if (sortBy === 'market_cap') {
+            list.sort((a, b) => a.rank - b.rank);
         } else {
             list.sort((a, b) => a.code.localeCompare(b.code));
         }
 
         return list;
-    }, [searchTerm, sortBy, financialRawData, marketCapData]);
+    }, [searchTerm, sortBy, marketCapData]);
 
     // Load US company index when sidebar switches to US
     useEffect(() => {
@@ -204,24 +186,14 @@ const Home = () => {
                                     >
                                         <ArrowUpDown size={16} />
                                         <span>
-                                            {sortBy === 'revenue' ? t('sidebar.sortByRevenue') :
-                                                sortBy === 'op_profit' ? t('sidebar.sortByOpProfit') :
-                                                sortBy === 'market_cap' ? t('sidebar.sortByMarketCap') : t('sidebar.sortByCode')}
+                                            {sortBy === 'market_cap' ? t('sidebar.sortByMarketCap') : t('sidebar.sortByCode')}
                                         </span>
                                     </button>
                                     {sortDropdownOpen && (
                                         <div className="sort-dropdown-menu">
-                                            <button className={`sort-option ${sortBy === 'revenue' ? 'active' : ''}`}
-                                                onClick={() => { setSortBy('revenue'); setSortDropdownOpen(false); }}>
-                                                {t('sidebar.sortByRevenue')}
-                                            </button>
                                             <button className={`sort-option ${sortBy === 'market_cap' ? 'active' : ''}`}
                                                 onClick={() => { setSortBy('market_cap'); setSortDropdownOpen(false); }}>
                                                 {t('sidebar.sortByMarketCap')}
-                                            </button>
-                                            <button className={`sort-option ${sortBy === 'op_profit' ? 'active' : ''}`}
-                                                onClick={() => { setSortBy('op_profit'); setSortDropdownOpen(false); }}>
-                                                {t('sidebar.sortByOpProfit')}
                                             </button>
                                             <button className={`sort-option ${sortBy === 'code' ? 'active' : ''}`}
                                                 onClick={() => { setSortBy('code'); setSortDropdownOpen(false); }}>

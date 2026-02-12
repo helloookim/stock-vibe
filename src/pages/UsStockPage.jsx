@@ -534,7 +534,6 @@ const UsStockPage = () => {
                             <div className="company-info">
                                 <h1>{companyData?.name || selectedTicker}</h1>
                                 <span className="company-code">{selectedTicker}</span>
-                                <span className="company-sector" style={{ background: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa' }}>US Stock</span>
                             </div>
 
                             <div className="view-mode-toggle" style={{ display: 'flex', gap: '6px', marginBottom: '8px', justifyContent: 'center' }}>

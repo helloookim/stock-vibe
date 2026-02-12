@@ -180,44 +180,29 @@ const App = () => {
         ? { fontSize: 8, angle: -45, textAnchor: 'end', height: 60 }
         : { fontSize: 10, angle: -45, textAnchor: 'end', height: 70 };
 
-    // Load all data on mount
+    // Phase 1: Load quarterly data + market cap (essential for initial render)
     useEffect(() => {
         async function loadData() {
             setDataLoading(true);
             try {
-                const [financial, annual, eps, marketCap] = await Promise.all([
-                    loadAllFinancialData(),  // Loads and merges consolidated + separate + income statement
-                    loadAllAnnualFinancialData(),  // Loads and merges annual + income statement annual
-                    loadAllEpsData(),  // Loads and merges eps_data + income_statement_eps
+                const [financial, marketCap] = await Promise.all([
+                    loadAllFinancialData(),
                     fetch('/market_cap_data.json').then(r => r.json())
                 ]);
 
                 setFinancialRawData(financial || {});
-                setFinancialAnnualData(annual || {});
-                setEpsData(eps || {});
                 setMarketCapData(marketCap || {});
 
-                // Check if URL has a stock code (now under /stocks/ prefix)
                 const pathname = window.location.pathname;
                 const pathCode = pathname.startsWith('/stocks/') ? pathname.slice(8) : '';
 
-                // Only set default company if:
-                // 1. No code in URL, OR
-                // 2. Code in URL is valid
-                // If code is invalid, don't set anything (let 404 show)
                 const codes = Object.keys(financial || {});
                 if (codes.length > 0) {
                     if (!pathCode || financial[pathCode]) {
-                        // Valid code or no code - set selected
                         if (pathCode && financial[pathCode]) {
                             setSelectedCode(pathCode);
-                        } else if (!pathCode) {
-                            // No code in URL - this is home page, don't set default
-                            // (Home component handles this separately)
                         }
                     }
-                    // If pathCode exists but is invalid, don't set selectedCode
-                    // This will let isInvalidCode logic handle it
                 }
             } catch (error) {
                 console.error('Error loading data:', error);
@@ -228,6 +213,18 @@ const App = () => {
 
         loadData();
     }, []);
+
+    // Phase 2: Load EPS data in background (visible on page but below fold)
+    useEffect(() => {
+        if (dataLoading) return;
+        loadAllEpsData().then(eps => setEpsData(eps || {})).catch(() => {});
+    }, [dataLoading]);
+
+    // Phase 3: Load annual data only when user switches to annual view
+    useEffect(() => {
+        if (viewMode !== 'annual' || Object.keys(financialAnnualData).length > 0) return;
+        loadAllAnnualFinancialData().then(annual => setFinancialAnnualData(annual || {})).catch(() => {});
+    }, [viewMode]);
 
     // Track if we have an invalid stock code
     const [isInvalidCode, setIsInvalidCode] = useState(false);
@@ -255,6 +252,8 @@ const App = () => {
     // Track unique stock views and show donation popup at 10 unique views (1-day cooldown)
     useEffect(() => {
         if (!selectedCode || dataLoading) return;
+        // Only show donation popup to Korean language users
+        if (i18n.language !== 'ko') return;
         // Skip if already viewed this stock
         if (viewedStocksRef.current.has(selectedCode)) return;
         viewedStocksRef.current.add(selectedCode);

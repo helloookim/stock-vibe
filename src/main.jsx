@@ -1,50 +1,63 @@
-import React from 'react'
+import React, { Suspense } from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import './i18n'
 import { HelmetProvider } from 'react-helmet-async'
-import App from './App.jsx'
-import Home from './pages/Home.jsx'
-import PrivacyPolicy from './pages/PrivacyPolicy.jsx'
-import Terms from './pages/Terms.jsx'
-import Contact from './pages/Contact.jsx'
-import SamsungElectronics from './pages/blog/SamsungElectronics.jsx'
-import SKHynix from './pages/blog/SKHynix.jsx'
-import HyundaiMotor from './pages/blog/HyundaiMotor.jsx'
-import LGEnergySolution from './pages/blog/LGEnergySolution.jsx'
-import SamsungBiologics from './pages/blog/SamsungBiologics.jsx'
-import HanwhaAerospace from './pages/blog/HanwhaAerospace.jsx'
-import Kia from './pages/blog/Kia.jsx'
-import Naver from './pages/blog/Naver.jsx'
-import Kakao from './pages/blog/Kakao.jsx'
-import BlogList from './pages/BlogList.jsx'
-import UsStockPage from './pages/UsStockPage.jsx'
-import NotFound from './pages/NotFound.jsx'
 import './index.css'
+
+// Lazy load all page components
+const Home = React.lazy(() => import('./pages/Home.jsx'))
+const App = React.lazy(() => import('./App.jsx'))
+const UsStockPage = React.lazy(() => import('./pages/UsStockPage.jsx'))
+const PrivacyPolicy = React.lazy(() => import('./pages/PrivacyPolicy.jsx'))
+const Terms = React.lazy(() => import('./pages/Terms.jsx'))
+const Contact = React.lazy(() => import('./pages/Contact.jsx'))
+const BlogList = React.lazy(() => import('./pages/BlogList.jsx'))
+const NotFound = React.lazy(() => import('./pages/NotFound.jsx'))
+const SamsungElectronics = React.lazy(() => import('./pages/blog/SamsungElectronics.jsx'))
+const SKHynix = React.lazy(() => import('./pages/blog/SKHynix.jsx'))
+const HyundaiMotor = React.lazy(() => import('./pages/blog/HyundaiMotor.jsx'))
+const LGEnergySolution = React.lazy(() => import('./pages/blog/LGEnergySolution.jsx'))
+const SamsungBiologics = React.lazy(() => import('./pages/blog/SamsungBiologics.jsx'))
+const HanwhaAerospace = React.lazy(() => import('./pages/blog/HanwhaAerospace.jsx'))
+const Kia = React.lazy(() => import('./pages/blog/Kia.jsx'))
+const Naver = React.lazy(() => import('./pages/blog/Naver.jsx'))
+const Kakao = React.lazy(() => import('./pages/blog/Kakao.jsx'))
+
+const LoadingFallback = () => (
+    <div style={{
+        display: 'flex', justifyContent: 'center', alignItems: 'center',
+        height: '100vh', backgroundColor: '#0f172a', color: '#94a3b8', fontSize: '0.9rem'
+    }}>
+        Loading...
+    </div>
+)
 
 ReactDOM.createRoot(document.getElementById('root')).render(
     <React.StrictMode>
         <HelmetProvider>
             <BrowserRouter>
-                <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/privacy" element={<PrivacyPolicy />} />
-                    <Route path="/terms" element={<Terms />} />
-                    <Route path="/contact" element={<Contact />} />
-                    <Route path="/blog/samsung-electronics" element={<SamsungElectronics />} />
-                    <Route path="/blog/sk-hynix" element={<SKHynix />} />
-                    <Route path="/blog/hyundai-motor" element={<HyundaiMotor />} />
-                    <Route path="/blog/lg-energy-solution" element={<LGEnergySolution />} />
-                    <Route path="/blog/samsung-biologics" element={<SamsungBiologics />} />
-                    <Route path="/blog/hanwha-aerospace" element={<HanwhaAerospace />} />
-                    <Route path="/blog/kia" element={<Kia />} />
-                    <Route path="/blog/naver" element={<Naver />} />
-                    <Route path="/blog/kakao" element={<Kakao />} />
-                    <Route path="/blogs" element={<BlogList />} />
-                    <Route path="/stocks/:stockCode" element={<App />} />
-                    <Route path="/us-stocks/:ticker" element={<UsStockPage />} />
-                    <Route path="*" element={<NotFound />} />
-                </Routes>
+                <Suspense fallback={<LoadingFallback />}>
+                    <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/privacy" element={<PrivacyPolicy />} />
+                        <Route path="/terms" element={<Terms />} />
+                        <Route path="/contact" element={<Contact />} />
+                        <Route path="/blog/samsung-electronics" element={<SamsungElectronics />} />
+                        <Route path="/blog/sk-hynix" element={<SKHynix />} />
+                        <Route path="/blog/hyundai-motor" element={<HyundaiMotor />} />
+                        <Route path="/blog/lg-energy-solution" element={<LGEnergySolution />} />
+                        <Route path="/blog/samsung-biologics" element={<SamsungBiologics />} />
+                        <Route path="/blog/hanwha-aerospace" element={<HanwhaAerospace />} />
+                        <Route path="/blog/kia" element={<Kia />} />
+                        <Route path="/blog/naver" element={<Naver />} />
+                        <Route path="/blog/kakao" element={<Kakao />} />
+                        <Route path="/blogs" element={<BlogList />} />
+                        <Route path="/stocks/:stockCode" element={<App />} />
+                        <Route path="/us-stocks/:ticker" element={<UsStockPage />} />
+                        <Route path="*" element={<NotFound />} />
+                    </Routes>
+                </Suspense>
             </BrowserRouter>
         </HelmetProvider>
     </React.StrictMode>,
