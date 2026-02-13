@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
+import SEOHead from '../components/SEOHead';
 import { Search, Menu, X, BarChart3, TrendingUp, PieChart, ArrowUpDown, ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
 import { loadUsCompanyIndex } from '../usDataLoader';
 import LanguageToggle from '../components/LanguageToggle';
@@ -136,16 +136,22 @@ const Home = () => {
 
     return (
         <>
-            <Helmet>
-                <html lang={i18n.language} />
-                <title>{t('helmet.homeTitle')}</title>
-                <meta name="description" content={t('helmet.homeDesc')} />
-                <meta property="og:title" content={t('helmet.homeTitle')} />
-                <meta property="og:description" content={t('helmet.appDescDefault')} />
-                <meta property="og:type" content="website" />
-                <meta property="og:url" content="https://kstockview.com" />
-                <link rel="canonical" href="https://kstockview.com" />
-            </Helmet>
+            <SEOHead
+                title={t('helmet.homeTitle')}
+                description={t('helmet.homeDesc')}
+                canonical="https://kstockview.com"
+                jsonLd={[
+                    {
+                        '@type': 'FAQPage',
+                        mainEntity: [
+                            { '@type': 'Question', name: t('faq.home.q1'), acceptedAnswer: { '@type': 'Answer', text: t('faq.home.a1') } },
+                            { '@type': 'Question', name: t('faq.home.q2'), acceptedAnswer: { '@type': 'Answer', text: t('faq.home.a2') } },
+                            { '@type': 'Question', name: t('faq.home.q3'), acceptedAnswer: { '@type': 'Answer', text: t('faq.home.a3') } },
+                            { '@type': 'Question', name: t('faq.home.q4'), acceptedAnswer: { '@type': 'Answer', text: t('faq.home.a4') } }
+                        ]
+                    }
+                ]}
+            />
 
             <div className="app-container">
                 {/* Mobile Header with Hamburger Menu */}

@@ -1,9 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, TrendingUp, BarChart3, Shield, ExternalLink } from 'lucide-react';
+import SEOHead from '../../components/SEOHead';
 
 const SamsungElectronics = () => {
+    const { t } = useTranslation();
+
     // Override body overflow for this page
     React.useEffect(() => {
         document.body.style.overflow = 'auto';
@@ -18,15 +21,40 @@ const SamsungElectronics = () => {
 
     return (
         <>
-            <Helmet>
-                <title>삼성전자 주가 전망 및 재무분석 2025 | 매출액, 영업이익 추이 - KStockView</title>
-                <meta name="description" content="삼성전자(005930) 2025년 최신 재무제표 분석. 분기별 매출액, 영업이익, 영업이익률 추이와 반도체 산업 전망을 상세히 알아봅니다." />
-                <meta name="keywords" content="삼성전자, 005930, 삼성전자 주가, 삼성전자 전망, 삼성전자 재무제표, 삼성전자 영업이익, 반도체 주식" />
-                <meta property="og:title" content="삼성전자 주가 전망 및 재무분석 2025 | KStockView" />
-                <meta property="og:description" content="삼성전자의 분기별 매출액, 영업이익 추이와 반도체 산업 전망을 분석합니다." />
-                <meta property="og:type" content="article" />
-                <link rel="canonical" href="https://kstockview.com/blog/samsung-electronics" />
-            </Helmet>
+            <SEOHead
+                title={t('blogSeo.samsungElectronics.title')}
+                description={t('blogSeo.samsungElectronics.description')}
+                keywords={t('blogSeo.samsungElectronics.keywords')}
+                canonical="https://kstockview.com/blog/samsung-electronics"
+                ogType="article"
+                jsonLd={[
+                    {
+                        '@type': 'Article',
+                        headline: t('blogSeo.samsungElectronics.ogTitle'),
+                        author: { '@type': 'Organization', name: 'KStockView' },
+                        publisher: { '@type': 'Organization', name: 'KStockView', logo: { '@type': 'ImageObject', url: 'https://kstockview.com/logo.png' } },
+                        datePublished: '2025-06-01',
+                        dateModified: '2026-02-14',
+                        mainEntityOfPage: { '@type': 'WebPage', '@id': 'https://kstockview.com/blog/samsung-electronics' }
+                    },
+                    {
+                        '@type': 'BreadcrumbList',
+                        itemListElement: [
+                            { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://kstockview.com' },
+                            { '@type': 'ListItem', position: 2, name: 'Blog', item: 'https://kstockview.com/blogs' },
+                            { '@type': 'ListItem', position: 3, name: 'Samsung Electronics' }
+                        ]
+                    },
+                    {
+                        '@type': 'FAQPage',
+                        mainEntity: [
+                            { '@type': 'Question', name: t('faq.samsungElectronics.q1'), acceptedAnswer: { '@type': 'Answer', text: t('faq.samsungElectronics.a1') } },
+                            { '@type': 'Question', name: t('faq.samsungElectronics.q2'), acceptedAnswer: { '@type': 'Answer', text: t('faq.samsungElectronics.a2') } },
+                            { '@type': 'Question', name: t('faq.samsungElectronics.q3'), acceptedAnswer: { '@type': 'Answer', text: t('faq.samsungElectronics.a3') } }
+                        ]
+                    }
+                ]}
+            />
             <div style={{
                 minHeight: '100vh',
                 background: 'linear-gradient(135deg, #020617 0%, #0f172a 100%)',
@@ -53,7 +81,7 @@ const SamsungElectronics = () => {
                         }}
                     >
                         <ArrowLeft size={18} />
-                        홈으로 돌아가기
+                        {t('blog.backToHome')}
                     </Link>
 
                     {/* Header */}
@@ -101,7 +129,7 @@ const SamsungElectronics = () => {
                             삼성전자(005930) 주가 전망 및 재무분석
                         </h1>
                         <p style={{ color: '#94a3b8', fontSize: isMobile ? '0.8rem' : '0.9rem' }}>
-                            최종 업데이트: 2025년 3분기 실적 반영 | KStockView 리서치팀
+                            최종 업데이트: 2026년 3분기 실적 반영 | KStockView 리서치팀
                         </p>
                     </header>
 
@@ -233,7 +261,7 @@ const SamsungElectronics = () => {
                                     fontSize: '1.2rem',
                                     textAlign: 'center'
                                 }}>
-                                    2025년 3분기 주요 실적 (연결 기준)
+                                    2026년 3분기 주요 실적 (연결 기준)
                                 </h3>
                                 <div style={{
                                     display: 'grid',
@@ -270,7 +298,7 @@ const SamsungElectronics = () => {
                                 2024년부터 본격적인 회복세를 보이고 있습니다.
                             </p>
                             <p style={{ color: '#cbd5e1', marginBottom: '25px' }}>
-                                특히 2025년 3분기 매출액 <strong style={{ color: '#60a5fa' }}>86조 617억원</strong>은
+                                특히 2026년 3분기 매출액 <strong style={{ color: '#60a5fa' }}>86조 617억원</strong>은
                                 전년 동기(67조 4,047억원) 대비 약 <strong style={{ color: '#10b981' }}>27.7% 증가</strong>한
                                 수치로, AI 서버용 HBM(고대역폭메모리) 수요 증가와 메모리 가격 상승이 주요 원인으로
                                 분석됩니다.
@@ -287,7 +315,7 @@ const SamsungElectronics = () => {
                             </p>
                             <p style={{ color: '#cbd5e1', marginBottom: '25px' }}>
                                 삼성전자는 2023년 반도체 불황기에 영업이익률이 한 자릿수까지 하락했으나,
-                                2025년 3분기 기준 약 <strong style={{ color: '#8b5cf6' }}>14.1%</strong>까지
+                                2026년 3분기 기준 약 <strong style={{ color: '#8b5cf6' }}>14.1%</strong>까지
                                 회복하였습니다. 이는 메모리 반도체 가격 정상화와 원가 절감 노력의 결과로 해석됩니다.
                             </p>
 
@@ -329,7 +357,7 @@ const SamsungElectronics = () => {
                                     <strong>2022~2023년:</strong> 조정기 - 인플레이션, 금리 인상으로 수요 둔화
                                 </li>
                                 <li>
-                                    <strong>2024~2025년:</strong> AI 시대 - HBM 등 AI 반도체 수요 급증으로 재도약
+                                    <strong>2024~2026년:</strong> AI 시대 - HBM 등 AI 반도체 수요 급증으로 재도약
                                 </li>
                             </ul>
                         </section>

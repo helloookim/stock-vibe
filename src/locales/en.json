@@ -205,11 +205,160 @@
         "appTitle": "{{name}} ({{code}}) Financial Statements & Analysis | KStockView",
         "appTitleDefault": "KStockView - Korean Stock Financial Analysis",
         "appDesc": "Analyze {{name}} ({{code}}) quarterly/annual financial statements, revenue, operating profit, operating margin, EPS and more with charts.",
-        "appDescDefault": "Visualize and analyze financial statements and earnings data of Korean listed companies.",
+        "appDescDefault": "Visualize and analyze financial statements and earnings data of Korean and US listed companies.",
         "ogTitle": "{{name}} ({{code}}) Financial Analysis | KStockView",
         "ogTitleDefault": "KStockView - Korean Stock Financial Analysis",
         "ogDesc": "Check {{name}}'s revenue, operating profit, EPS and more financial data with charts.",
-        "homeTitle": "KStockView - Korean Stock Financial Analysis",
-        "homeDesc": "Visualize and analyze financial statements and earnings data of Korean listed companies. Check key financial indicators like revenue, operating profit, and EPS at a glance."
+        "homeTitle": "KStockView - Korean & US Stock Financial Analysis",
+        "homeDesc": "Visualize and analyze financial statements of Korean & US listed companies. Check revenue, operating profit, EPS and key financial indicators. Free KOSPI, KOSDAQ, NASDAQ, NYSE stock analysis."
+    },
+    "blog": {
+        "backToHome": "Back to Home",
+        "backToBlogs": "Back to Blog",
+        "relatedAnalysis": "View Live Financial Analysis",
+        "lastUpdated": "Last updated"
+    },
+    "blogList": {
+        "title": "Company Analysis Blog | KStockView",
+        "description": "In-depth financial analysis reports for major Korean companies including Samsung Electronics, SK Hynix, Hyundai Motor and more.",
+        "heading": "Analysis Reports",
+        "subheading": "In-depth financial analysis of leading Korean companies"
+    },
+    "blogSeo": {
+        "samsungElectronics": {
+            "title": "Samsung Electronics Stock Forecast & Financial Analysis 2026 | Revenue, Profit Trends - KStockView",
+            "description": "Samsung Electronics (005930) 2026 latest financial analysis. Explore quarterly revenue, operating profit, margin trends and semiconductor industry outlook.",
+            "keywords": "Samsung Electronics, 005930, Samsung stock, Samsung forecast, Samsung financials, semiconductor stock, KOSPI",
+            "ogTitle": "Samsung Electronics Stock Forecast & Financial Analysis 2026 | KStockView",
+            "ogDescription": "Analyze Samsung Electronics quarterly revenue, operating profit trends and semiconductor industry outlook."
+        },
+        "skHynix": {
+            "title": "SK Hynix Stock Forecast & Financial Analysis 2026 | Revenue, Profit Trends - KStockView",
+            "description": "SK Hynix (000660) 2026 latest financial analysis. Explore HBM, DRAM, NAND revenue trends and memory semiconductor industry outlook.",
+            "keywords": "SK Hynix, 000660, SK Hynix stock, HBM, DRAM, memory semiconductor, KOSPI",
+            "ogTitle": "SK Hynix Stock Forecast & Financial Analysis 2026 | KStockView",
+            "ogDescription": "Analyze SK Hynix quarterly revenue, operating profit trends and memory semiconductor industry outlook."
+        },
+        "hyundaiMotor": {
+            "title": "Hyundai Motor Stock Forecast & Financial Analysis 2026 | Revenue, Profit Trends - KStockView",
+            "description": "Hyundai Motor (005380) 2026 latest financial analysis. Explore global sales, EV strategy, and operating margin trends.",
+            "keywords": "Hyundai Motor, 005380, Hyundai stock, Hyundai forecast, IONIQ, electric vehicle, KOSPI",
+            "ogTitle": "Hyundai Motor Stock Forecast & Financial Analysis 2026 | KStockView",
+            "ogDescription": "Analyze Hyundai Motor quarterly revenue, operating profit trends and global automotive market outlook."
+        },
+        "lgEnergySolution": {
+            "title": "LG Energy Solution Stock Forecast & Financial Analysis 2026 | Revenue, Profit Trends - KStockView",
+            "description": "LG Energy Solution (373220) 2026 latest financial analysis. Explore battery sales, order backlog, and operating margin trends.",
+            "keywords": "LG Energy Solution, 373220, LG battery stock, EV battery, electric vehicle battery, KOSPI",
+            "ogTitle": "LG Energy Solution Stock Forecast & Financial Analysis 2026 | KStockView",
+            "ogDescription": "Analyze LG Energy Solution quarterly revenue, operating profit trends and battery industry outlook."
+        },
+        "samsungBiologics": {
+            "title": "Samsung Biologics Stock Forecast & Financial Analysis 2026 | Revenue, Profit Trends - KStockView",
+            "description": "Samsung Biologics (207940) 2026 latest financial analysis. Explore CMO/CDO revenue, biosimilar strategy, and operating margin trends.",
+            "keywords": "Samsung Biologics, 207940, Samsung Bio stock, biosimilar, CMO, biopharmaceutical, KOSPI",
+            "ogTitle": "Samsung Biologics Stock Forecast & Financial Analysis 2026 | KStockView",
+            "ogDescription": "Analyze Samsung Biologics quarterly revenue, operating profit trends and biopharmaceutical industry outlook."
+        },
+        "hanwhaAerospace": {
+            "title": "Hanwha Aerospace Stock Forecast & Financial Analysis 2026 | Revenue, Profit Trends - KStockView",
+            "description": "Hanwha Aerospace (012450) 2026 latest financial analysis. Explore defense exports, aircraft engine revenue, and industry outlook.",
+            "keywords": "Hanwha Aerospace, 012450, Hanwha stock, defense stock, aircraft engine, KOSPI",
+            "ogTitle": "Hanwha Aerospace Stock Forecast & Financial Analysis 2026 | KStockView",
+            "ogDescription": "Analyze Hanwha Aerospace quarterly revenue, operating profit trends and defense industry outlook."
+        },
+        "kia": {
+            "title": "Kia Stock Forecast & Financial Analysis 2026 | Revenue, Profit Trends - KStockView",
+            "description": "Kia (000270) 2026 latest financial analysis. Explore global sales, EV6/EV9 electric vehicles, and operating margin trends.",
+            "keywords": "Kia, 000270, Kia stock, Kia forecast, EV6, EV9, electric vehicle, KOSPI",
+            "ogTitle": "Kia Stock Forecast & Financial Analysis 2026 | KStockView",
+            "ogDescription": "Analyze Kia quarterly revenue, operating profit trends and global automotive market outlook."
+        },
+        "naver": {
+            "title": "Naver Stock Forecast & Financial Analysis 2026 | Revenue, Profit Trends - KStockView",
+            "description": "Naver (035420) 2026 latest financial analysis. Explore search, commerce, cloud, AI revenue trends and platform outlook.",
+            "keywords": "Naver, 035420, Naver stock, Naver forecast, Naver AI, Naver Cloud, KOSPI",
+            "ogTitle": "Naver Stock Forecast & Financial Analysis 2026 | KStockView",
+            "ogDescription": "Analyze Naver quarterly revenue, operating profit trends and IT platform industry outlook."
+        },
+        "kakao": {
+            "title": "Kakao Stock Forecast & Financial Analysis 2026 | Revenue, Profit Trends - KStockView",
+            "description": "Kakao (035720) 2026 latest financial analysis. Explore KakaoTalk, KakaoPay, Kakao Entertainment revenue trends and platform outlook.",
+            "keywords": "Kakao, 035720, Kakao stock, Kakao forecast, KakaoTalk, KakaoPay, KOSPI",
+            "ogTitle": "Kakao Stock Forecast & Financial Analysis 2026 | KStockView",
+            "ogDescription": "Analyze Kakao quarterly revenue, operating profit trends and platform business outlook."
+        }
+    },
+    "faq": {
+        "home": {
+            "q1": "What is KStockView?",
+            "a1": "KStockView is a free service that visualizes and analyzes financial statements and earnings data of Korean (KOSPI/KOSDAQ) and US (NASDAQ/NYSE) listed companies with interactive charts.",
+            "q2": "What financial metrics are provided?",
+            "a2": "We provide key financial indicators including revenue, operating profit, operating margin, EPS (Earnings Per Share), and YoY changes on both quarterly and annual basis.",
+            "q3": "Can I analyze US stocks too?",
+            "a3": "Yes, KStockView supports financial analysis of US listed companies (NASDAQ, NYSE). Use the market toggle at the top to switch to US stocks.",
+            "q4": "Is it free?",
+            "a4": "Yes, KStockView is completely free to use with no sign-up required."
+        },
+        "samsungElectronics": {
+            "q1": "What is Samsung Electronics' recent revenue trend?",
+            "a1": "You can check Samsung Electronics' quarterly and annual revenue trends in real-time on KStockView. The semiconductor division's revenue recovery is driving overall performance.",
+            "q2": "What is Samsung Electronics' operating margin level?",
+            "a2": "You can check Samsung Electronics' operating margin trends by quarter. Profitability fluctuates significantly with memory semiconductor price movements.",
+            "q3": "Can I analyze Samsung Electronics financials for free?",
+            "a3": "Yes, you can analyze Samsung Electronics (005930) revenue, operating profit, EPS and more with free charts on KStockView."
+        },
+        "skHynix": {
+            "q1": "What is SK Hynix's recent performance?",
+            "a1": "Check SK Hynix's quarterly revenue and operating profit trends on KStockView. Performance has improved significantly due to growing HBM demand.",
+            "q2": "What is SK Hynix's HBM revenue share?",
+            "a2": "SK Hynix's HBM revenue share is rapidly increasing due to expanding AI semiconductor demand. Detailed financial trends are available on KStockView.",
+            "q3": "Can I analyze SK Hynix financials for free?",
+            "a3": "Yes, you can analyze SK Hynix (000660) revenue, operating profit, EPS and more with free charts on KStockView."
+        },
+        "hyundaiMotor": {
+            "q1": "What is Hyundai Motor's global sales trend?",
+            "a1": "Check Hyundai Motor's quarterly revenue and operating profit trends on KStockView. SUV and EV sales are driving growth in global markets.",
+            "q2": "What is Hyundai Motor's operating margin level?",
+            "a2": "You can check Hyundai Motor's operating margin trends by quarter. Premium vehicle expansion and exchange rate effects impact profitability.",
+            "q3": "Can I analyze Hyundai Motor financials for free?",
+            "a3": "Yes, you can analyze Hyundai Motor (005380) revenue, operating profit, EPS and more with free charts on KStockView."
+        },
+        "lgEnergySolution": {
+            "q1": "What is LG Energy Solution's battery sales trend?",
+            "a1": "Check LG Energy Solution's quarterly revenue and operating profit trends on KStockView. Battery sales fluctuate with North American and European EV demand.",
+            "q2": "Can I analyze LG Energy Solution financials for free?",
+            "a2": "Yes, you can analyze LG Energy Solution (373220) revenue, operating profit, EPS and more with free charts on KStockView."
+        },
+        "samsungBiologics": {
+            "q1": "What is Samsung Biologics' CMO revenue trend?",
+            "a1": "Check Samsung Biologics' quarterly revenue and operating profit trends on KStockView. Global biopharmaceutical contract manufacturing (CMO) demand drives revenue.",
+            "q2": "Can I analyze Samsung Biologics financials for free?",
+            "a2": "Yes, you can analyze Samsung Biologics (207940) revenue, operating profit, EPS and more with free charts on KStockView."
+        },
+        "hanwhaAerospace": {
+            "q1": "What is Hanwha Aerospace's defense export performance?",
+            "a1": "Check Hanwha Aerospace's quarterly revenue and operating profit trends on KStockView. Performance is growing significantly due to expanding global defense exports.",
+            "q2": "Can I analyze Hanwha Aerospace financials for free?",
+            "a2": "Yes, you can analyze Hanwha Aerospace (012450) revenue, operating profit, EPS and more with free charts on KStockView."
+        },
+        "kia": {
+            "q1": "What is Kia's global sales performance?",
+            "a1": "Check Kia's quarterly revenue and operating profit trends on KStockView. EV6, EV9 and SUV lineup are driving sales growth.",
+            "q2": "Can I analyze Kia financials for free?",
+            "a2": "Yes, you can analyze Kia (000270) revenue, operating profit, EPS and more with free charts on KStockView."
+        },
+        "naver": {
+            "q1": "What is Naver's AI and cloud revenue trend?",
+            "a1": "Check Naver's quarterly revenue and operating profit trends on KStockView. AI, cloud, and commerce businesses are driving growth.",
+            "q2": "Can I analyze Naver financials for free?",
+            "a2": "Yes, you can analyze Naver (035420) revenue, operating profit, EPS and more with free charts on KStockView."
+        },
+        "kakao": {
+            "q1": "What is Kakao's platform revenue trend?",
+            "a1": "Check Kakao's quarterly revenue and operating profit trends on KStockView. KakaoTalk, KakaoPay, and Kakao Entertainment contribute to revenue.",
+            "q2": "Can I analyze Kakao financials for free?",
+            "a2": "Yes, you can analyze Kakao (035720) revenue, operating profit, EPS and more with free charts on KStockView."
+        }
     }
 }

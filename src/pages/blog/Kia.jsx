@@ -1,9 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
+import SEOHead from '../../components/SEOHead';
 import { ArrowLeft, TrendingUp, BarChart3, Shield, ExternalLink, Car } from 'lucide-react';
 
 const Kia = () => {
+    const { t } = useTranslation();
     React.useEffect(() => {
         document.body.style.overflow = 'auto';
         document.documentElement.style.overflow = 'auto';
@@ -17,15 +19,39 @@ const Kia = () => {
 
     return (
         <>
-            <Helmet>
-                <title>기아 주가 전망 및 재무분석 2025 | 전기차·SUV 글로벌 강자 - KStockView</title>
-                <meta name="description" content="기아(000270) 2025년 최신 재무제표 분석. EV6, EV9 등 전기차 라인업과 글로벌 SUV 시장에서의 성장 전략을 상세히 알아봅니다." />
-                <meta name="keywords" content="기아, 000270, 기아 주가, 기아 전망, EV6, EV9, 전기차, SUV" />
-                <meta property="og:title" content="기아 주가 전망 및 재무분석 2025 | KStockView" />
-                <meta property="og:description" content="기아의 전기차 전환과 글로벌 시장 확대 전략을 분석합니다." />
-                <meta property="og:type" content="article" />
-                <link rel="canonical" href="https://kstockview.com/blog/kia" />
-            </Helmet>
+            <SEOHead
+                title={t('blogSeo.kia.title')}
+                description={t('blogSeo.kia.description')}
+                keywords={t('blogSeo.kia.keywords')}
+                canonical="https://kstockview.com/blog/kia"
+                ogType="article"
+                jsonLd={[
+                    {
+                        '@type': 'Article',
+                        headline: t('blogSeo.kia.ogTitle'),
+                        author: { '@type': 'Organization', name: 'KStockView' },
+                        publisher: { '@type': 'Organization', name: 'KStockView', logo: { '@type': 'ImageObject', url: 'https://kstockview.com/logo.png' } },
+                        datePublished: '2025-06-01',
+                        dateModified: '2026-02-14',
+                        mainEntityOfPage: { '@type': 'WebPage', '@id': 'https://kstockview.com/blog/kia' }
+                    },
+                    {
+                        '@type': 'BreadcrumbList',
+                        itemListElement: [
+                            { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://kstockview.com' },
+                            { '@type': 'ListItem', position: 2, name: 'Blog', item: 'https://kstockview.com/blogs' },
+                            { '@type': 'ListItem', position: 3, name: 'Kia' }
+                        ]
+                    },
+                    {
+                        '@type': 'FAQPage',
+                        mainEntity: [
+                            { '@type': 'Question', name: t('faq.kia.q1'), acceptedAnswer: { '@type': 'Answer', text: t('faq.kia.a1') } },
+                            { '@type': 'Question', name: t('faq.kia.q2'), acceptedAnswer: { '@type': 'Answer', text: t('faq.kia.a2') } }
+                        ]
+                    }
+                ]}
+            />
             <div style={{
                 minHeight: '100vh',
                 background: 'linear-gradient(135deg, #020617 0%, #0f172a 100%)',
@@ -35,7 +61,7 @@ const Kia = () => {
                 <div style={{ maxWidth: '900px', margin: '0 auto', width: '100%' }}>
                     <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#60a5fa', textDecoration: 'none', marginBottom: '30px', fontSize: '0.9rem' }}>
                         <ArrowLeft size={18} />
-                        홈으로 돌아가기
+                        {t('blog.backToHome')}
                     </Link>
 
                     <header style={{ marginBottom: '40px', paddingBottom: '20px', borderBottom: '2px solid #334155' }}>
@@ -57,7 +83,7 @@ const Kia = () => {
                             기아(000270) 주가 전망 및 재무분석
                         </h1>
                         <p style={{ color: '#94a3b8', fontSize: isMobile ? '0.8rem' : '0.9rem' }}>
-                            최종 업데이트: 2025년 3분기 실적 반영 | KStockView 리서치팀
+                            최종 업데이트: 2026년 3분기 실적 반영 | KStockView 리서치팀
                         </p>
                     </header>
 
@@ -151,7 +177,7 @@ const Kia = () => {
                                 border: '1px solid #ef4444'
                             }}>
                                 <h3 style={{ color: '#ef4444', marginBottom: '20px', fontSize: '1.2rem', textAlign: 'center' }}>
-                                    2025년 3분기 주요 실적 (연결 기준)
+                                    2026년 3분기 주요 실적 (연결 기준)
                                 </h3>
                                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '20px' }}>
                                     <div style={{ textAlign: 'center' }}>

@@ -1,9 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, TrendingUp, BarChart3, Shield, ExternalLink, Car } from 'lucide-react';
+import SEOHead from '../../components/SEOHead';
 
 const HyundaiMotor = () => {
+    const { t } = useTranslation();
+
     React.useEffect(() => {
         document.body.style.overflow = 'auto';
         document.documentElement.style.overflow = 'auto';
@@ -17,15 +20,40 @@ const HyundaiMotor = () => {
 
     return (
         <>
-            <Helmet>
-                <title>현대자동차 주가 전망 및 재무분석 2025 | 전기차 전환 분석 - KStockView</title>
-                <meta name="description" content="현대자동차(005380) 2025년 최신 재무제표 분석. 글로벌 완성차 3위 기업의 전기차 전환과 수익성 개선 현황을 상세히 알아봅니다." />
-                <meta name="keywords" content="현대자동차, 005380, 현대차 주가, 현대차 전망, 아이오닉, 전기차, 완성차" />
-                <meta property="og:title" content="현대자동차 주가 전망 및 재무분석 2025 | KStockView" />
-                <meta property="og:description" content="현대자동차의 전기차 전환과 글로벌 시장 확대 전략을 분석합니다." />
-                <meta property="og:type" content="article" />
-                <link rel="canonical" href="https://kstockview.com/blog/hyundai-motor" />
-            </Helmet>
+            <SEOHead
+                title={t('blogSeo.hyundaiMotor.title')}
+                description={t('blogSeo.hyundaiMotor.description')}
+                keywords={t('blogSeo.hyundaiMotor.keywords')}
+                canonical="https://kstockview.com/blog/hyundai-motor"
+                ogType="article"
+                jsonLd={[
+                    {
+                        '@type': 'Article',
+                        headline: t('blogSeo.hyundaiMotor.ogTitle'),
+                        author: { '@type': 'Organization', name: 'KStockView' },
+                        publisher: { '@type': 'Organization', name: 'KStockView', logo: { '@type': 'ImageObject', url: 'https://kstockview.com/logo.png' } },
+                        datePublished: '2025-06-01',
+                        dateModified: '2026-02-14',
+                        mainEntityOfPage: { '@type': 'WebPage', '@id': 'https://kstockview.com/blog/hyundai-motor' }
+                    },
+                    {
+                        '@type': 'BreadcrumbList',
+                        itemListElement: [
+                            { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://kstockview.com' },
+                            { '@type': 'ListItem', position: 2, name: 'Blog', item: 'https://kstockview.com/blogs' },
+                            { '@type': 'ListItem', position: 3, name: 'Hyundai Motor' }
+                        ]
+                    },
+                    {
+                        '@type': 'FAQPage',
+                        mainEntity: [
+                            { '@type': 'Question', name: t('faq.hyundaiMotor.q1'), acceptedAnswer: { '@type': 'Answer', text: t('faq.hyundaiMotor.a1') } },
+                            { '@type': 'Question', name: t('faq.hyundaiMotor.q2'), acceptedAnswer: { '@type': 'Answer', text: t('faq.hyundaiMotor.a2') } },
+                            { '@type': 'Question', name: t('faq.hyundaiMotor.q3'), acceptedAnswer: { '@type': 'Answer', text: t('faq.hyundaiMotor.a3') } }
+                        ]
+                    }
+                ]}
+            />
             <div style={{
                 minHeight: '100vh',
                 background: 'linear-gradient(135deg, #020617 0%, #0f172a 100%)',
@@ -36,7 +64,7 @@ const HyundaiMotor = () => {
                     {/* Back Button */}
                     <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#60a5fa', textDecoration: 'none', marginBottom: '30px', fontSize: '0.9rem' }}>
                         <ArrowLeft size={18} />
-                        홈으로 돌아가기
+                        {t('blog.backToHome')}
                     </Link>
 
                     {/* Header */}
@@ -65,7 +93,7 @@ const HyundaiMotor = () => {
                             현대자동차(005380) 주가 전망 및 재무분석
                         </h1>
                         <p style={{ color: '#94a3b8', fontSize: isMobile ? '0.8rem' : '0.9rem' }}>
-                            최종 업데이트: 2025년 3분기 실적 반영 | KStockView 리서치팀
+                            최종 업데이트: 2026년 3분기 실적 반영 | KStockView 리서치팀
                         </p>
                     </header>
 
@@ -170,7 +198,7 @@ const HyundaiMotor = () => {
                                 border: '1px solid #3b82f6'
                             }}>
                                 <h3 style={{ color: '#3b82f6', marginBottom: '20px', fontSize: '1.2rem', textAlign: 'center' }}>
-                                    2025년 3분기 주요 실적 (연결 기준)
+                                    2026년 3분기 주요 실적 (연결 기준)
                                 </h3>
                                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '20px' }}>
                                     <div style={{ textAlign: 'center' }}>
@@ -192,7 +220,7 @@ const HyundaiMotor = () => {
                                 매출액 및 수익성 분석
                             </h3>
                             <p style={{ color: '#cbd5e1', marginBottom: '20px' }}>
-                                2025년 3분기 현대자동차는 매출액 <strong style={{ color: '#60a5fa' }}>46조 7,214억원</strong>,
+                                2026년 3분기 현대자동차는 매출액 <strong style={{ color: '#60a5fa' }}>46조 7,214억원</strong>,
                                 영업이익 <strong style={{ color: '#10b981' }}>2조 5,373억원</strong>을 기록했습니다.
                                 자동차 산업 특성상 영업이익률 5~7%는 양호한 수준으로 평가됩니다.
                             </p>

@@ -1,9 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, FileText, ChevronRight } from 'lucide-react';
+import SEOHead from '../components/SEOHead';
 
 const BlogList = () => {
+    const { t } = useTranslation();
     React.useEffect(() => {
         document.body.style.overflow = 'auto';
         document.documentElement.style.overflow = 'auto';
@@ -101,15 +103,11 @@ const BlogList = () => {
 
     return (
         <>
-            <Helmet>
-                <title>종목 분석 리포트 전체보기 | KStockView</title>
-                <meta name="description" content="한국 주요 상장 기업의 재무분석 리포트를 확인하세요. 삼성전자, SK하이닉스, 현대자동차 등 핵심 종목의 주가 전망과 투자 포인트를 제공합니다." />
-                <meta name="keywords" content="종목분석, 재무분석, 주식 리포트, 삼성전자, SK하이닉스, 현대자동차, NAVER, 카카오" />
-                <meta property="og:title" content="종목 분석 리포트 전체보기 | KStockView" />
-                <meta property="og:description" content="한국 주요 상장 기업의 재무분석 리포트를 확인하세요." />
-                <meta property="og:type" content="website" />
-                <link rel="canonical" href="https://kstockview.com/blogs" />
-            </Helmet>
+            <SEOHead
+                title={t('blogList.title')}
+                description={t('blogList.description')}
+                canonical="https://kstockview.com/blogs"
+            />
             <div style={{
                 minHeight: '100vh',
                 background: 'linear-gradient(135deg, #020617 0%, #0f172a 100%)',

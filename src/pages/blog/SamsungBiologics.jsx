@@ -1,9 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
+import SEOHead from '../../components/SEOHead';
 import { ArrowLeft, TrendingUp, BarChart3, Shield, ExternalLink, Pill } from 'lucide-react';
 
 const SamsungBiologics = () => {
+    const { t } = useTranslation();
     React.useEffect(() => {
         document.body.style.overflow = 'auto';
         document.documentElement.style.overflow = 'auto';
@@ -17,15 +19,39 @@ const SamsungBiologics = () => {
 
     return (
         <>
-            <Helmet>
-                <title>삼성바이오로직스 주가 전망 및 재무분석 2025 | 바이오 CMO 시장 분석 - KStockView</title>
-                <meta name="description" content="삼성바이오로직스(207940) 2025년 최신 재무제표 분석. 글로벌 바이오의약품 CMO 1위 기업의 생산능력 확대와 수익성 현황을 상세히 알아봅니다." />
-                <meta name="keywords" content="삼성바이오로직스, 207940, 삼성바이오 주가, 바이오 CMO, 바이오시밀러, 바이오주" />
-                <meta property="og:title" content="삼성바이오로직스 주가 전망 및 재무분석 2025 | KStockView" />
-                <meta property="og:description" content="삼성바이오로직스의 글로벌 CMO 시장 지배력과 고성장 전망을 분석합니다." />
-                <meta property="og:type" content="article" />
-                <link rel="canonical" href="https://kstockview.com/blog/samsung-biologics" />
-            </Helmet>
+            <SEOHead
+                title={t('blogSeo.samsungBiologics.title')}
+                description={t('blogSeo.samsungBiologics.description')}
+                keywords={t('blogSeo.samsungBiologics.keywords')}
+                canonical="https://kstockview.com/blog/samsung-biologics"
+                ogType="article"
+                jsonLd={[
+                    {
+                        '@type': 'Article',
+                        headline: t('blogSeo.samsungBiologics.ogTitle'),
+                        author: { '@type': 'Organization', name: 'KStockView' },
+                        publisher: { '@type': 'Organization', name: 'KStockView', logo: { '@type': 'ImageObject', url: 'https://kstockview.com/logo.png' } },
+                        datePublished: '2025-06-01',
+                        dateModified: '2026-02-14',
+                        mainEntityOfPage: { '@type': 'WebPage', '@id': 'https://kstockview.com/blog/samsung-biologics' }
+                    },
+                    {
+                        '@type': 'BreadcrumbList',
+                        itemListElement: [
+                            { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://kstockview.com' },
+                            { '@type': 'ListItem', position: 2, name: 'Blog', item: 'https://kstockview.com/blogs' },
+                            { '@type': 'ListItem', position: 3, name: 'Samsung Biologics' }
+                        ]
+                    },
+                    {
+                        '@type': 'FAQPage',
+                        mainEntity: [
+                            { '@type': 'Question', name: t('faq.samsungBiologics.q1'), acceptedAnswer: { '@type': 'Answer', text: t('faq.samsungBiologics.a1') } },
+                            { '@type': 'Question', name: t('faq.samsungBiologics.q2'), acceptedAnswer: { '@type': 'Answer', text: t('faq.samsungBiologics.a2') } }
+                        ]
+                    }
+                ]}
+            />
             <div style={{
                 minHeight: '100vh',
                 background: 'linear-gradient(135deg, #020617 0%, #0f172a 100%)',
@@ -35,7 +61,7 @@ const SamsungBiologics = () => {
                 <div style={{ maxWidth: '900px', margin: '0 auto', width: '100%' }}>
                     <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#60a5fa', textDecoration: 'none', marginBottom: '30px', fontSize: '0.9rem' }}>
                         <ArrowLeft size={18} />
-                        홈으로 돌아가기
+                        {t('blog.backToHome')}
                     </Link>
 
                     <header style={{ marginBottom: '40px', paddingBottom: '20px', borderBottom: '2px solid #334155' }}>
@@ -57,7 +83,7 @@ const SamsungBiologics = () => {
                             삼성바이오로직스(207940) 주가 전망 및 재무분석
                         </h1>
                         <p style={{ color: '#94a3b8', fontSize: isMobile ? '0.8rem' : '0.9rem' }}>
-                            최종 업데이트: 2025년 3분기 실적 반영 | KStockView 리서치팀
+                            최종 업데이트: 2026년 3분기 실적 반영 | KStockView 리서치팀
                         </p>
                     </header>
 
@@ -155,7 +181,7 @@ const SamsungBiologics = () => {
                                 border: '1px solid #a855f7'
                             }}>
                                 <h3 style={{ color: '#a855f7', marginBottom: '20px', fontSize: '1.2rem', textAlign: 'center' }}>
-                                    2025년 3분기 주요 실적 (연결 기준)
+                                    2026년 3분기 주요 실적 (연결 기준)
                                 </h3>
                                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '20px' }}>
                                     <div style={{ textAlign: 'center' }}>
@@ -175,7 +201,7 @@ const SamsungBiologics = () => {
 
                             <h3 style={{ color: '#e2e8f0', fontSize: '1.2rem', marginBottom: '15px' }}>압도적인 수익성</h3>
                             <p style={{ color: '#cbd5e1', marginBottom: '20px' }}>
-                                2025년 3분기 삼성바이오로직스는 매출액 <strong style={{ color: '#60a5fa' }}>1조 6,602억원</strong>,
+                                2026년 3분기 삼성바이오로직스는 매출액 <strong style={{ color: '#60a5fa' }}>1조 6,602억원</strong>,
                                 영업이익 <strong style={{ color: '#10b981' }}>7,288억원</strong>을 기록했습니다.
                                 영업이익률 <strong style={{ color: '#8b5cf6' }}>43.9%</strong>는 제조업 중에서도 최상위 수준입니다.
                             </p>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation, useParams, Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
+import SEOHead from '../components/SEOHead';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     ComposedChart, Line, ReferenceLine, AreaChart, Area
@@ -12,6 +12,7 @@ import { loadAllFinancialData } from '../dataLoader';
 import NotFound from './NotFound';
 import LanguageToggle from '../components/LanguageToggle';
 import MarketToggle from '../components/MarketToggle';
+import ShareButtons from '../components/ShareButtons';
 
 // Info Tooltip Component
 const InfoTooltip = ({ text }) => {
@@ -393,14 +394,18 @@ const UsStockPage = () => {
 
     return (
         <>
-            <Helmet>
-                <title>{companyData ? t('usHelmet.appTitle', { name: companyData.name, ticker: selectedTicker }) : 'KStockView - US Stock Analysis'}</title>
-                <meta name="description" content={companyData ? t('usHelmet.appDesc', { name: companyData.name, ticker: selectedTicker }) : ''} />
-                <meta property="og:title" content={companyData ? t('usHelmet.ogTitle', { name: companyData.name, ticker: selectedTicker }) : ''} />
-                <meta property="og:type" content="website" />
-                <meta property="og:url" content={`https://kstockview.com/us-stocks/${selectedTicker}`} />
-                <link rel="canonical" href={`https://kstockview.com/us-stocks/${selectedTicker}`} />
-            </Helmet>
+            <SEOHead
+                title={companyData ? t('usHelmet.appTitle', { name: companyData.name, ticker: selectedTicker }) : 'KStockView - US Stock Analysis'}
+                description={companyData ? t('usHelmet.appDesc', { name: companyData.name, ticker: selectedTicker }) : ''}
+                canonical={`https://kstockview.com/us-stocks/${selectedTicker}`}
+                jsonLd={companyData ? [{
+                    '@type': 'BreadcrumbList',
+                    itemListElement: [
+                        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://kstockview.com' },
+                        { '@type': 'ListItem', position: 2, name: companyData.name }
+                    ]
+                }] : []}
+            />
             <div className="app-container">
                 {/* Mobile Header */}
                 <div className="mobile-header">
@@ -534,6 +539,11 @@ const UsStockPage = () => {
                             <div className="company-info">
                                 <h1>{companyData?.name || selectedTicker}</h1>
                                 <span className="company-code">{selectedTicker}</span>
+                                <ShareButtons
+                                    companyName={companyData?.name || ''}
+                                    stockCode={selectedTicker}
+                                    url={`https://kstockview.com/us-stocks/${selectedTicker}`}
+                                />
                             </div>
 
                             <div className="view-mode-toggle" style={{ display: 'flex', gap: '6px', marginBottom: '8px', justifyContent: 'center' }}>

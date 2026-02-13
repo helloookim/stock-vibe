@@ -79,6 +79,15 @@ let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
   </url>
 `;
 
+// Add blog list page
+sitemap += `  <url>
+    <loc>${baseUrl}/blogs</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+`;
+
 // Add blog pages
 blogPages.forEach(slug => {
   sitemap += `  <url>
@@ -104,6 +113,26 @@ sortedCodes.forEach(code => {
 `;
 });
 
+// Add US stock pages
+const usIndexPath = path.join(__dirname, 'public', 'data', 'us_company_index.json');
+let usTickerCount = 0;
+if (fs.existsSync(usIndexPath)) {
+  const usIndex = JSON.parse(fs.readFileSync(usIndexPath, 'utf-8'));
+  sitemap += `  <!-- US Stock Pages -->
+`;
+  usIndex.forEach(company => {
+    sitemap += `  <url>
+    <loc>${baseUrl}/us-stocks/${company.ticker}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+`;
+  });
+  usTickerCount = usIndex.length;
+  console.log(`Added ${usTickerCount} US stock pages to sitemap`);
+}
+
 sitemap += '</urlset>';
 
 // Write sitemap to public folder
@@ -112,4 +141,4 @@ fs.writeFileSync(sitemapPath, sitemap);
 
 console.log(`✅ Sitemap generated successfully!`);
 console.log(`📍 Location: ${sitemapPath}`);
-console.log(`📊 Total URLs: ${sortedCodes.length + 4 + blogPages.length} (1 homepage + 3 static pages + ${blogPages.length} blog pages + ${sortedCodes.length} stocks)`);
+console.log(`📊 Total URLs: ${sortedCodes.length + 5 + blogPages.length + usTickerCount} (1 homepage + 1 blogs + 3 static pages + ${blogPages.length} blog pages + ${sortedCodes.length} KR stocks + ${usTickerCount} US stocks)`);

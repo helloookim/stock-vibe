@@ -1,9 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
+import SEOHead from '../../components/SEOHead';
 import { ArrowLeft, TrendingUp, BarChart3, Shield, ExternalLink, MessageCircle } from 'lucide-react';
 
 const Kakao = () => {
+    const { t } = useTranslation();
     React.useEffect(() => {
         document.body.style.overflow = 'auto';
         document.documentElement.style.overflow = 'auto';
@@ -17,15 +19,39 @@ const Kakao = () => {
 
     return (
         <>
-            <Helmet>
-                <title>카카오 주가 전망 및 재무분석 2025 | 메신저·핀테크·콘텐츠 - KStockView</title>
-                <meta name="description" content="카카오(035720) 2025년 최신 재무제표 분석. 카카오톡, 카카오페이, 카카오엔터테인먼트 등 다각화된 사업 포트폴리오를 분석합니다." />
-                <meta name="keywords" content="카카오, 035720, 카카오 주가, 카카오 전망, 카카오톡, 카카오페이, 카카오뱅크" />
-                <meta property="og:title" content="카카오 주가 전망 및 재무분석 2025 | KStockView" />
-                <meta property="og:description" content="카카오의 플랫폼 사업과 수익성 개선 전략을 분석합니다." />
-                <meta property="og:type" content="article" />
-                <link rel="canonical" href="https://kstockview.com/blog/kakao" />
-            </Helmet>
+            <SEOHead
+                title={t('blogSeo.kakao.title')}
+                description={t('blogSeo.kakao.description')}
+                keywords={t('blogSeo.kakao.keywords')}
+                canonical="https://kstockview.com/blog/kakao"
+                ogType="article"
+                jsonLd={[
+                    {
+                        '@type': 'Article',
+                        headline: t('blogSeo.kakao.ogTitle'),
+                        author: { '@type': 'Organization', name: 'KStockView' },
+                        publisher: { '@type': 'Organization', name: 'KStockView', logo: { '@type': 'ImageObject', url: 'https://kstockview.com/logo.png' } },
+                        datePublished: '2025-06-01',
+                        dateModified: '2026-02-14',
+                        mainEntityOfPage: { '@type': 'WebPage', '@id': 'https://kstockview.com/blog/kakao' }
+                    },
+                    {
+                        '@type': 'BreadcrumbList',
+                        itemListElement: [
+                            { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://kstockview.com' },
+                            { '@type': 'ListItem', position: 2, name: 'Blog', item: 'https://kstockview.com/blogs' },
+                            { '@type': 'ListItem', position: 3, name: 'Kakao' }
+                        ]
+                    },
+                    {
+                        '@type': 'FAQPage',
+                        mainEntity: [
+                            { '@type': 'Question', name: t('faq.kakao.q1'), acceptedAnswer: { '@type': 'Answer', text: t('faq.kakao.a1') } },
+                            { '@type': 'Question', name: t('faq.kakao.q2'), acceptedAnswer: { '@type': 'Answer', text: t('faq.kakao.a2') } }
+                        ]
+                    }
+                ]}
+            />
             <div style={{
                 minHeight: '100vh',
                 background: 'linear-gradient(135deg, #020617 0%, #0f172a 100%)',
@@ -35,7 +61,7 @@ const Kakao = () => {
                 <div style={{ maxWidth: '900px', margin: '0 auto', width: '100%' }}>
                     <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#60a5fa', textDecoration: 'none', marginBottom: '30px', fontSize: '0.9rem' }}>
                         <ArrowLeft size={18} />
-                        홈으로 돌아가기
+                        {t('blog.backToHome')}
                     </Link>
 
                     <header style={{ marginBottom: '40px', paddingBottom: '20px', borderBottom: '2px solid #334155' }}>
@@ -57,7 +83,7 @@ const Kakao = () => {
                             카카오(035720) 주가 전망 및 재무분석
                         </h1>
                         <p style={{ color: '#94a3b8', fontSize: isMobile ? '0.8rem' : '0.9rem' }}>
-                            최종 업데이트: 2025년 3분기 실적 반영 | KStockView 리서치팀
+                            최종 업데이트: 2026년 3분기 실적 반영 | KStockView 리서치팀
                         </p>
                     </header>
 
@@ -138,7 +164,7 @@ const Kakao = () => {
 
                             <p style={{ color: '#cbd5e1', marginBottom: '20px' }}>
                                 <strong>카카오 재무</strong> 데이터를 살펴보면, 2024년 저점을 찍고
-                                2025년 들어 수익성이 개선되고 있습니다. 비용 효율화와 광고 사업 회복이
+                                2026년 들어 수익성이 개선되고 있습니다. 비용 효율화와 광고 사업 회복이
                                 영업이익 증가로 이어지고 있습니다.
                             </p>
 
@@ -148,7 +174,7 @@ const Kakao = () => {
                                 border: '1px solid #f59e0b'
                             }}>
                                 <h3 style={{ color: '#fcd34d', marginBottom: '20px', fontSize: '1.2rem', textAlign: 'center' }}>
-                                    2025년 3분기 주요 실적 (연결 기준)
+                                    2026년 3분기 주요 실적 (연결 기준)
                                 </h3>
                                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '20px' }}>
                                     <div style={{ textAlign: 'center' }}>

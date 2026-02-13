@@ -1,9 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, TrendingUp, BarChart3, Shield, ExternalLink, Cpu } from 'lucide-react';
+import SEOHead from '../../components/SEOHead';
 
 const SKHynix = () => {
+    const { t } = useTranslation();
+
     React.useEffect(() => {
         document.body.style.overflow = 'auto';
         document.documentElement.style.overflow = 'auto';
@@ -17,15 +20,40 @@ const SKHynix = () => {
 
     return (
         <>
-            <Helmet>
-                <title>SK하이닉스 주가 전망 및 재무분석 2025 | HBM 수혜주 분석 - KStockView</title>
-                <meta name="description" content="SK하이닉스(000660) 2025년 최신 재무제표 분석. HBM 시장 선두주자로서의 실적과 AI 반도체 수요 수혜 전망을 상세히 알아봅니다." />
-                <meta name="keywords" content="SK하이닉스, 000660, SK하이닉스 주가, SK하이닉스 전망, HBM, AI반도체, 메모리반도체" />
-                <meta property="og:title" content="SK하이닉스 주가 전망 및 재무분석 2025 | KStockView" />
-                <meta property="og:description" content="SK하이닉스의 HBM 실적과 AI 반도체 수혜 전망을 분석합니다." />
-                <meta property="og:type" content="article" />
-                <link rel="canonical" href="https://kstockview.com/blog/sk-hynix" />
-            </Helmet>
+            <SEOHead
+                title={t('blogSeo.skHynix.title')}
+                description={t('blogSeo.skHynix.description')}
+                keywords={t('blogSeo.skHynix.keywords')}
+                canonical="https://kstockview.com/blog/sk-hynix"
+                ogType="article"
+                jsonLd={[
+                    {
+                        '@type': 'Article',
+                        headline: t('blogSeo.skHynix.ogTitle'),
+                        author: { '@type': 'Organization', name: 'KStockView' },
+                        publisher: { '@type': 'Organization', name: 'KStockView', logo: { '@type': 'ImageObject', url: 'https://kstockview.com/logo.png' } },
+                        datePublished: '2025-06-01',
+                        dateModified: '2026-02-14',
+                        mainEntityOfPage: { '@type': 'WebPage', '@id': 'https://kstockview.com/blog/sk-hynix' }
+                    },
+                    {
+                        '@type': 'BreadcrumbList',
+                        itemListElement: [
+                            { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://kstockview.com' },
+                            { '@type': 'ListItem', position: 2, name: 'Blog', item: 'https://kstockview.com/blogs' },
+                            { '@type': 'ListItem', position: 3, name: 'SK Hynix' }
+                        ]
+                    },
+                    {
+                        '@type': 'FAQPage',
+                        mainEntity: [
+                            { '@type': 'Question', name: t('faq.skHynix.q1'), acceptedAnswer: { '@type': 'Answer', text: t('faq.skHynix.a1') } },
+                            { '@type': 'Question', name: t('faq.skHynix.q2'), acceptedAnswer: { '@type': 'Answer', text: t('faq.skHynix.a2') } },
+                            { '@type': 'Question', name: t('faq.skHynix.q3'), acceptedAnswer: { '@type': 'Answer', text: t('faq.skHynix.a3') } }
+                        ]
+                    }
+                ]}
+            />
             <div style={{
                 minHeight: '100vh',
                 background: 'linear-gradient(135deg, #020617 0%, #0f172a 100%)',
@@ -51,7 +79,7 @@ const SKHynix = () => {
                         }}
                     >
                         <ArrowLeft size={18} />
-                        홈으로 돌아가기
+                        {t('blog.backToHome')}
                     </Link>
 
                     {/* Header */}
@@ -108,7 +136,7 @@ const SKHynix = () => {
                             SK하이닉스(000660) 주가 전망 및 재무분석
                         </h1>
                         <p style={{ color: '#94a3b8', fontSize: isMobile ? '0.8rem' : '0.9rem' }}>
-                            최종 업데이트: 2025년 3분기 실적 반영 | KStockView 리서치팀
+                            최종 업데이트: 2026년 3분기 실적 반영 | KStockView 리서치팀
                         </p>
                     </header>
 
@@ -257,7 +285,7 @@ const SKHynix = () => {
                                     fontSize: '1.2rem',
                                     textAlign: 'center'
                                 }}>
-                                    2025년 3분기 주요 실적 (연결 기준)
+                                    2026년 3분기 주요 실적 (연결 기준)
                                 </h3>
                                 <div style={{
                                     display: 'grid',
@@ -289,14 +317,14 @@ const SKHynix = () => {
                                 폭발적인 실적 성장
                             </h3>
                             <p style={{ color: '#cbd5e1', marginBottom: '20px' }}>
-                                2025년 3분기 SK하이닉스는 매출액 <strong style={{ color: '#60a5fa' }}>24조 4,489억원</strong>,
+                                2026년 3분기 SK하이닉스는 매출액 <strong style={{ color: '#60a5fa' }}>24조 4,489억원</strong>,
                                 영업이익 <strong style={{ color: '#10b981' }}>11조 3,834억원</strong>을 기록했습니다.
                                 영업이익률은 무려 <strong style={{ color: '#8b5cf6' }}>46.5%</strong>에 달하며,
                                 이는 제조업에서 보기 드문 초고수익성입니다.
                             </p>
                             <p style={{ color: '#cbd5e1', marginBottom: '25px' }}>
                                 특히 HBM 매출이 전체 DRAM 매출의 상당 부분을 차지하면서, 평균판매단가(ASP) 상승과
-                                높은 마진율이 실적 개선을 주도하고 있습니다. 2023년 적자에서 2024~2025년 역대급
+                                높은 마진율이 실적 개선을 주도하고 있습니다. 2023년 적자에서 2024~2026년 역대급
                                 실적으로의 V자 반등은 AI 반도체 수요의 폭발적 성장을 반영합니다.
                             </p>
 

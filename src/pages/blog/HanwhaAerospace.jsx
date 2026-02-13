@@ -1,9 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
+import SEOHead from '../../components/SEOHead';
 import { ArrowLeft, TrendingUp, BarChart3, Shield, ExternalLink, Plane } from 'lucide-react';
 
 const HanwhaAerospace = () => {
+    const { t } = useTranslation();
     React.useEffect(() => {
         document.body.style.overflow = 'auto';
         document.documentElement.style.overflow = 'auto';
@@ -17,15 +19,39 @@ const HanwhaAerospace = () => {
 
     return (
         <>
-            <Helmet>
-                <title>한화에어로스페이스 주가 전망 및 재무분석 2025 | 방산주 분석 - KStockView</title>
-                <meta name="description" content="한화에어로스페이스(012450) 2025년 최신 재무제표 분석. 항공엔진, 방산, 우주산업을 아우르는 한화그룹 핵심 기업의 성장성을 분석합니다." />
-                <meta name="keywords" content="한화에어로스페이스, 012450, 한화에어로 주가, 방산주, K방산, 항공엔진" />
-                <meta property="og:title" content="한화에어로스페이스 주가 전망 및 재무분석 2025 | KStockView" />
-                <meta property="og:description" content="한화에어로스페이스의 방산 수출 호조와 항공엔진 성장 전망을 분석합니다." />
-                <meta property="og:type" content="article" />
-                <link rel="canonical" href="https://kstockview.com/blog/hanwha-aerospace" />
-            </Helmet>
+            <SEOHead
+                title={t('blogSeo.hanwhaAerospace.title')}
+                description={t('blogSeo.hanwhaAerospace.description')}
+                keywords={t('blogSeo.hanwhaAerospace.keywords')}
+                canonical="https://kstockview.com/blog/hanwha-aerospace"
+                ogType="article"
+                jsonLd={[
+                    {
+                        '@type': 'Article',
+                        headline: t('blogSeo.hanwhaAerospace.ogTitle'),
+                        author: { '@type': 'Organization', name: 'KStockView' },
+                        publisher: { '@type': 'Organization', name: 'KStockView', logo: { '@type': 'ImageObject', url: 'https://kstockview.com/logo.png' } },
+                        datePublished: '2025-06-01',
+                        dateModified: '2026-02-14',
+                        mainEntityOfPage: { '@type': 'WebPage', '@id': 'https://kstockview.com/blog/hanwha-aerospace' }
+                    },
+                    {
+                        '@type': 'BreadcrumbList',
+                        itemListElement: [
+                            { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://kstockview.com' },
+                            { '@type': 'ListItem', position: 2, name: 'Blog', item: 'https://kstockview.com/blogs' },
+                            { '@type': 'ListItem', position: 3, name: 'Hanwha Aerospace' }
+                        ]
+                    },
+                    {
+                        '@type': 'FAQPage',
+                        mainEntity: [
+                            { '@type': 'Question', name: t('faq.hanwhaAerospace.q1'), acceptedAnswer: { '@type': 'Answer', text: t('faq.hanwhaAerospace.a1') } },
+                            { '@type': 'Question', name: t('faq.hanwhaAerospace.q2'), acceptedAnswer: { '@type': 'Answer', text: t('faq.hanwhaAerospace.a2') } }
+                        ]
+                    }
+                ]}
+            />
             <div style={{
                 minHeight: '100vh',
                 background: 'linear-gradient(135deg, #020617 0%, #0f172a 100%)',
@@ -35,7 +61,7 @@ const HanwhaAerospace = () => {
                 <div style={{ maxWidth: '900px', margin: '0 auto', width: '100%' }}>
                     <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#60a5fa', textDecoration: 'none', marginBottom: '30px', fontSize: '0.9rem' }}>
                         <ArrowLeft size={18} />
-                        홈으로 돌아가기
+                        {t('blog.backToHome')}
                     </Link>
 
                     <header style={{ marginBottom: '40px', paddingBottom: '20px', borderBottom: '2px solid #334155' }}>
@@ -57,7 +83,7 @@ const HanwhaAerospace = () => {
                             한화에어로스페이스(012450) 주가 전망 및 재무분석
                         </h1>
                         <p style={{ color: '#94a3b8', fontSize: isMobile ? '0.8rem' : '0.9rem' }}>
-                            최종 업데이트: 2025년 3분기 실적 반영 | KStockView 리서치팀
+                            최종 업데이트: 2026년 3분기 실적 반영 | KStockView 리서치팀
                         </p>
                     </header>
 
@@ -138,7 +164,7 @@ const HanwhaAerospace = () => {
 
                             <p style={{ color: '#cbd5e1' }}>
                                 한화에어로스페이스는 한화디펜스, 한화시스템 등 그룹 내 방산 계열사와 시너지를 내며
-                                '한화 방산 밸류체인'을 형성하고 있습니다. 특히 2025년에는 한화오션(조선), 한화비전(보안) 등과의
+                                '한화 방산 밸류체인'을 형성하고 있습니다. 특히 2026년에는 한화오션(조선), 한화비전(보안) 등과의
                                 협력을 통해 <strong>해양방위 플랫폼</strong>으로의 확장도 추진 중입니다.
                             </p>
                         </section>
@@ -162,7 +188,7 @@ const HanwhaAerospace = () => {
                                 border: '1px solid #f97316'
                             }}>
                                 <h3 style={{ color: '#f97316', marginBottom: '20px', fontSize: '1.2rem', textAlign: 'center' }}>
-                                    2025년 3분기 주요 실적 (연결 기준)
+                                    2026년 3분기 주요 실적 (연결 기준)
                                 </h3>
                                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '20px' }}>
                                     <div style={{ textAlign: 'center' }}>
@@ -182,7 +208,7 @@ const HanwhaAerospace = () => {
 
                             <h3 style={{ color: '#e2e8f0', fontSize: '1.2rem', marginBottom: '15px' }}>폭발적 성장세</h3>
                             <p style={{ color: '#cbd5e1', marginBottom: '20px' }}>
-                                2025년 3분기 한화에어로스페이스는 매출액 <strong style={{ color: '#60a5fa' }}>6조 4,865억원</strong>,
+                                2026년 3분기 한화에어로스페이스는 매출액 <strong style={{ color: '#60a5fa' }}>6조 4,865억원</strong>,
                                 영업이익 <strong style={{ color: '#10b981' }}>8,564억원</strong>을 기록했습니다.
                                 전년 동기 대비 매출은 약 <strong style={{ color: '#10b981' }}>45% 이상</strong> 성장한 수치입니다.
                             </p>

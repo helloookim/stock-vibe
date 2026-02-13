@@ -1,9 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
+import SEOHead from '../../components/SEOHead';
 import { ArrowLeft, TrendingUp, BarChart3, Shield, ExternalLink, Battery } from 'lucide-react';
 
 const LGEnergySolution = () => {
+    const { t } = useTranslation();
     React.useEffect(() => {
         document.body.style.overflow = 'auto';
         document.documentElement.style.overflow = 'auto';
@@ -17,15 +19,39 @@ const LGEnergySolution = () => {
 
     return (
         <>
-            <Helmet>
-                <title>LG에너지솔루션 주가 전망 및 재무분석 2025 | 2차전지 시장 분석 - KStockView</title>
-                <meta name="description" content="LG에너지솔루션(373220) 2025년 최신 재무제표 분석. 글로벌 배터리 2위 기업의 전기차 배터리 사업과 ESS 시장 전망을 상세히 알아봅니다." />
-                <meta name="keywords" content="LG에너지솔루션, 373220, LGES 주가, 2차전지, 배터리주, 전기차 배터리, ESS" />
-                <meta property="og:title" content="LG에너지솔루션 주가 전망 및 재무분석 2025 | KStockView" />
-                <meta property="og:description" content="LG에너지솔루션의 글로벌 배터리 시장 경쟁력과 수익성 개선 전망을 분석합니다." />
-                <meta property="og:type" content="article" />
-                <link rel="canonical" href="https://kstockview.com/blog/lg-energy-solution" />
-            </Helmet>
+            <SEOHead
+                title={t('blogSeo.lgEnergySolution.title')}
+                description={t('blogSeo.lgEnergySolution.description')}
+                keywords={t('blogSeo.lgEnergySolution.keywords')}
+                canonical="https://kstockview.com/blog/lg-energy-solution"
+                ogType="article"
+                jsonLd={[
+                    {
+                        '@type': 'Article',
+                        headline: t('blogSeo.lgEnergySolution.ogTitle'),
+                        author: { '@type': 'Organization', name: 'KStockView' },
+                        publisher: { '@type': 'Organization', name: 'KStockView', logo: { '@type': 'ImageObject', url: 'https://kstockview.com/logo.png' } },
+                        datePublished: '2025-06-01',
+                        dateModified: '2026-02-14',
+                        mainEntityOfPage: { '@type': 'WebPage', '@id': 'https://kstockview.com/blog/lg-energy-solution' }
+                    },
+                    {
+                        '@type': 'BreadcrumbList',
+                        itemListElement: [
+                            { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://kstockview.com' },
+                            { '@type': 'ListItem', position: 2, name: 'Blog', item: 'https://kstockview.com/blogs' },
+                            { '@type': 'ListItem', position: 3, name: 'LG Energy Solution' }
+                        ]
+                    },
+                    {
+                        '@type': 'FAQPage',
+                        mainEntity: [
+                            { '@type': 'Question', name: t('faq.lgEnergySolution.q1'), acceptedAnswer: { '@type': 'Answer', text: t('faq.lgEnergySolution.a1') } },
+                            { '@type': 'Question', name: t('faq.lgEnergySolution.q2'), acceptedAnswer: { '@type': 'Answer', text: t('faq.lgEnergySolution.a2') } }
+                        ]
+                    }
+                ]}
+            />
             <div style={{
                 minHeight: '100vh',
                 background: 'linear-gradient(135deg, #020617 0%, #0f172a 100%)',
@@ -35,7 +61,7 @@ const LGEnergySolution = () => {
                 <div style={{ maxWidth: '900px', margin: '0 auto', width: '100%' }}>
                     <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#60a5fa', textDecoration: 'none', marginBottom: '30px', fontSize: '0.9rem' }}>
                         <ArrowLeft size={18} />
-                        홈으로 돌아가기
+                        {t('blog.backToHome')}
                     </Link>
 
                     <header style={{ marginBottom: '40px', paddingBottom: '20px', borderBottom: '2px solid #334155' }}>
@@ -57,7 +83,7 @@ const LGEnergySolution = () => {
                             LG에너지솔루션(373220) 주가 전망 및 재무분석
                         </h1>
                         <p style={{ color: '#94a3b8', fontSize: isMobile ? '0.8rem' : '0.9rem' }}>
-                            최종 업데이트: 2025년 3분기 실적 반영 | KStockView 리서치팀
+                            최종 업데이트: 2026년 3분기 실적 반영 | KStockView 리서치팀
                         </p>
                     </header>
 
@@ -141,7 +167,7 @@ const LGEnergySolution = () => {
 
                             <p style={{ color: '#cbd5e1', marginBottom: '20px' }}>
                                 <strong>LG에너지솔루션 재무</strong> 데이터를 살펴보면, 2024년 적자 전환 후
-                                2025년 들어 수익성이 회복되고 있습니다. 원자재 가격 안정화와 북미 IRA 세액공제 반영이
+                                2026년 들어 수익성이 회복되고 있습니다. 원자재 가격 안정화와 북미 IRA 세액공제 반영이
                                 실적 개선에 기여하고 있습니다.
                             </p>
 
@@ -153,7 +179,7 @@ const LGEnergySolution = () => {
                                 border: '1px solid #22c55e'
                             }}>
                                 <h3 style={{ color: '#22c55e', marginBottom: '20px', fontSize: '1.2rem', textAlign: 'center' }}>
-                                    2025년 3분기 주요 실적 (연결 기준)
+                                    2026년 3분기 주요 실적 (연결 기준)
                                 </h3>
                                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '20px' }}>
                                     <div style={{ textAlign: 'center' }}>
@@ -174,7 +200,7 @@ const LGEnergySolution = () => {
                             <h3 style={{ color: '#e2e8f0', fontSize: '1.2rem', marginBottom: '15px' }}>실적 턴어라운드</h3>
                             <p style={{ color: '#cbd5e1', marginBottom: '20px' }}>
                                 2024년 4분기 <strong style={{ color: '#ef4444' }}>-2,255억원</strong>의 영업적자를 기록했던
-                                LG에너지솔루션은 2025년 들어 흑자 전환에 성공했습니다. 3분기에는 영업이익
+                                LG에너지솔루션은 2026년 들어 흑자 전환에 성공했습니다. 3분기에는 영업이익
                                 <strong style={{ color: '#10b981' }}> 6,013억원</strong>을 기록하며 영업이익률이
                                 <strong style={{ color: '#8b5cf6' }}> 10%대</strong>를 회복했습니다.
                             </p>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
+import SEOHead from './components/SEOHead';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     ComposedChart, Line, ReferenceLine, AreaChart, Area
@@ -633,16 +633,18 @@ const App = () => {
 
     return (
         <>
-            <Helmet>
-                <html lang={i18n.language} />
-                <title>{currentCompany?.name ? t('helmet.appTitle', { name: currentCompany.name, code: selectedCode }) : t('helmet.appTitleDefault')}</title>
-                <meta name="description" content={currentCompany?.name ? t('helmet.appDesc', { name: currentCompany.name, code: selectedCode }) : t('helmet.appDescDefault')} />
-                <meta property="og:title" content={currentCompany?.name ? t('helmet.ogTitle', { name: currentCompany.name, code: selectedCode }) : t('helmet.ogTitleDefault')} />
-                <meta property="og:description" content={currentCompany?.name ? t('helmet.ogDesc', { name: currentCompany.name }) : t('helmet.appDescDefault')} />
-                <meta property="og:type" content="website" />
-                <meta property="og:url" content={`https://kstockview.com/stocks/${selectedCode || ''}`} />
-                <link rel="canonical" href={`https://kstockview.com/stocks/${selectedCode || ''}`} />
-            </Helmet>
+            <SEOHead
+                title={currentCompany?.name ? t('helmet.appTitle', { name: currentCompany.name, code: selectedCode }) : t('helmet.appTitleDefault')}
+                description={currentCompany?.name ? t('helmet.appDesc', { name: currentCompany.name, code: selectedCode }) : t('helmet.appDescDefault')}
+                canonical={`https://kstockview.com/stocks/${selectedCode || ''}`}
+                jsonLd={currentCompany ? [{
+                    '@type': 'BreadcrumbList',
+                    itemListElement: [
+                        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://kstockview.com' },
+                        { '@type': 'ListItem', position: 2, name: currentCompany.name }
+                    ]
+                }] : []}
+            />
             <div className="app-container">
                 {/* Mobile Header with Hamburger Menu */}
                 <div className="mobile-header">
