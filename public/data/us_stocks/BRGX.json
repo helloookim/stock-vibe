@@ -6,36 +6,44 @@
         {
             "date": 20211231,
             "eps": 0.0,
+            "eps_basic": 0.0,
             "net_income": -96873.0,
             "operating_cash_flow": -119517.0,
             "operating_income": -165118.0,
+            "pretax_income": -96873.0,
             "revenue": 198584.0,
             "source": "2023q2"
         },
         {
             "date": 20221231,
             "eps": 0.0,
+            "eps_basic": 0.0,
             "net_income": -78308.0,
             "operating_cash_flow": -64652.0,
             "operating_income": -78308.0,
+            "pretax_income": -78308.0,
             "revenue": 42159.0,
-            "source": "2024q2"
+            "source": "2023q2"
         },
         {
             "date": 20231231,
             "eps": -0.01,
-            "net_income": -3600082.0,
-            "operating_cash_flow": -1515043.0,
+            "eps_basic": -0.01,
+            "net_income": -571171.0,
+            "operating_cash_flow": -13347.0,
             "operating_income": -3408834.0,
-            "revenue": 3411415.0,
-            "source": "2025q2"
+            "pretax_income": -571171.0,
+            "revenue": 22243.0,
+            "source": "2024q2"
         },
         {
             "date": 20241231,
             "eps": -0.02,
+            "eps_basic": -0.02,
             "net_income": -23054017.0,
             "operating_cash_flow": -324148.0,
             "operating_income": -22763355.0,
+            "pretax_income": null,
             "revenue": 2340106.0,
             "source": "2025q2"
         }
@@ -45,201 +53,300 @@
             "date": 20220331,
             "qtrs": 1,
             "eps": 0.0,
+            "eps_basic": 0.0,
             "net_income": -37319.0,
             "operating_cash_flow": -20920.0,
             "operating_income": -37319.0,
+            "pretax_income": -37319.0,
             "revenue": 7704.0,
-            "source": "2023q2"
+            "source": "2023q2",
+            "is_calculated": null
         },
         {
             "date": 20220630,
             "qtrs": 1,
             "eps": 0.0,
+            "eps_basic": 0.0,
             "net_income": -33263.0,
             "operating_cash_flow": null,
             "operating_income": -33263.0,
+            "pretax_income": -33263.0,
             "revenue": 14258.0,
-            "source": "2023q3"
+            "source": "2023q3",
+            "is_calculated": null
         },
         {
             "date": 20220630,
             "qtrs": 2,
             "eps": 0.0,
+            "eps_basic": 0.0,
             "net_income": -70582.0,
             "operating_cash_flow": -54030.0,
             "operating_income": -70582.0,
+            "pretax_income": -70582.0,
             "revenue": 21962.0,
-            "source": "2023q3"
+            "source": "2023q3",
+            "is_calculated": null
         },
         {
             "date": 20220930,
             "qtrs": 1,
             "eps": 0.0,
+            "eps_basic": 0.0,
             "net_income": -2191.0,
             "operating_cash_flow": null,
             "operating_income": -2191.0,
+            "pretax_income": -2191.0,
             "revenue": 11283.0,
-            "source": "2023q4"
+            "source": "2023q4",
+            "is_calculated": null
         },
         {
             "date": 20220930,
             "qtrs": 3,
             "eps": 0.0,
+            "eps_basic": 0.0,
             "net_income": -72773.0,
             "operating_cash_flow": -60288.0,
             "operating_income": -72773.0,
+            "pretax_income": -72773.0,
             "revenue": 33245.0,
-            "source": "2023q4"
+            "source": "2023q4",
+            "is_calculated": null
+        },
+        {
+            "date": 20221231,
+            "qtrs": 1,
+            "eps": 0.0,
+            "eps_basic": null,
+            "net_income": -5535.0,
+            "operating_cash_flow": -4364.0,
+            "operating_income": -5535.0,
+            "pretax_income": null,
+            "revenue": 8914.0,
+            "source": "2023q2",
+            "is_calculated": true
         },
         {
             "date": 20230331,
             "qtrs": 1,
             "eps": 0.0,
+            "eps_basic": 0.0,
             "net_income": -548033.0,
             "operating_cash_flow": -566.0,
             "operating_income": -92754.0,
+            "pretax_income": -548033.0,
             "revenue": 5552.0,
-            "source": "2023q2"
+            "source": "2023q2",
+            "is_calculated": null
         },
         {
             "date": 20230630,
             "qtrs": 1,
             "eps": 0.0,
-            "net_income": -594461.0,
+            "eps_basic": 0.0,
+            "net_income": -4128.0,
             "operating_cash_flow": null,
             "operating_income": -544619.0,
-            "revenue": 863278.0,
-            "source": "2024q4"
+            "pretax_income": -4128.0,
+            "revenue": 7933.0,
+            "source": "2023q3",
+            "is_calculated": null
         },
         {
             "date": 20230630,
             "qtrs": 2,
             "eps": 0.0,
-            "net_income": -824299.0,
-            "operating_cash_flow": -985953.0,
+            "eps_basic": 0.0,
+            "net_income": -552161.0,
+            "operating_cash_flow": -566.0,
             "operating_income": -728725.0,
-            "revenue": 1938862.0,
-            "source": "2024q4"
-        },
-        {
-            "date": 20230930,
-            "qtrs": 1,
-            "eps": 0.0,
-            "net_income": -2519035.0,
-            "operating_cash_flow": null,
-            "operating_income": -2468553.0,
-            "revenue": 794544.0,
-            "source": "2024q4"
+            "pretax_income": -552161.0,
+            "revenue": 13485.0,
+            "source": "2023q3",
+            "is_calculated": null
         },
         {
             "date": 20230930,
             "qtrs": 3,
             "eps": -0.01,
-            "net_income": -3343334.0,
-            "operating_cash_flow": -1269417.0,
+            "eps_basic": -0.01,
+            "net_income": -555852.0,
+            "operating_cash_flow": -1608.0,
             "operating_income": -3197279.0,
-            "revenue": 2733407.0,
-            "source": "2024q4"
+            "pretax_income": -555852.0,
+            "revenue": 17175.0,
+            "source": "2023q4",
+            "is_calculated": null
+        },
+        {
+            "date": 20230930,
+            "qtrs": 1,
+            "eps": 0.0,
+            "eps_basic": 0.0,
+            "net_income": -3691.0,
+            "operating_cash_flow": null,
+            "operating_income": -2468553.0,
+            "pretax_income": -3691.0,
+            "revenue": 3690.0,
+            "source": "2023q4",
+            "is_calculated": null
+        },
+        {
+            "date": 20231231,
+            "qtrs": 1,
+            "eps": 0.0,
+            "eps_basic": null,
+            "net_income": -15319.0,
+            "operating_cash_flow": -11739.0,
+            "operating_income": -211555.0,
+            "pretax_income": null,
+            "revenue": 5068.0,
+            "source": "2024q2",
+            "is_calculated": true
         },
         {
             "date": 20240331,
             "qtrs": 1,
             "eps": 0.0,
+            "eps_basic": 0.0,
             "net_income": -3152458.0,
             "operating_cash_flow": -104250.0,
             "operating_income": -3079436.0,
+            "pretax_income": null,
             "revenue": 549548.0,
-            "source": "2025q2"
+            "source": "2025q2",
+            "is_calculated": null
         },
         {
             "date": 20240630,
             "qtrs": 1,
             "eps": 0.0,
+            "eps_basic": 0.0,
             "net_income": -1106128.0,
             "operating_cash_flow": null,
             "operating_income": -1039797.0,
+            "pretax_income": null,
             "revenue": 734032.0,
-            "source": "2025q3"
+            "source": "2024q4",
+            "is_calculated": null
         },
         {
             "date": 20240630,
             "qtrs": 2,
             "eps": 0.0,
+            "eps_basic": 0.0,
             "net_income": -4258586.0,
             "operating_cash_flow": -281591.0,
             "operating_income": -4119233.0,
+            "pretax_income": null,
             "revenue": 1283580.0,
-            "source": "2025q3"
-        },
-        {
-            "date": 20240930,
-            "qtrs": 1,
-            "eps": 0.0,
-            "net_income": -394860.0,
-            "operating_cash_flow": null,
-            "operating_income": -327307.0,
-            "revenue": 596037.0,
-            "source": "2025q4"
+            "source": "2024q4",
+            "is_calculated": null
         },
         {
             "date": 20240930,
             "qtrs": 3,
             "eps": -0.01,
+            "eps_basic": -0.01,
             "net_income": -4653446.0,
             "operating_cash_flow": -312787.0,
             "operating_income": -4446540.0,
+            "pretax_income": null,
             "revenue": 1879617.0,
-            "source": "2025q4"
+            "source": "2024q4",
+            "is_calculated": null
+        },
+        {
+            "date": 20240930,
+            "qtrs": 1,
+            "eps": 0.0,
+            "eps_basic": 0.0,
+            "net_income": -394860.0,
+            "operating_cash_flow": null,
+            "operating_income": -327307.0,
+            "pretax_income": null,
+            "revenue": 596037.0,
+            "source": "2024q4",
+            "is_calculated": null
+        },
+        {
+            "date": 20241231,
+            "qtrs": 1,
+            "eps": -0.01,
+            "eps_basic": null,
+            "net_income": -18400571.0,
+            "operating_cash_flow": -11361.0,
+            "operating_income": -18316815.0,
+            "pretax_income": null,
+            "revenue": 460489.0,
+            "source": "2025q2",
+            "is_calculated": true
         },
         {
             "date": 20250331,
             "qtrs": 1,
             "eps": 0.0,
+            "eps_basic": 0.0,
             "net_income": -266854.0,
             "operating_cash_flow": 37695.0,
             "operating_income": -192615.0,
+            "pretax_income": null,
             "revenue": 515147.0,
-            "source": "2025q2"
+            "source": "2025q2",
+            "is_calculated": null
         },
         {
             "date": 20250630,
             "qtrs": 1,
             "eps": 0.0,
+            "eps_basic": 0.0,
             "net_income": -178345.0,
             "operating_cash_flow": null,
             "operating_income": -107259.0,
+            "pretax_income": null,
             "revenue": 445970.0,
-            "source": "2025q3"
+            "source": "2025q3",
+            "is_calculated": null
         },
         {
             "date": 20250630,
             "qtrs": 2,
             "eps": 0.0,
+            "eps_basic": 0.0,
             "net_income": -445199.0,
             "operating_cash_flow": 40900.0,
             "operating_income": -299874.0,
+            "pretax_income": null,
             "revenue": 961116.0,
-            "source": "2025q3"
+            "source": "2025q3",
+            "is_calculated": null
         },
         {
             "date": 20250930,
             "qtrs": 1,
             "eps": 0.0,
+            "eps_basic": 0.0,
             "net_income": -80565.0,
             "operating_cash_flow": null,
             "operating_income": -8459.0,
+            "pretax_income": null,
             "revenue": 507755.0,
-            "source": "2025q4"
+            "source": "2025q4",
+            "is_calculated": null
         },
         {
             "date": 20250930,
             "qtrs": 3,
             "eps": 0.0,
+            "eps_basic": 0.0,
             "net_income": -525764.0,
             "operating_cash_flow": -30664.0,
             "operating_income": -308333.0,
+            "pretax_income": null,
             "revenue": 1468872.0,
-            "source": "2025q4"
+            "source": "2025q4",
+            "is_calculated": null
         }
     ]
 }
