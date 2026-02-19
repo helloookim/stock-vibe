@@ -143,6 +143,17 @@
       }, 2000);
     });
   </script>
+
+  <script>
+    // Fix: AdSense anchor ad overlays intercepting wheel events on desktop
+    document.addEventListener('wheel', function (e) {
+      var target = e.target;
+      if (target.closest && !target.closest('#root')) {
+        var container = document.querySelector('.charts-container');
+        if (container) container.scrollTop += e.deltaY;
+      }
+    }, { passive: true, capture: true });
+  </script>
 </body>
 
 </html>

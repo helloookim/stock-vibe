@@ -7,11 +7,9 @@ import { ArrowLeft, TrendingUp, BarChart3, Shield, ExternalLink, Pill } from 'lu
 const SamsungBiologics = () => {
     const { t } = useTranslation();
     React.useEffect(() => {
-        document.body.style.overflow = 'auto';
-        document.documentElement.style.overflow = 'auto';
+        document.documentElement.classList.add('page-scroll-enabled');
         return () => {
-            document.body.style.overflow = 'hidden';
-            document.documentElement.style.overflow = 'hidden';
+            document.documentElement.classList.remove('page-scroll-enabled');
         };
     }, []);
 

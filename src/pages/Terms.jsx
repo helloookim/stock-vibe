@@ -6,11 +6,9 @@ import { ArrowLeft } from 'lucide-react';
 const Terms = () => {
     // Override body overflow for this page
     React.useEffect(() => {
-        document.body.style.overflow = 'auto';
-        document.documentElement.style.overflow = 'auto';
+        document.documentElement.classList.add('page-scroll-enabled');
         return () => {
-            document.body.style.overflow = 'hidden';
-            document.documentElement.style.overflow = 'hidden';
+            document.documentElement.classList.remove('page-scroll-enabled');
         };
     }, []);
 
