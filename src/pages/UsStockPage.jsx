@@ -535,6 +535,7 @@ const UsStockPage = () => {
                 {/* MAIN CONTENT */}
                 <main className="main-content">
                     <header className="main-header">
+                      <div className="main-header-inner">
                         <div className="header-top-row">
                             <div className="company-info">
                                 <h1>{companyData?.name || selectedTicker}</h1>
@@ -581,6 +582,7 @@ const UsStockPage = () => {
                                     onChange={e => { const val = parseInt(e.target.value); if (val >= yearRange[0]) { setYearRange([yearRange[0], val]); setIsDefaultRange(false); } }} />
                             </div>
                         </div>
+                      </div>
                     </header>
 
                     <div className="charts-container">

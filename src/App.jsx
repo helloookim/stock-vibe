@@ -803,6 +803,7 @@ const App = () => {
                 {/* MAIN CONTENT */}
                 <main className="main-content">
                     <header className="main-header">
+                      <div className="main-header-inner">
                         <div className="header-top-row">
                             <div className="company-info">
                                 <h1>{currentCompany?.name}</h1>
@@ -889,6 +890,7 @@ const App = () => {
                                 />
                             </div>
                         </div>
+                      </div>
                     </header>
 
                     <div className="charts-container">
