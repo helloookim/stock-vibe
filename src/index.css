@@ -470,6 +470,24 @@ html.page-scroll-enabled body {
   border-radius: 4px;
 }
 
+.charts-container > * {
+  max-width: 960px;
+}
+
+/* Side Rail Ad */
+.side-rail {
+  width: 160px;
+  flex-shrink: 0;
+  padding: 20px 10px;
+  overflow-y: auto;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.side-rail-ad {
+  position: sticky;
+  top: 20px;
+}
+
 /* Summary Cards */
 .summary-cards {
   display: grid;
@@ -1066,6 +1084,10 @@ input[type="range"]::-moz-range-thumb {
 
 /* Responsive */
 @media (max-width: 1200px) {
+  .side-rail {
+    display: none;
+  }
+
   .summary-cards {
     grid-template-columns: repeat(2, 1fr);
   }

@@ -1362,6 +1362,21 @@ const App = () => {
                         </footer>
                     </div>
                 </main>
+
+                {/* Side Rail Ad */}
+                {!isMobile && (
+                    <aside className="side-rail">
+                        <div className="side-rail-ad">
+                            <ins className="adsbygoogle"
+                                style={{ display: 'block' }}
+                                data-ad-client="ca-pub-9130041681645679"
+                                data-ad-slot="side-rail"
+                                data-ad-format="vertical"
+                                data-full-width-responsive="false"
+                            />
+                        </div>
+                    </aside>
+                )}
             </div>
 
             {/* Donation Popup Modal */}
