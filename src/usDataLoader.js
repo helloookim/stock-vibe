@@ -45,7 +45,7 @@ function processUsCompanyData(raw) {
                 revenue: entry.revenue,
                 operating_income: entry.operating_income,
                 net_income: entry.net_income,
-                eps: entry.eps,
+                eps: entry.eps != null ? entry.eps : entry.eps_basic,
                 op_margin: (entry.revenue && entry.operating_income != null)
                     ? parseFloat(((entry.operating_income / entry.revenue) * 100).toFixed(1))
                     : null,
@@ -87,7 +87,7 @@ function processUsCompanyData(raw) {
                 revenue: entry.revenue,
                 operating_income: entry.operating_income,
                 net_income: entry.net_income,
-                eps: entry.eps,
+                eps: entry.eps != null ? entry.eps : entry.eps_basic,
             });
         }
     });
