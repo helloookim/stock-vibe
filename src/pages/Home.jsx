@@ -333,6 +333,32 @@ const Home = () => {
                                 </button>
                             </section>
 
+                            {/* Data Update Notice */}
+                            <section style={{
+                                maxWidth: '640px',
+                                margin: '0 auto 2rem',
+                                padding: '14px 20px',
+                                background: 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(139,92,246,0.08))',
+                                border: '1px solid rgba(96,165,250,0.2)',
+                                borderRadius: '12px',
+                                textAlign: 'center',
+                            }}>
+                                <p style={{
+                                    margin: 0,
+                                    color: '#93c5fd',
+                                    fontSize: '0.85rem',
+                                    lineHeight: '1.5',
+                                }}>
+                                    <span style={{ color: '#60a5fa', fontWeight: 600 }}>
+                                        {t('home.updateNoticeTitle')}
+                                    </span>
+                                    <br />
+                                    <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>
+                                        {t('home.updateNoticeDesc')}
+                                    </span>
+                                </p>
+                            </section>
+
                             {/* Feature Cards */}
                             <section className="home-features-section">
                                 <p className="home-features-title">{t('home.featuresLabel')}</p>
