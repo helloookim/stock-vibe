@@ -2,6 +2,7 @@
     "ticker": "SARO",
     "cik": 2025410,
     "name": "STANDARDAERO, INC.",
+    "fy_end_month": 12,
     "annual": [
         {
             "date": 20221231,
@@ -12,7 +13,8 @@
             "operating_income": 262632000.0,
             "pretax_income": 21996000.0,
             "revenue": 4150478000.0,
-            "source": "2025q1"
+            "source": "2025q1",
+            "fiscal_year": "FY2022"
         },
         {
             "date": 20231231,
@@ -23,7 +25,8 @@
             "operating_income": 337358000.0,
             "pretax_income": 5119000.0,
             "revenue": 4563284000.0,
-            "source": "2025q1"
+            "source": "2025q1",
+            "fiscal_year": "FY2023"
         },
         {
             "date": 20241231,
@@ -34,7 +37,8 @@
             "operating_income": 403219000.0,
             "pretax_income": 81757000.0,
             "revenue": 5237161000.0,
-            "source": "2025q1"
+            "source": "2025q1",
+            "fiscal_year": "FY2024"
         }
     ],
     "quarterly": [
@@ -49,6 +53,8 @@
             "pretax_income": null,
             "revenue": null,
             "source": "2024q4",
+            "fiscal_quarter": "FY2023Q1",
+            "type": "single",
             "is_calculated": null
         },
         {
@@ -62,6 +68,8 @@
             "pretax_income": null,
             "revenue": null,
             "source": "2024q4",
+            "fiscal_quarter": "FY2023Q2",
+            "type": "single",
             "is_calculated": null
         },
         {
@@ -75,6 +83,8 @@
             "pretax_income": -30532000.0,
             "revenue": 1099441000.0,
             "source": "2024q4",
+            "fiscal_quarter": "FY2023Q3",
+            "type": "single",
             "is_calculated": null
         },
         {
@@ -88,6 +98,8 @@
             "pretax_income": 4375000.0,
             "revenue": 3405513000.0,
             "source": "2024q4",
+            "fiscal_quarter": "FY2023Q3",
+            "type": "cumulative_9m",
             "is_calculated": null
         },
         {
@@ -101,32 +113,38 @@
             "pretax_income": 744000.0,
             "revenue": 1157771000.0,
             "source": "2025q1",
+            "fiscal_quarter": "FY2023Q4",
+            "type": "single",
             "is_calculated": true
         },
         {
             "date": 20240331,
             "qtrs": 1,
-            "eps": 0.01,
-            "eps_basic": 0.01,
+            "eps": null,
+            "eps_basic": null,
             "net_income": 3187000.0,
-            "operating_cash_flow": -83551000.0,
-            "operating_income": 105507000.0,
-            "pretax_income": 20099000.0,
-            "revenue": 1235723000.0,
-            "source": "2025q2",
+            "operating_cash_flow": null,
+            "operating_income": null,
+            "pretax_income": null,
+            "revenue": null,
+            "source": "2024q4",
+            "fiscal_quarter": "FY2024Q1",
+            "type": "single",
             "is_calculated": null
         },
         {
             "date": 20240630,
             "qtrs": 1,
-            "eps": 0.02,
-            "eps_basic": 0.02,
+            "eps": null,
+            "eps_basic": null,
             "net_income": 5404000.0,
             "operating_cash_flow": null,
-            "operating_income": 105077000.0,
-            "pretax_income": 26371000.0,
-            "revenue": 1347198000.0,
-            "source": "2025q3",
+            "operating_income": null,
+            "pretax_income": null,
+            "revenue": null,
+            "source": "2024q4",
+            "fiscal_quarter": "FY2024Q2",
+            "type": "single",
             "is_calculated": null
         },
         {
@@ -140,6 +158,8 @@
             "pretax_income": 46470000.0,
             "revenue": 2582921000.0,
             "source": "2025q3",
+            "fiscal_quarter": "FY2024Q2",
+            "type": "cumulative_6m",
             "is_calculated": null
         },
         {
@@ -153,6 +173,8 @@
             "pretax_income": 16647000.0,
             "revenue": 1244627000.0,
             "source": "2024q4",
+            "fiscal_quarter": "FY2024Q3",
+            "type": "single",
             "is_calculated": null
         },
         {
@@ -166,6 +188,8 @@
             "pretax_income": 63117000.0,
             "revenue": 3827548000.0,
             "source": "2024q4",
+            "fiscal_quarter": "FY2024Q3",
+            "type": "cumulative_9m",
             "is_calculated": null
         },
         {
@@ -179,6 +203,8 @@
             "pretax_income": 18640000.0,
             "revenue": 1409613000.0,
             "source": "2025q1",
+            "fiscal_quarter": "FY2024Q4",
+            "type": "single",
             "is_calculated": true
         },
         {
@@ -192,6 +218,8 @@
             "pretax_income": 85132000.0,
             "revenue": 1435588000.0,
             "source": "2025q2",
+            "fiscal_quarter": "FY2025Q1",
+            "type": "single",
             "is_calculated": null
         },
         {
@@ -205,6 +233,8 @@
             "pretax_income": 91735000.0,
             "revenue": 1528943000.0,
             "source": "2025q3",
+            "fiscal_quarter": "FY2025Q2",
+            "type": "single",
             "is_calculated": null
         },
         {
@@ -218,6 +248,8 @@
             "pretax_income": 176867000.0,
             "revenue": 2964531000.0,
             "source": "2025q3",
+            "fiscal_quarter": "FY2025Q2",
+            "type": "cumulative_6m",
             "is_calculated": null
         },
         {
@@ -231,6 +263,8 @@
             "pretax_income": 92776000.0,
             "revenue": 1497962000.0,
             "source": "2025q4",
+            "fiscal_quarter": "FY2025Q3",
+            "type": "single",
             "is_calculated": null
         },
         {
@@ -244,6 +278,8 @@
             "pretax_income": 269643000.0,
             "revenue": 4462493000.0,
             "source": "2025q4",
+            "fiscal_quarter": "FY2025Q3",
+            "type": "cumulative_9m",
             "is_calculated": null
         }
     ]

@@ -2,6 +2,7 @@
     "ticker": "ECG",
     "cik": 2015845,
     "name": "EVERUS CONSTRUCTION GROUP, INC.",
+    "fy_end_month": 12,
     "annual": [
         {
             "date": 20221231,
@@ -12,7 +13,8 @@
             "operating_income": 164644000.0,
             "pretax_income": 159669000.0,
             "revenue": 2699250000.0,
-            "source": "2025q1"
+            "source": "2025q1",
+            "fiscal_year": "FY2022"
         },
         {
             "date": 20231231,
@@ -23,7 +25,8 @@
             "operating_income": 190543000.0,
             "pretax_income": 177570000.0,
             "revenue": 2854390000.0,
-            "source": "2025q1"
+            "source": "2025q1",
+            "fiscal_year": "FY2023"
         },
         {
             "date": 20241231,
@@ -34,7 +37,8 @@
             "operating_income": 189907000.0,
             "pretax_income": 180759000.0,
             "revenue": 2849685000.0,
-            "source": "2025q1"
+            "source": "2025q1",
+            "fiscal_year": "FY2024"
         }
     ],
     "quarterly": [
@@ -49,6 +53,8 @@
             "pretax_income": null,
             "revenue": null,
             "source": "2024q4",
+            "fiscal_quarter": "FY2023Q1",
+            "type": "single",
             "is_calculated": null
         },
         {
@@ -62,6 +68,8 @@
             "pretax_income": null,
             "revenue": null,
             "source": "2024q4",
+            "fiscal_quarter": "FY2023Q2",
+            "type": "single",
             "is_calculated": null
         },
         {
@@ -75,6 +83,8 @@
             "pretax_income": 46703000.0,
             "revenue": 717406000.0,
             "source": "2024q4",
+            "fiscal_quarter": "FY2023Q3",
+            "type": "single",
             "is_calculated": null
         },
         {
@@ -88,6 +98,8 @@
             "pretax_income": 128841000.0,
             "revenue": 2218672000.0,
             "source": "2024q4",
+            "fiscal_quarter": "FY2023Q3",
+            "type": "cumulative_9m",
             "is_calculated": null
         },
         {
@@ -101,32 +113,38 @@
             "pretax_income": 48729000.0,
             "revenue": 635718000.0,
             "source": "2025q1",
+            "fiscal_quarter": "FY2023Q4",
+            "type": "single",
             "is_calculated": true
         },
         {
             "date": 20240331,
             "qtrs": 1,
-            "eps": 0.55,
-            "eps_basic": 0.55,
+            "eps": null,
+            "eps_basic": null,
             "net_income": 28214000.0,
-            "operating_cash_flow": 21856000.0,
-            "operating_income": 38884000.0,
-            "pretax_income": 37076000.0,
-            "revenue": 625689000.0,
-            "source": "2025q2",
+            "operating_cash_flow": null,
+            "operating_income": null,
+            "pretax_income": null,
+            "revenue": null,
+            "source": "2024q4",
+            "fiscal_quarter": "FY2024Q1",
+            "type": "single",
             "is_calculated": null
         },
         {
             "date": 20240630,
             "qtrs": 1,
-            "eps": 0.76,
-            "eps_basic": 0.76,
+            "eps": null,
+            "eps_basic": null,
             "net_income": 38972000.0,
             "operating_cash_flow": null,
-            "operating_income": 51309000.0,
-            "pretax_income": 49757000.0,
-            "revenue": 703373000.0,
-            "source": "2025q3",
+            "operating_income": null,
+            "pretax_income": null,
+            "revenue": null,
+            "source": "2024q4",
+            "fiscal_quarter": "FY2024Q2",
+            "type": "single",
             "is_calculated": null
         },
         {
@@ -140,6 +158,8 @@
             "pretax_income": 86833000.0,
             "revenue": 1329062000.0,
             "source": "2025q3",
+            "fiscal_quarter": "FY2024Q2",
+            "type": "cumulative_6m",
             "is_calculated": null
         },
         {
@@ -153,6 +173,8 @@
             "pretax_income": 51929000.0,
             "revenue": 760985000.0,
             "source": "2024q4",
+            "fiscal_quarter": "FY2024Q3",
+            "type": "single",
             "is_calculated": null
         },
         {
@@ -166,6 +188,8 @@
             "pretax_income": 138762000.0,
             "revenue": 2090047000.0,
             "source": "2024q4",
+            "fiscal_quarter": "FY2024Q3",
+            "type": "cumulative_9m",
             "is_calculated": null
         },
         {
@@ -179,6 +203,8 @@
             "pretax_income": 41997000.0,
             "revenue": 759638000.0,
             "source": "2025q1",
+            "fiscal_quarter": "FY2024Q4",
+            "type": "single",
             "is_calculated": true
         },
         {
@@ -192,6 +218,8 @@
             "pretax_income": 46857000.0,
             "revenue": 826629000.0,
             "source": "2025q2",
+            "fiscal_quarter": "FY2025Q1",
+            "type": "single",
             "is_calculated": null
         },
         {
@@ -205,6 +233,8 @@
             "pretax_income": 69602000.0,
             "revenue": 921466000.0,
             "source": "2025q3",
+            "fiscal_quarter": "FY2025Q2",
+            "type": "single",
             "is_calculated": null
         },
         {
@@ -218,6 +248,8 @@
             "pretax_income": 116459000.0,
             "revenue": 1748095000.0,
             "source": "2025q3",
+            "fiscal_quarter": "FY2025Q2",
+            "type": "cumulative_6m",
             "is_calculated": null
         },
         {
@@ -231,6 +263,8 @@
             "pretax_income": 72054000.0,
             "revenue": 986820000.0,
             "source": "2025q4",
+            "fiscal_quarter": "FY2025Q3",
+            "type": "single",
             "is_calculated": null
         },
         {
@@ -244,6 +278,8 @@
             "pretax_income": 188513000.0,
             "revenue": 2734915000.0,
             "source": "2025q4",
+            "fiscal_quarter": "FY2025Q3",
+            "type": "cumulative_9m",
             "is_calculated": null
         }
     ]

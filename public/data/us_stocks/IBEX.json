@@ -2,6 +2,7 @@
     "ticker": "IBEX",
     "cik": 1720420,
     "name": "IBEX LTD",
+    "fy_end_month": 6,
     "annual": [
         {
             "date": 20180630,
@@ -12,7 +13,8 @@
             "operating_income": null,
             "pretax_income": null,
             "revenue": 342200000.0,
-            "source": "2020q4"
+            "source": "2020q4",
+            "fiscal_year": "FY2018"
         },
         {
             "date": 20190630,
@@ -23,7 +25,8 @@
             "operating_income": null,
             "pretax_income": null,
             "revenue": 368380000.0,
-            "source": "2021q4"
+            "source": "2020q4",
+            "fiscal_year": "FY2019"
         },
         {
             "date": 20200630,
@@ -34,29 +37,32 @@
             "operating_income": null,
             "pretax_income": null,
             "revenue": 405135000.0,
-            "source": "2022q4"
+            "source": "2020q4",
+            "fiscal_year": "FY2020"
         },
         {
             "date": 20210630,
-            "eps": 0.71,
-            "eps_basic": 0.74,
-            "net_income": 13089000.0,
-            "operating_cash_flow": 16077000.0,
-            "operating_income": 17045000.0,
-            "pretax_income": 15153000.0,
-            "revenue": 443388000.0,
-            "source": "2023q3"
+            "eps": 0.15,
+            "eps_basic": 0.16,
+            "net_income": 2847000.0,
+            "operating_cash_flow": 25897000.0,
+            "operating_income": null,
+            "pretax_income": null,
+            "revenue": 443662000.0,
+            "source": "2021q4",
+            "fiscal_year": "FY2021"
         },
         {
             "date": 20220630,
-            "eps": 1.15,
-            "eps_basic": 1.18,
-            "net_income": 21456000.0,
-            "operating_cash_flow": 40006000.0,
-            "operating_income": 20625000.0,
-            "pretax_income": 19379000.0,
-            "revenue": 492851000.0,
-            "source": "2024q3"
+            "eps": 1.23,
+            "eps_basic": 1.26,
+            "net_income": 22990000.0,
+            "operating_cash_flow": 50129000.0,
+            "operating_income": null,
+            "pretax_income": null,
+            "revenue": 493572000.0,
+            "source": "2022q4",
+            "fiscal_year": "FY2022"
         },
         {
             "date": 20230630,
@@ -67,7 +73,8 @@
             "operating_income": 40478000.0,
             "pretax_income": 40326000.0,
             "revenue": 523118000.0,
-            "source": "2025q3"
+            "source": "2023q3",
+            "fiscal_year": "FY2023"
         },
         {
             "date": 20240630,
@@ -78,7 +85,8 @@
             "operating_income": 39429000.0,
             "pretax_income": 40986000.0,
             "revenue": 508569000.0,
-            "source": "2025q3"
+            "source": "2024q3",
+            "fiscal_year": "FY2024"
         },
         {
             "date": 20250630,
@@ -89,7 +97,8 @@
             "operating_income": 46611000.0,
             "pretax_income": 45932000.0,
             "revenue": 558273000.0,
-            "source": "2025q3"
+            "source": "2025q3",
+            "fiscal_year": "FY2025"
         }
     ],
     "quarterly": [
@@ -104,6 +113,8 @@
             "pretax_income": null,
             "revenue": 100900000.0,
             "source": "2020q4",
+            "fiscal_quarter": "FY2020Q4",
+            "type": "single",
             "is_calculated": null
         },
         {
@@ -112,11 +123,13 @@
             "eps": 0.35,
             "eps_basic": 0.36,
             "net_income": 6523000.0,
-            "operating_cash_flow": 5562000.0,
+            "operating_cash_flow": null,
             "operating_income": 7670000.0,
-            "pretax_income": 7570000.0,
+            "pretax_income": null,
             "revenue": 127805000.0,
             "source": "2023q3",
+            "fiscal_quarter": "FY2023Q1",
+            "type": "single",
             "is_calculated": null
         },
         {
@@ -127,9 +140,11 @@
             "net_income": 9270000.0,
             "operating_cash_flow": null,
             "operating_income": 11451000.0,
-            "pretax_income": 11289000.0,
+            "pretax_income": null,
             "revenue": 139325000.0,
             "source": "2023q3",
+            "fiscal_quarter": "FY2023Q2",
+            "type": "single",
             "is_calculated": null
         },
         {
@@ -143,19 +158,23 @@
             "pretax_income": 18859000.0,
             "revenue": 267130000.0,
             "source": "2024q1",
+            "fiscal_quarter": "FY2023Q2",
+            "type": "cumulative_6m",
             "is_calculated": null
         },
         {
             "date": 20230331,
             "qtrs": 1,
-            "eps": 0.59,
+            "eps": 0.6,
             "eps_basic": 0.62,
             "net_income": 11279000.0,
             "operating_cash_flow": null,
             "operating_income": 13051000.0,
-            "pretax_income": 13151000.0,
+            "pretax_income": null,
             "revenue": 131557000.0,
-            "source": "2024q2",
+            "source": "2023q3",
+            "fiscal_quarter": "FY2023Q3",
+            "type": "single",
             "is_calculated": null
         },
         {
@@ -169,6 +188,8 @@
             "pretax_income": 32010000.0,
             "revenue": 398687000.0,
             "source": "2024q2",
+            "fiscal_quarter": "FY2023Q3",
+            "type": "cumulative_9m",
             "is_calculated": null
         },
         {
@@ -182,6 +203,8 @@
             "pretax_income": 8316000.0,
             "revenue": 124431000.0,
             "source": "2023q3",
+            "fiscal_quarter": "FY2023Q4",
+            "type": "single",
             "is_calculated": true
         },
         {
@@ -195,6 +218,8 @@
             "pretax_income": 8813000.0,
             "revenue": 124609000.0,
             "source": "2023q4",
+            "fiscal_quarter": "FY2024Q1",
+            "type": "single",
             "is_calculated": null
         },
         {
@@ -208,6 +233,8 @@
             "pretax_income": 7348000.0,
             "revenue": 132634000.0,
             "source": "2024q1",
+            "fiscal_quarter": "FY2024Q2",
+            "type": "single",
             "is_calculated": null
         },
         {
@@ -221,6 +248,8 @@
             "pretax_income": 16161000.0,
             "revenue": 257243000.0,
             "source": "2024q1",
+            "fiscal_quarter": "FY2024Q2",
+            "type": "cumulative_6m",
             "is_calculated": null
         },
         {
@@ -233,7 +262,9 @@
             "operating_income": 11282000.0,
             "pretax_income": 11589000.0,
             "revenue": 126795000.0,
-            "source": "2025q2",
+            "source": "2024q2",
+            "fiscal_quarter": "FY2024Q3",
+            "type": "single",
             "is_calculated": null
         },
         {
@@ -247,6 +278,8 @@
             "pretax_income": 27750000.0,
             "revenue": 384038000.0,
             "source": "2024q2",
+            "fiscal_quarter": "FY2024Q3",
+            "type": "cumulative_9m",
             "is_calculated": null
         },
         {
@@ -259,7 +292,9 @@
             "operating_income": 12869000.0,
             "pretax_income": 13236000.0,
             "revenue": 124531000.0,
-            "source": "2025q3",
+            "source": "2024q3",
+            "fiscal_quarter": "FY2024Q4",
+            "type": "single",
             "is_calculated": true
         },
         {
@@ -272,7 +307,9 @@
             "operating_income": 9092000.0,
             "pretax_income": 9513000.0,
             "revenue": 129717000.0,
-            "source": "2025q4",
+            "source": "2024q4",
+            "fiscal_quarter": "FY2025Q1",
+            "type": "single",
             "is_calculated": null
         },
         {
@@ -286,6 +323,8 @@
             "pretax_income": 11619000.0,
             "revenue": 140682000.0,
             "source": "2025q1",
+            "fiscal_quarter": "FY2025Q2",
+            "type": "single",
             "is_calculated": null
         },
         {
@@ -299,6 +338,8 @@
             "pretax_income": 21132000.0,
             "revenue": 270399000.0,
             "source": "2025q1",
+            "fiscal_quarter": "FY2025Q2",
+            "type": "cumulative_6m",
             "is_calculated": null
         },
         {
@@ -312,6 +353,8 @@
             "pretax_income": 12957000.0,
             "revenue": 140736000.0,
             "source": "2025q2",
+            "fiscal_quarter": "FY2025Q3",
+            "type": "single",
             "is_calculated": null
         },
         {
@@ -325,6 +368,8 @@
             "pretax_income": 34089000.0,
             "revenue": 411135000.0,
             "source": "2025q2",
+            "fiscal_quarter": "FY2025Q3",
+            "type": "cumulative_9m",
             "is_calculated": null
         },
         {
@@ -338,6 +383,8 @@
             "pretax_income": 11843000.0,
             "revenue": 147138000.0,
             "source": "2025q3",
+            "fiscal_quarter": "FY2025Q4",
+            "type": "single",
             "is_calculated": true
         },
         {
@@ -351,6 +398,8 @@
             "pretax_income": 13512000.0,
             "revenue": 151179000.0,
             "source": "2025q4",
+            "fiscal_quarter": "FY2026Q1",
+            "type": "single",
             "is_calculated": null
         }
     ]

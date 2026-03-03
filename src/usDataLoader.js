@@ -1,4 +1,6 @@
 // US Stock data loader - on-demand loading for individual company JSON files
+// Data format: per-company JSON with fiscal_year/fiscal_quarter labels, type field,
+// and pre-derived Q4 data. See us_fixed_company_jsons/README.md for full spec.
 
 let companyIndexCache = null;
 const companyDataCache = new Map();
@@ -20,25 +22,24 @@ export async function loadUsCompanyData(ticker) {
     return processed;
 }
 
-function dateToCalendarQuarter(dateNum) {
-    const s = String(dateNum);
-    const year = parseInt(s.substring(0, 4));
-    const month = parseInt(s.substring(4, 6));
-    let q;
-    if (month <= 3) q = 'Q1';
-    else if (month <= 6) q = 'Q2';
-    else if (month <= 9) q = 'Q3';
-    else q = 'Q4';
-    return { year, quarter: q };
+function parseFiscalYear(fiscalYear) {
+    // "FY2024" → 2024
+    return parseInt(fiscalYear.replace('FY', ''));
+}
+
+function parseFiscalQuarter(fiscalQuarter) {
+    // "FY2024Q3" → { year: 2024, quarter: "Q3" }
+    const match = fiscalQuarter.match(/FY(\d+)Q(\d)/);
+    return { year: parseInt(match[1]), quarter: `Q${match[2]}` };
 }
 
 function processUsCompanyData(raw) {
-    const { ticker, name, cik, annual: annualRaw, quarterly: quarterlyRaw } = raw;
+    const { ticker, name, cik, fy_end_month, annual: annualRaw, quarterly: quarterlyRaw } = raw;
 
     // --- Annual data ---
     const annualData = (annualRaw || [])
         .map(entry => {
-            const { year } = dateToCalendarQuarter(entry.date);
+            const year = parseFiscalYear(entry.fiscal_year);
             return {
                 year,
                 displayLabel: `${year}`,
@@ -70,13 +71,13 @@ function processUsCompanyData(raw) {
     });
 
     // --- Quarterly data ---
-    // Get qtrs=1 entries
-    const singleQuarters = (quarterlyRaw || []).filter(e => e.qtrs === 1);
-    // Build quarterly map keyed by "YYYY-QX"
+    // New data format includes pre-derived Q4 entries (is_calculated: true)
+    // so we only need to filter for type === "single"
+    const singleQuarters = (quarterlyRaw || []).filter(e => e.type === 'single');
     const quarterMap = new Map();
 
     singleQuarters.forEach(entry => {
-        const { year, quarter } = dateToCalendarQuarter(entry.date);
+        const { year, quarter } = parseFiscalQuarter(entry.fiscal_quarter);
         const key = `${year}-${quarter}`;
         // Keep the latest source if duplicates
         if (!quarterMap.has(key) || entry.date > quarterMap.get(key).date) {
@@ -92,57 +93,7 @@ function processUsCompanyData(raw) {
         }
     });
 
-    // Derive missing Q4 from annual - Q3 YTD (qtrs=3)
-    const ytdQ3 = (quarterlyRaw || []).filter(e => e.qtrs === 3);
-    const ytdQ3Map = new Map();
-    ytdQ3.forEach(entry => {
-        const { year, quarter } = dateToCalendarQuarter(entry.date);
-        const key = `${year}-${quarter}`;
-        ytdQ3Map.set(key, entry);
-    });
-
-    // For each annual entry, check if corresponding Q4 is missing
-    (annualRaw || []).forEach(aEntry => {
-        const { year: aYear, quarter: aQuarter } = dateToCalendarQuarter(aEntry.date);
-        const q4Key = `${aYear}-${aQuarter}`;
-
-        if (!quarterMap.has(q4Key)) {
-            // Find the Q3 YTD entry 3 months before the annual end
-            // The YTD Q3 date is ~3 months before annual date
-            const annualDate = aEntry.date;
-            const annualMonth = parseInt(String(annualDate).substring(4, 6));
-            // Q3 YTD month is 3 months before annual end
-            let q3Month = annualMonth - 3;
-            let q3Year = parseInt(String(annualDate).substring(0, 4));
-            if (q3Month <= 0) { q3Month += 12; q3Year -= 1; }
-            const q3MonthStr = String(q3Month).padStart(2, '0');
-
-            // Find matching ytdQ3 entry
-            let matched = null;
-            ytdQ3.forEach(e => {
-                const eMonth = parseInt(String(e.date).substring(4, 6));
-                const eYear = parseInt(String(e.date).substring(0, 4));
-                if (eYear === q3Year && eMonth === q3Month) {
-                    matched = e;
-                }
-            });
-
-            if (matched) {
-                quarterMap.set(q4Key, {
-                    date: annualDate,
-                    year: aYear,
-                    quarter: aQuarter,
-                    revenue: subtract(aEntry.revenue, matched.revenue),
-                    operating_income: subtract(aEntry.operating_income, matched.operating_income),
-                    net_income: subtract(aEntry.net_income, matched.net_income),
-                    eps: subtract(aEntry.eps, matched.eps),
-                    derived: true,
-                });
-            }
-        }
-    });
-
-    // Sort quarterly data chronologically
+    // Sort and enrich quarterly data
     const quarterlyData = Array.from(quarterMap.values())
         .sort((a, b) => a.date - b.date)
         .map(entry => ({
@@ -153,7 +104,7 @@ function processUsCompanyData(raw) {
                 : null,
         }));
 
-    // Calculate quarterly YoY (same calendar quarter previous year)
+    // Calculate quarterly YoY (same fiscal quarter previous year)
     quarterlyData.forEach((entry) => {
         const prevYear = quarterlyData.find(
             e => e.year === entry.year - 1 && e.quarter === entry.quarter
@@ -183,11 +134,6 @@ function processUsCompanyData(raw) {
 function calcYoy(current, previous) {
     if (current == null || previous == null || previous === 0) return null;
     return parseFloat((((current - previous) / Math.abs(previous)) * 100).toFixed(1));
-}
-
-function subtract(a, b) {
-    if (a == null || b == null) return null;
-    return a - b;
 }
 
 // USD currency formatter

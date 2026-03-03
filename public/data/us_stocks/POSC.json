@@ -2,6 +2,7 @@
     "ticker": "POSC",
     "cik": 844985,
     "name": "POSITRON CORP",
+    "fy_end_month": 12,
     "annual": [
         {
             "date": 20131231,
@@ -11,7 +12,8 @@
             "operating_income": -3338000.0,
             "pretax_income": -7104000.0,
             "revenue": 1630000.0,
-            "source": "2015q1"
+            "source": "2015q1",
+            "fiscal_year": "FY2013"
         },
         {
             "date": 20141231,
@@ -21,7 +23,8 @@
             "operating_income": -2743000.0,
             "pretax_income": -2584000.0,
             "revenue": 1466000.0,
-            "source": "2015q1"
+            "source": "2015q1",
+            "fiscal_year": "FY2014"
         }
     ],
     "quarterly": [
@@ -35,6 +38,8 @@
             "pretax_income": null,
             "revenue": 371000.0,
             "source": "2015q1",
+            "fiscal_quarter": "FY2013Q1",
+            "type": "single",
             "is_calculated": null,
             "eps_basic": null
         },
@@ -48,6 +53,8 @@
             "pretax_income": null,
             "revenue": 432000.0,
             "source": "2015q1",
+            "fiscal_quarter": "FY2013Q2",
+            "type": "single",
             "is_calculated": null,
             "eps_basic": null
         },
@@ -61,6 +68,8 @@
             "pretax_income": null,
             "revenue": 351000.0,
             "source": "2015q1",
+            "fiscal_quarter": "FY2013Q3",
+            "type": "single",
             "is_calculated": null,
             "eps_basic": null
         },
@@ -74,6 +83,8 @@
             "pretax_income": null,
             "revenue": 476000.0,
             "source": "2015q1",
+            "fiscal_quarter": "FY2013Q4",
+            "type": "single",
             "is_calculated": null,
             "eps_basic": null
         },
@@ -82,11 +93,13 @@
             "qtrs": 1,
             "eps": 0.0,
             "net_income": 861000.0,
-            "operating_cash_flow": -695000.0,
-            "operating_income": -685000.0,
-            "pretax_income": -861000.0,
+            "operating_cash_flow": null,
+            "operating_income": null,
+            "pretax_income": null,
             "revenue": 456000.0,
             "source": "2015q1",
+            "fiscal_quarter": "FY2014Q1",
+            "type": "single",
             "is_calculated": null,
             "eps_basic": null
         },
@@ -96,10 +109,12 @@
             "eps": 0.0,
             "net_income": 201000.0,
             "operating_cash_flow": null,
-            "operating_income": -707000.0,
-            "pretax_income": -201000.0,
+            "operating_income": null,
+            "pretax_income": null,
             "revenue": 355000.0,
             "source": "2015q1",
+            "fiscal_quarter": "FY2014Q2",
+            "type": "single",
             "is_calculated": null,
             "eps_basic": null
         },
@@ -113,6 +128,8 @@
             "pretax_income": -1062000.0,
             "revenue": 811000.0,
             "source": "2015q3",
+            "fiscal_quarter": "FY2014Q2",
+            "type": "cumulative_6m",
             "is_calculated": null,
             "eps_basic": null
         },
@@ -122,10 +139,12 @@
             "eps": 0.0,
             "net_income": 1436000.0,
             "operating_cash_flow": null,
-            "operating_income": -707000.0,
-            "pretax_income": -1436000.0,
+            "operating_income": null,
+            "pretax_income": null,
             "revenue": 396000.0,
             "source": "2015q1",
+            "fiscal_quarter": "FY2014Q3",
+            "type": "single",
             "is_calculated": null,
             "eps_basic": null
         },
@@ -139,6 +158,8 @@
             "pretax_income": -2498000.0,
             "revenue": 1207000.0,
             "source": "2015q4",
+            "fiscal_quarter": "FY2014Q3",
+            "type": "cumulative_9m",
             "is_calculated": null,
             "eps_basic": null
         },
@@ -152,6 +173,8 @@
             "pretax_income": -86000.0,
             "revenue": 259000.0,
             "source": "2015q1",
+            "fiscal_quarter": "FY2014Q4",
+            "type": "single",
             "is_calculated": true,
             "eps_basic": null
         },
@@ -165,6 +188,8 @@
             "pretax_income": -554000.0,
             "revenue": 346000.0,
             "source": "2015q2",
+            "fiscal_quarter": "FY2015Q1",
+            "type": "single",
             "is_calculated": null,
             "eps_basic": null
         },
@@ -178,6 +203,8 @@
             "pretax_income": -375000.0,
             "revenue": 328000.0,
             "source": "2015q3",
+            "fiscal_quarter": "FY2015Q2",
+            "type": "single",
             "is_calculated": null,
             "eps_basic": null
         },
@@ -191,6 +218,8 @@
             "pretax_income": -929000.0,
             "revenue": 674000.0,
             "source": "2015q3",
+            "fiscal_quarter": "FY2015Q2",
+            "type": "cumulative_6m",
             "is_calculated": null,
             "eps_basic": null
         },
@@ -204,6 +233,8 @@
             "pretax_income": -255000.0,
             "revenue": 304000.0,
             "source": "2015q4",
+            "fiscal_quarter": "FY2015Q3",
+            "type": "single",
             "is_calculated": null,
             "eps_basic": null
         },
@@ -217,6 +248,8 @@
             "pretax_income": -1184000.0,
             "revenue": 978000.0,
             "source": "2015q4",
+            "fiscal_quarter": "FY2015Q3",
+            "type": "cumulative_9m",
             "is_calculated": null,
             "eps_basic": null
         }

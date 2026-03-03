@@ -2,6 +2,7 @@
     "ticker": "DMNIF",
     "cik": 2000640,
     "name": "DAMON INC.",
+    "fy_end_month": 6,
     "annual": [
         {
             "date": 20240630,
@@ -12,7 +13,8 @@
             "operating_income": -11484372.0,
             "pretax_income": -33968248.0,
             "revenue": null,
-            "source": "2025q3"
+            "source": "2025q3",
+            "fiscal_year": "FY2024"
         },
         {
             "date": 20250630,
@@ -23,7 +25,8 @@
             "operating_income": -31474917.0,
             "pretax_income": -5349867.0,
             "revenue": 222736.0,
-            "source": "2025q3"
+            "source": "2025q3",
+            "fiscal_year": "FY2025"
         }
     ],
     "quarterly": [
@@ -38,6 +41,8 @@
             "pretax_income": -3692.0,
             "revenue": 97908.0,
             "source": "2024q4",
+            "fiscal_quarter": "FY2024Q1",
+            "type": "single",
             "is_calculated": null
         },
         {
@@ -51,6 +56,8 @@
             "pretax_income": null,
             "revenue": null,
             "source": "2025q1",
+            "fiscal_quarter": "FY2024Q2",
+            "type": "single",
             "is_calculated": null
         },
         {
@@ -64,6 +71,8 @@
             "pretax_income": null,
             "revenue": null,
             "source": "2025q1",
+            "fiscal_quarter": "FY2024Q2",
+            "type": "cumulative_6m",
             "is_calculated": null
         },
         {
@@ -77,6 +86,8 @@
             "pretax_income": -13096933.0,
             "revenue": null,
             "source": "2025q2",
+            "fiscal_quarter": "FY2024Q3",
+            "type": "single",
             "is_calculated": null
         },
         {
@@ -90,6 +101,8 @@
             "pretax_income": -25604984.0,
             "revenue": null,
             "source": "2025q2",
+            "fiscal_quarter": "FY2024Q3",
+            "type": "cumulative_9m",
             "is_calculated": null
         },
         {
@@ -103,6 +116,8 @@
             "pretax_income": -8363264.0,
             "revenue": null,
             "source": "2025q3",
+            "fiscal_quarter": "FY2024Q4",
+            "type": "single",
             "is_calculated": true
         },
         {
@@ -112,10 +127,12 @@
             "eps_basic": -0.39,
             "net_income": -1564540.0,
             "operating_cash_flow": -799535.0,
-            "operating_income": -1899941.0,
+            "operating_income": -1420446.0,
             "pretax_income": -1564540.0,
             "revenue": 101969.0,
             "source": "2024q4",
+            "fiscal_quarter": "FY2025Q1",
+            "type": "single",
             "is_calculated": null
         },
         {
@@ -129,6 +146,8 @@
             "pretax_income": null,
             "revenue": 49523.0,
             "source": "2025q1",
+            "fiscal_quarter": "FY2025Q2",
+            "type": "single",
             "is_calculated": null
         },
         {
@@ -142,6 +161,8 @@
             "pretax_income": null,
             "revenue": 49523.0,
             "source": "2025q1",
+            "fiscal_quarter": "FY2025Q2",
+            "type": "cumulative_6m",
             "is_calculated": null
         },
         {
@@ -155,6 +176,8 @@
             "pretax_income": -25163438.0,
             "revenue": 81411.0,
             "source": "2025q2",
+            "fiscal_quarter": "FY2025Q3",
+            "type": "single",
             "is_calculated": null
         },
         {
@@ -168,6 +191,8 @@
             "pretax_income": -2354510.0,
             "revenue": 130934.0,
             "source": "2025q2",
+            "fiscal_quarter": "FY2025Q3",
+            "type": "cumulative_9m",
             "is_calculated": null
         },
         {
@@ -181,6 +206,8 @@
             "pretax_income": -2995357.0,
             "revenue": 91802.0,
             "source": "2025q3",
+            "fiscal_quarter": "FY2025Q4",
+            "type": "single",
             "is_calculated": true
         },
         {
@@ -194,6 +221,8 @@
             "pretax_income": -3302459.0,
             "revenue": 80691.0,
             "source": "2025q4",
+            "fiscal_quarter": "FY2026Q1",
+            "type": "single",
             "is_calculated": null
         }
     ]

@@ -24,7 +24,22 @@
       "Bash(timeout 60 python:*)",
       "Bash(while read f)",
       "Bash(do mv \"$f\" debug/)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(node:*)",
+      "Bash(dir:*)",
+      "Bash(git revert:*)",
+      "Bash(wc:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(powershell -command:*)",
+      "Bash(npx vite build)",
+      "Bash(timeout:*)",
+      "Bash(python3:*)",
+      "Bash(__NEW_LINE_a31b409faa78839e__ python3 -c '\nimport json\nimport sys\n\npath = r\"\"c:\\\\Users\\\\laser\\\\OneDrive\\\\2026\\\\vibecode\\\\korean_stock\\\\public\\\\data\\\\financial_data_02.json\"\"\ntry:\n    with open\\(path, \"\"r\"\", encoding=\"\"utf-8\"\"\\) as f:\n        data = json.load\\(f\\)\n    \n    if \"\"005930\"\" in data:\n        entry = data[\"\"005930\"\"]\n        print\\(\"\"=== SAMSUNG \\(005930\\) from financial_data_02.json ===\"\"\\)\n        print\\(f\"\"Name: {entry.get\\(\\\\\"\"name\\\\\"\"\\)}\"\"\\)\n        print\\(f\"\"Sector: {entry.get\\(\\\\\"\"sector\\\\\"\"\\)}\"\"\\)\n        print\\(f\"\"Statement Type: {entry.get\\(\\\\\"\"statement_type\\\\\"\"\\)}\"\"\\)\n        \n        hist = entry.get\\(\"\"history\"\", []\\)\n        print\\(f\"\"\\\\nTotal history records: {len\\(hist\\)}\"\"\\)\n        print\\(\"\"\\\\nLatest 5 records:\"\"\\)\n        for record in hist[-5:]:\n            print\\(json.dumps\\(record\\)\\)\nexcept Exception as e:\n    print\\(f\"\"Error: {type\\(e\\).__name__}: {e}\"\", file=sys.stderr\\)\n')",
+      "Bash(for file in \"c:\\\\Users\\\\laser\\\\OneDrive\\\\2026\\\\vibecode\\\\korean_stock\\\\public\\\\data\\\\eps_data\"*.json)",
+      "Bash(do if grep -q \"\"\"005930\"\"\" \"$file\")",
+      "Bash(then echo \"Found in: $file\" grep \"\"\"005930\"\"\" \"$file\")",
+      "Bash(break)",
+      "Bash(fi)"
     ]
   }
 }

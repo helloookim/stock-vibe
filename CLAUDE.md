@@ -104,7 +104,7 @@ Korean stock data is split into chunks to stay under Cloudflare Pages' 25MB file
 
 - `DataLoader` class in `dataLoader.js` manages chunked loading with caching
 - Three loader instances exported: `financialDataLoader`, `financialDataSeparateLoader`, `epsDataLoader`
-- US stock data loaded on-demand per ticker via `usDataLoader.js`
+- US stock data loaded on-demand per ticker via `usDataLoader.js`. Data includes `fiscal_year`/`fiscal_quarter` labels and pre-derived Q4 entries, so the loader simply parses labels and filters `type === "single"` quarters.
 - All data fetching uses the native `fetch()` API (no axios)
 
 ## Code Conventions
@@ -184,13 +184,39 @@ All IDs/keys are hardcoded (no environment variables used).
 ```
 
 ### US Stock Data
+
+Per-company JSON files from SEC EDGAR (2015q1–2025q4). See `us_fixed_company_jsons/README.md` for full spec.
+
 ```javascript
 {
   "ticker": "AAPL",
-  "name": "Apple Inc.",
-  "cik": "0000320193",
-  "annual": [{ "year": 2024, "revenue": 391035, "operating_income": 128999, "eps": 6.05 }],
-  "quarterly": [{ "year": 2024, "quarter": "Q1", "revenue": 114880, "operating_income": 25735, "eps": 1.52 }]
+  "cik": 320193,
+  "name": "APPLE INC",
+  "fy_end_month": 9,            // Fiscal year-end month (1-12). Apple = September
+  "annual": [{
+    "date": 20240930,            // Fiscal year-end date (YYYYMMDD)
+    "fiscal_year": "FY2024",     // Fiscal year label
+    "revenue": 391035000000.0,   // All monetary values in full USD
+    "operating_income": 123216000000.0,
+    "net_income": 93736000000.0,
+    "eps": 6.08,
+    "eps_basic": 6.11,
+    "pretax_income": 123485000000.0,
+    "operating_cash_flow": 118254000000.0,
+    "source": "2025q4"
+  }],
+  "quarterly": [{
+    "date": 20240629,
+    "fiscal_quarter": "FY2024Q3", // Fiscal quarter label (relative to company's FY)
+    "type": "single",             // "single" | "cumulative_6m" | "cumulative_9m"
+    "qtrs": 1,                    // 1=single, 2=6m, 3=9m
+    "revenue": 85777000000.0,
+    "operating_income": 25352000000.0,
+    "net_income": 21448000000.0,
+    "eps": 1.4,
+    "is_calculated": null,        // true if Q4 was derived (annual - 9m cumulative)
+    "source": "2024q3"
+  }]
 }
 ```
 

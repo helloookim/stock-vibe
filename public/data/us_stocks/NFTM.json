@@ -2,6 +2,7 @@
     "ticker": "NFTM",
     "cik": 1345865,
     "name": "BUILDABLOCK CORP.",
+    "fy_end_month": 11,
     "annual": [
         {
             "date": 20111130,
@@ -12,7 +13,8 @@
             "operating_income": -729063.0,
             "pretax_income": -860465.0,
             "revenue": 134422.0,
-            "source": "2023q4"
+            "source": "2023q4",
+            "fiscal_year": "FY2011"
         },
         {
             "date": 20121130,
@@ -23,18 +25,8 @@
             "operating_income": -1379032.0,
             "pretax_income": -1379032.0,
             "revenue": null,
-            "source": "2023q4"
-        },
-        {
-            "date": 20130531,
-            "eps": null,
-            "eps_basic": null,
-            "net_income": -1511080.0,
-            "operating_cash_flow": -1199629.0,
-            "operating_income": -1511080.0,
-            "pretax_income": -1511080.0,
-            "revenue": null,
-            "source": "2023q4"
+            "source": "2023q4",
+            "fiscal_year": "FY2012"
         }
     ],
     "quarterly": [
@@ -49,7 +41,8 @@
             "pretax_income": -189863.0,
             "revenue": 6431.0,
             "source": "2023q4",
-            "is_calculated": null
+            "fiscal_quarter": "FY2012Q1",
+            "type": "single"
         },
         {
             "date": 20120531,
@@ -62,7 +55,8 @@
             "pretax_income": -402894.0,
             "revenue": null,
             "source": "2023q4",
-            "is_calculated": null
+            "fiscal_quarter": "FY2012Q2",
+            "type": "single"
         },
         {
             "date": 20120531,
@@ -75,7 +69,8 @@
             "pretax_income": -545515.0,
             "revenue": null,
             "source": "2023q4",
-            "is_calculated": null
+            "fiscal_quarter": "FY2012Q2",
+            "type": "cumulative_6m"
         },
         {
             "date": 20121130,
@@ -88,7 +83,8 @@
             "pretax_income": -1042104.0,
             "revenue": null,
             "source": "2023q4",
-            "is_calculated": null
+            "fiscal_quarter": "FY2012Q4",
+            "type": "cumulative_6m"
         },
         {
             "date": 20130228,
@@ -101,7 +97,8 @@
             "pretax_income": -275896.0,
             "revenue": null,
             "source": "2023q4",
-            "is_calculated": null
+            "fiscal_quarter": "FY2013Q1",
+            "type": "single"
         },
         {
             "date": 20130228,
@@ -114,7 +111,8 @@
             "pretax_income": -1318000.0,
             "revenue": null,
             "source": "2023q4",
-            "is_calculated": null
+            "fiscal_quarter": "FY2013Q1",
+            "type": "cumulative_9m"
         },
         {
             "date": 20130531,
@@ -122,12 +120,13 @@
             "eps": -0.01,
             "eps_basic": -0.01,
             "net_income": -193080.0,
-            "operating_cash_flow": -106597.0,
+            "operating_cash_flow": null,
             "operating_income": -193080.0,
             "pretax_income": -193080.0,
             "revenue": null,
             "source": "2023q4",
-            "is_calculated": true
+            "fiscal_quarter": "FY2013Q2",
+            "type": "single"
         },
         {
             "date": 20130531,
@@ -140,7 +139,8 @@
             "pretax_income": -468976.0,
             "revenue": null,
             "source": "2023q4",
-            "is_calculated": null
+            "fiscal_quarter": "FY2013Q2",
+            "type": "cumulative_6m"
         }
     ]
 }

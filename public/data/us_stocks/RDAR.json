@@ -2,6 +2,7 @@
     "ticker": "RDAR",
     "cik": 1384365,
     "name": "RAADR, INC.",
+    "fy_end_month": 12,
     "annual": [
         {
             "date": 20131231,
@@ -11,7 +12,8 @@
             "operating_cash_flow": -1784416.0,
             "pretax_income": -3320445.0,
             "revenue": 327951.0,
-            "source": "2015q3"
+            "source": "2015q3",
+            "fiscal_year": "FY2013"
         },
         {
             "date": 20141231,
@@ -21,7 +23,8 @@
             "operating_cash_flow": -671680.0,
             "pretax_income": -1439073.0,
             "revenue": 82055.0,
-            "source": "2015q3"
+            "source": "2015q3",
+            "fiscal_year": "FY2014"
         },
         {
             "date": 20151231,
@@ -31,7 +34,8 @@
             "operating_cash_flow": -392689.0,
             "pretax_income": -7477430.0,
             "revenue": null,
-            "source": "2016q2"
+            "source": "2016q2",
+            "fiscal_year": "FY2015"
         }
     ],
     "quarterly": [
@@ -45,6 +49,8 @@
             "pretax_income": -257489.0,
             "revenue": 44073.0,
             "source": "2015q3",
+            "fiscal_quarter": "FY2014Q1",
+            "type": "single",
             "is_calculated": null,
             "operating_income": null
         },
@@ -58,6 +64,8 @@
             "pretax_income": -157168.0,
             "revenue": 43197.0,
             "source": "2015q3",
+            "fiscal_quarter": "FY2014Q2",
+            "type": "single",
             "is_calculated": null,
             "operating_income": null
         },
@@ -71,6 +79,8 @@
             "pretax_income": -394078.0,
             "revenue": 80546.0,
             "source": "2015q3",
+            "fiscal_quarter": "FY2014Q2",
+            "type": "cumulative_6m",
             "is_calculated": null,
             "operating_income": null
         },
@@ -84,6 +94,8 @@
             "pretax_income": -826020.0,
             "revenue": 260.0,
             "source": "2015q4",
+            "fiscal_quarter": "FY2014Q3",
+            "type": "single",
             "is_calculated": null,
             "operating_income": null
         },
@@ -97,6 +109,8 @@
             "pretax_income": -1220097.0,
             "revenue": 80806.0,
             "source": "2015q4",
+            "fiscal_quarter": "FY2014Q3",
+            "type": "cumulative_9m",
             "is_calculated": null,
             "operating_income": null
         },
@@ -110,6 +124,8 @@
             "pretax_income": -218976.0,
             "revenue": 1249.0,
             "source": "2015q3",
+            "fiscal_quarter": "FY2014Q4",
+            "type": "single",
             "is_calculated": true,
             "operating_income": null
         },
@@ -117,12 +133,14 @@
             "date": 20150331,
             "qtrs": 1,
             "eps": -0.06,
-            "eps_basic": -0.06,
+            "eps_basic": null,
             "net_income": -6897648.0,
             "operating_cash_flow": -46192.0,
             "pretax_income": -6743969.0,
             "revenue": null,
-            "source": "2016q2",
+            "source": "2015q3",
+            "fiscal_quarter": "FY2015Q1",
+            "type": "single",
             "is_calculated": null,
             "operating_income": null
         },
@@ -136,6 +154,8 @@
             "pretax_income": -66142.0,
             "revenue": null,
             "source": "2015q3",
+            "fiscal_quarter": "FY2015Q2",
+            "type": "single",
             "is_calculated": null,
             "operating_income": null
         },
@@ -149,6 +169,8 @@
             "pretax_income": -6810111.0,
             "revenue": null,
             "source": "2015q3",
+            "fiscal_quarter": "FY2015Q2",
+            "type": "cumulative_6m",
             "is_calculated": null,
             "operating_income": null
         },
@@ -162,6 +184,8 @@
             "pretax_income": -117006.0,
             "revenue": null,
             "source": "2015q4",
+            "fiscal_quarter": "FY2015Q3",
+            "type": "single",
             "is_calculated": null,
             "operating_income": null
         },
@@ -175,6 +199,8 @@
             "pretax_income": -6927117.0,
             "revenue": null,
             "source": "2015q4",
+            "fiscal_quarter": "FY2015Q3",
+            "type": "cumulative_9m",
             "is_calculated": null,
             "operating_income": null
         },
@@ -188,6 +214,8 @@
             "pretax_income": -550313.0,
             "revenue": null,
             "source": "2016q2",
+            "fiscal_quarter": "FY2015Q4",
+            "type": "single",
             "is_calculated": true,
             "operating_income": null
         },
@@ -201,6 +229,8 @@
             "pretax_income": -245481.0,
             "revenue": null,
             "source": "2016q2",
+            "fiscal_quarter": "FY2016Q1",
+            "type": "single",
             "is_calculated": null,
             "operating_income": null
         }
