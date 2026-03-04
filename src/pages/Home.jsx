@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import SEOHead from '../components/SEOHead';
 import { Search, Menu, X, BarChart3, TrendingUp, PieChart, ArrowUpDown, ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
 import { loadUsCompanyIndex } from '../usDataLoader';
+import { financialDataLoader } from '../dataLoader';
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts';
 import LanguageToggle from '../components/LanguageToggle';
 import MarketToggle from '../components/MarketToggle';
 
@@ -23,6 +25,8 @@ const Home = () => {
     const [usIndexLoading, setUsIndexLoading] = useState(false);
     const [usSortBy, setUsSortBy] = useState('rank');
     const [usSearchTerm, setUsSearchTerm] = useState('');
+    const [spotlightData, setSpotlightData] = useState({ nvda: null, skHynix: null });
+    const [spotlightLoading, setSpotlightLoading] = useState(true);
 
     // Detect mobile screen size
     useEffect(() => {
@@ -49,6 +53,66 @@ const Home = () => {
         { ticker: 'TSLA', name: 'Tesla, Inc.' },
         { ticker: 'META', name: 'Meta Platforms, Inc.' },
     ];
+
+    // Load spotlight data for NVDA and SK Hynix
+    useEffect(() => {
+        async function loadSpotlightData() {
+            try {
+                const [nvdaRaw, skHynixRaw] = await Promise.all([
+                    fetch('/data/us_stocks/NVDA.json').then(r => r.json()),
+                    financialDataLoader.getCompany('000660')
+                ]);
+
+                const nvdaQuarters = (nvdaRaw.quarterly || [])
+                    .filter(e => e.type === 'single')
+                    .sort((a, b) => a.date - b.date)
+                    .slice(-8)
+                    .map(e => {
+                        const match = e.fiscal_quarter?.match(/FY(\d+)Q(\d)/);
+                        return {
+                            label: match ? `FY${match[1].slice(-2)}Q${match[2]}` : '',
+                            revenue: e.revenue,
+                        };
+                    });
+
+                const skHynixQuarters = (skHynixRaw?.history || [])
+                    .slice(-8)
+                    .map(e => ({
+                        label: `${String(e.year).slice(-2)}.${e.quarter}`,
+                        revenue: e.revenue,
+                    }));
+
+                setSpotlightData({ nvda: nvdaQuarters, skHynix: skHynixQuarters });
+            } catch (err) {
+                console.error('Error loading spotlight data:', err);
+            } finally {
+                setSpotlightLoading(false);
+            }
+        }
+        loadSpotlightData();
+    }, []);
+
+    const formatUsd = (val) => {
+        if (val == null) return 'N/A';
+        if (val >= 1e12) return `$${(val / 1e12).toFixed(1)}T`;
+        if (val >= 1e9) return `$${(val / 1e9).toFixed(1)}B`;
+        if (val >= 1e6) return `$${(val / 1e6).toFixed(0)}M`;
+        return `$${val.toLocaleString()}`;
+    };
+
+    const formatKrw = (val, lang) => {
+        if (val == null) return 'N/A';
+        const abs = Math.abs(val);
+        if (abs >= 1e12) {
+            const v = (val / 1e12).toFixed(1);
+            return lang === 'ko' ? `${v}조원` : `${v}T KRW`;
+        }
+        if (abs >= 1e8) {
+            const v = Math.round(val / 1e8).toLocaleString();
+            return lang === 'ko' ? `${v}억원` : `${v}B KRW`;
+        }
+        return val.toLocaleString();
+    };
 
     // Load lightweight market cap data for sidebar (587KB instead of 40MB)
     useEffect(() => {
@@ -357,6 +421,198 @@ const Home = () => {
                                         {t('home.updateNoticeDesc')}
                                     </span>
                                 </p>
+                            </section>
+
+                            {/* Revenue Spotlight Section */}
+                            <section style={{
+                                maxWidth: '900px',
+                                margin: '0 auto 3rem',
+                                padding: '0 16px',
+                            }}>
+                                <p style={{
+                                    textAlign: 'center',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 700,
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.15em',
+                                    color: '#64748b',
+                                    marginBottom: '24px',
+                                }}>
+                                    {t('home.spotlightTitle')}
+                                </p>
+
+                                {spotlightLoading ? (
+                                    <div style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+                                        gap: '20px',
+                                    }}>
+                                        {[0, 1].map(i => (
+                                            <div key={i} style={{
+                                                background: 'rgba(30, 41, 59, 0.4)',
+                                                borderRadius: '16px',
+                                                height: '280px',
+                                                animation: 'homeHeroFadeIn 1.5s ease-in-out infinite alternate',
+                                            }} />
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+                                        gap: '20px',
+                                    }}>
+                                        {/* NVDA Card */}
+                                        {spotlightData.nvda && (
+                                            <Link to="/us-stocks/NVDA" style={{ textDecoration: 'none' }}>
+                                                <div style={{
+                                                    background: 'rgba(30, 41, 59, 0.5)',
+                                                    border: '1px solid rgba(96, 165, 250, 0.15)',
+                                                    borderRadius: '16px',
+                                                    padding: isMobile ? '20px' : '24px',
+                                                    transition: 'all 0.3s ease',
+                                                    cursor: 'pointer',
+                                                }} onMouseEnter={e => {
+                                                    e.currentTarget.style.transform = 'translateY(-4px)';
+                                                    e.currentTarget.style.borderColor = 'rgba(96, 165, 250, 0.35)';
+                                                    e.currentTarget.style.boxShadow = '0 8px 30px rgba(59, 130, 246, 0.15)';
+                                                }} onMouseLeave={e => {
+                                                    e.currentTarget.style.transform = 'translateY(0)';
+                                                    e.currentTarget.style.borderColor = 'rgba(96, 165, 250, 0.15)';
+                                                    e.currentTarget.style.boxShadow = 'none';
+                                                }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                        <div>
+                                                            <p style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                <span style={{ fontSize: '1.1rem' }}>&#127482;&#127480;</span> NVIDIA
+                                                                <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 400 }}>NVDA</span>
+                                                            </p>
+                                                        </div>
+                                                        <p style={{
+                                                            margin: 0,
+                                                            fontSize: isMobile ? '1.3rem' : '1.5rem',
+                                                            fontWeight: 800,
+                                                            color: '#60a5fa',
+                                                            textShadow: '0 0 20px rgba(96, 165, 250, 0.3)',
+                                                        }}>
+                                                            {formatUsd(spotlightData.nvda[spotlightData.nvda.length - 1]?.revenue)}
+                                                        </p>
+                                                    </div>
+                                                    <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.5, margin: '6px 0 14px 0' }}>
+                                                        {t('home.spotlightNvdaHook')}
+                                                    </p>
+                                                    <ResponsiveContainer width="100%" height={isMobile ? 130 : 150}>
+                                                        <BarChart data={spotlightData.nvda} margin={{ top: 5, right: 5, left: 5, bottom: 0 }}>
+                                                            <defs>
+                                                                <linearGradient id="spotNvdaNormal" x1="0" y1="0" x2="0" y2="1">
+                                                                    <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.4} />
+                                                                    <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.1} />
+                                                                </linearGradient>
+                                                                <linearGradient id="spotNvdaLatest" x1="0" y1="0" x2="0" y2="1">
+                                                                    <stop offset="0%" stopColor="#60a5fa" stopOpacity={1} />
+                                                                    <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.6} />
+                                                                </linearGradient>
+                                                            </defs>
+                                                            <XAxis dataKey="label" stroke="#64748b" fontSize={9} tickLine={false} axisLine={false} />
+                                                            <YAxis hide />
+                                                            <Bar dataKey="revenue" radius={[4, 4, 0, 0]} animationDuration={1200}>
+                                                                {spotlightData.nvda.map((_, index) => (
+                                                                    <Cell
+                                                                        key={index}
+                                                                        fill={index === spotlightData.nvda.length - 1 ? 'url(#spotNvdaLatest)' : 'url(#spotNvdaNormal)'}
+                                                                    />
+                                                                ))}
+                                                            </Bar>
+                                                        </BarChart>
+                                                    </ResponsiveContainer>
+                                                    <p style={{
+                                                        margin: '12px 0 0 0',
+                                                        fontSize: '0.78rem',
+                                                        fontWeight: 600,
+                                                        color: '#60a5fa',
+                                                    }}>
+                                                        {t('home.spotlightViewAnalysis')}
+                                                    </p>
+                                                </div>
+                                            </Link>
+                                        )}
+
+                                        {/* SK Hynix Card */}
+                                        {spotlightData.skHynix && (
+                                            <Link to="/stocks/000660" style={{ textDecoration: 'none' }}>
+                                                <div style={{
+                                                    background: 'rgba(30, 41, 59, 0.5)',
+                                                    border: '1px solid rgba(16, 185, 129, 0.15)',
+                                                    borderRadius: '16px',
+                                                    padding: isMobile ? '20px' : '24px',
+                                                    transition: 'all 0.3s ease',
+                                                    cursor: 'pointer',
+                                                }} onMouseEnter={e => {
+                                                    e.currentTarget.style.transform = 'translateY(-4px)';
+                                                    e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.35)';
+                                                    e.currentTarget.style.boxShadow = '0 8px 30px rgba(16, 185, 129, 0.15)';
+                                                }} onMouseLeave={e => {
+                                                    e.currentTarget.style.transform = 'translateY(0)';
+                                                    e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.15)';
+                                                    e.currentTarget.style.boxShadow = 'none';
+                                                }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                        <div>
+                                                            <p style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                <span style={{ fontSize: '1.1rem' }}>&#127472;&#127479;</span> SK{i18n.language === 'ko' ? '하이닉스' : ' Hynix'}
+                                                                <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 400 }}>000660</span>
+                                                            </p>
+                                                        </div>
+                                                        <p style={{
+                                                            margin: 0,
+                                                            fontSize: isMobile ? '1.3rem' : '1.5rem',
+                                                            fontWeight: 800,
+                                                            color: '#34d399',
+                                                            textShadow: '0 0 20px rgba(52, 211, 153, 0.3)',
+                                                        }}>
+                                                            {formatKrw(spotlightData.skHynix[spotlightData.skHynix.length - 1]?.revenue, i18n.language)}
+                                                        </p>
+                                                    </div>
+                                                    <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.5, margin: '6px 0 14px 0' }}>
+                                                        {t('home.spotlightSkHynixHook')}
+                                                    </p>
+                                                    <ResponsiveContainer width="100%" height={isMobile ? 130 : 150}>
+                                                        <BarChart data={spotlightData.skHynix} margin={{ top: 5, right: 5, left: 5, bottom: 0 }}>
+                                                            <defs>
+                                                                <linearGradient id="spotSkNormal" x1="0" y1="0" x2="0" y2="1">
+                                                                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.4} />
+                                                                    <stop offset="100%" stopColor="#10b981" stopOpacity={0.1} />
+                                                                </linearGradient>
+                                                                <linearGradient id="spotSkLatest" x1="0" y1="0" x2="0" y2="1">
+                                                                    <stop offset="0%" stopColor="#34d399" stopOpacity={1} />
+                                                                    <stop offset="100%" stopColor="#10b981" stopOpacity={0.6} />
+                                                                </linearGradient>
+                                                            </defs>
+                                                            <XAxis dataKey="label" stroke="#64748b" fontSize={9} tickLine={false} axisLine={false} />
+                                                            <YAxis hide />
+                                                            <Bar dataKey="revenue" radius={[4, 4, 0, 0]} animationDuration={1200}>
+                                                                {spotlightData.skHynix.map((_, index) => (
+                                                                    <Cell
+                                                                        key={index}
+                                                                        fill={index === spotlightData.skHynix.length - 1 ? 'url(#spotSkLatest)' : 'url(#spotSkNormal)'}
+                                                                    />
+                                                                ))}
+                                                            </Bar>
+                                                        </BarChart>
+                                                    </ResponsiveContainer>
+                                                    <p style={{
+                                                        margin: '12px 0 0 0',
+                                                        fontSize: '0.78rem',
+                                                        fontWeight: 600,
+                                                        color: '#34d399',
+                                                    }}>
+                                                        {t('home.spotlightViewAnalysis')}
+                                                    </p>
+                                                </div>
+                                            </Link>
+                                        )}
+                                    </div>
+                                )}
                             </section>
 
                             {/* Feature Cards */}
