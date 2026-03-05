@@ -8,9 +8,12 @@ import { financialDataLoader } from '../dataLoader';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts';
 import LanguageToggle from '../components/LanguageToggle';
 import MarketToggle from '../components/MarketToggle';
+import ThemeToggle from '../components/ThemeToggle';
+import useThemeColors from '../hooks/useThemeColors';
 
 const Home = () => {
     const { t, i18n } = useTranslation();
+    const colors = useThemeColors();
     const navigate = useNavigate();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -228,7 +231,10 @@ const Home = () => {
                         {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                     </button>
                     <Link to="/" className="mobile-app-title" style={{ textDecoration: 'none', color: 'inherit' }}>KSTOCKVIEW</Link>
-                    <LanguageToggle />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <ThemeToggle />
+                        <LanguageToggle />
+                    </div>
                 </div>
 
                 {/* Mobile Overlay */}
@@ -244,7 +250,10 @@ const Home = () => {
                     <div className="sidebar-header">
                         <div className="sidebar-header-top">
                             <Link to="/" className="app-title" style={{ textDecoration: 'none', color: 'inherit' }}>KSTOCKVIEW</Link>
-                            <LanguageToggle />
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <ThemeToggle />
+                                <LanguageToggle />
+                            </div>
                         </div>
                         <MarketToggle activeMarket={sidebarMarket} onChange={handleMarketToggle} />
                         {sidebarMarket === 'kr' ? (
@@ -317,7 +326,7 @@ const Home = () => {
                     <div className="ticker-list">
                         {sidebarMarket === 'kr' ? (
                             dataLoading ? (
-                                <div style={{ textAlign: 'center', padding: '20px', color: '#94a3b8' }}>
+                                <div style={{ textAlign: 'center', padding: '20px', color: colors.textMuted }}>
                                     {t('common.loadingSidebar')}
                                 </div>
                             ) : (
@@ -334,7 +343,7 @@ const Home = () => {
                             )
                         ) : (
                             usIndexLoading ? (
-                                <div style={{ textAlign: 'center', padding: '20px', color: '#94a3b8' }}>
+                                <div style={{ textAlign: 'center', padding: '20px', color: colors.textMuted }}>
                                     {t('common.loadingSidebar')}
                                 </div>
                             ) : (
@@ -409,15 +418,15 @@ const Home = () => {
                             }}>
                                 <p style={{
                                     margin: 0,
-                                    color: '#93c5fd',
+                                    color: colors.accentLight,
                                     fontSize: '0.85rem',
                                     lineHeight: '1.5',
                                 }}>
-                                    <span style={{ color: '#60a5fa', fontWeight: 600 }}>
+                                    <span style={{ color: colors.accent, fontWeight: 600 }}>
                                         {t('home.updateNoticeTitle')}
                                     </span>
                                     <br />
-                                    <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>
+                                    <span style={{ color: colors.textMuted, fontSize: '0.8rem' }}>
                                         {t('home.updateNoticeDesc')}
                                     </span>
                                 </p>
@@ -435,7 +444,7 @@ const Home = () => {
                                     fontWeight: 700,
                                     textTransform: 'uppercase',
                                     letterSpacing: '0.15em',
-                                    color: '#64748b',
+                                    color: colors.textMuted,
                                     marginBottom: '24px',
                                 }}>
                                     {t('home.spotlightTitle')}
@@ -449,7 +458,7 @@ const Home = () => {
                                     }}>
                                         {[0, 1].map(i => (
                                             <div key={i} style={{
-                                                background: 'rgba(30, 41, 59, 0.4)',
+                                                background: 'rgba(0, 0, 0, 0.4)',
                                                 borderRadius: '16px',
                                                 height: '280px',
                                                 animation: 'homeHeroFadeIn 1.5s ease-in-out infinite alternate',
@@ -466,56 +475,56 @@ const Home = () => {
                                         {spotlightData.nvda && (
                                             <Link to="/us-stocks/NVDA" style={{ textDecoration: 'none' }}>
                                                 <div style={{
-                                                    background: 'rgba(30, 41, 59, 0.5)',
-                                                    border: '1px solid rgba(96, 165, 250, 0.15)',
-                                                    borderRadius: '16px',
+                                                    background: colors.bgCard,
+                                                    border: '1px solid rgba(255, 140, 0, 0.2)',
+                                                    borderRadius: '8px',
                                                     padding: isMobile ? '20px' : '24px',
                                                     transition: 'all 0.3s ease',
                                                     cursor: 'pointer',
                                                 }} onMouseEnter={e => {
                                                     e.currentTarget.style.transform = 'translateY(-4px)';
-                                                    e.currentTarget.style.borderColor = 'rgba(96, 165, 250, 0.35)';
-                                                    e.currentTarget.style.boxShadow = '0 8px 30px rgba(59, 130, 246, 0.15)';
+                                                    e.currentTarget.style.borderColor = 'rgba(255, 140, 0, 0.45)';
+                                                    e.currentTarget.style.boxShadow = '0 8px 30px rgba(255, 140, 0, 0.12)';
                                                 }} onMouseLeave={e => {
                                                     e.currentTarget.style.transform = 'translateY(0)';
-                                                    e.currentTarget.style.borderColor = 'rgba(96, 165, 250, 0.15)';
+                                                    e.currentTarget.style.borderColor = 'rgba(255, 140, 0, 0.2)';
                                                     e.currentTarget.style.boxShadow = 'none';
                                                 }}>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                                         <div>
-                                                            <p style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            <p style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: colors.textPrimary, display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                                 <span style={{ fontSize: '1.1rem' }}>&#127482;&#127480;</span> NVIDIA
-                                                                <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 400 }}>NVDA</span>
+                                                                <span style={{ fontSize: '0.75rem', color: colors.textMuted, fontWeight: 400 }}>NVDA</span>
                                                             </p>
                                                         </div>
                                                         <p style={{
                                                             margin: 0,
                                                             fontSize: isMobile ? '1.3rem' : '1.5rem',
                                                             fontWeight: 800,
-                                                            color: '#60a5fa',
-                                                            textShadow: '0 0 20px rgba(96, 165, 250, 0.3)',
+                                                            color: colors.accent,
+                                                            textShadow: '0 0 16px rgba(255, 140, 0, 0.3)',
                                                         }}>
                                                             {formatUsd(spotlightData.nvda[spotlightData.nvda.length - 1]?.revenue)}
                                                         </p>
                                                     </div>
-                                                    <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.5, margin: '6px 0 14px 0' }}>
+                                                    <p style={{ fontSize: '0.78rem', color: colors.textMuted, lineHeight: 1.5, margin: '6px 0 14px 0' }}>
                                                         {t('home.spotlightNvdaHook')}
                                                     </p>
                                                     <ResponsiveContainer width="100%" height={isMobile ? 130 : 150}>
                                                         <BarChart data={spotlightData.nvda} margin={{ top: 5, right: 5, left: 5, bottom: 0 }}>
                                                             <defs>
                                                                 <linearGradient id="spotNvdaNormal" x1="0" y1="0" x2="0" y2="1">
-                                                                    <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.4} />
-                                                                    <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.1} />
+                                                                    <stop offset="0%" stopColor={colors.accent} stopOpacity={0.3} />
+                                                                    <stop offset="100%" stopColor={colors.accent} stopOpacity={0.05} />
                                                                 </linearGradient>
                                                                 <linearGradient id="spotNvdaLatest" x1="0" y1="0" x2="0" y2="1">
-                                                                    <stop offset="0%" stopColor="#60a5fa" stopOpacity={1} />
-                                                                    <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.6} />
+                                                                    <stop offset="0%" stopColor={colors.accentLight} stopOpacity={1} />
+                                                                    <stop offset="100%" stopColor={colors.accent} stopOpacity={0.7} />
                                                                 </linearGradient>
                                                             </defs>
-                                                            <XAxis dataKey="label" stroke="#64748b" fontSize={9} tickLine={false} axisLine={false} />
+                                                            <XAxis dataKey="label" stroke={colors.textFaded} fontSize={9} tickLine={false} axisLine={false} />
                                                             <YAxis hide />
-                                                            <Bar dataKey="revenue" radius={[4, 4, 0, 0]} animationDuration={1200}>
+                                                            <Bar dataKey="revenue" radius={[2, 2, 0, 0]} animationDuration={1200}>
                                                                 {spotlightData.nvda.map((_, index) => (
                                                                     <Cell
                                                                         key={index}
@@ -529,7 +538,7 @@ const Home = () => {
                                                         margin: '12px 0 0 0',
                                                         fontSize: '0.78rem',
                                                         fontWeight: 600,
-                                                        color: '#60a5fa',
+                                                        color: colors.accent,
                                                     }}>
                                                         {t('home.spotlightViewAnalysis')}
                                                     </p>
@@ -541,56 +550,56 @@ const Home = () => {
                                         {spotlightData.skHynix && (
                                             <Link to="/stocks/000660" style={{ textDecoration: 'none' }}>
                                                 <div style={{
-                                                    background: 'rgba(30, 41, 59, 0.5)',
-                                                    border: '1px solid rgba(16, 185, 129, 0.15)',
-                                                    borderRadius: '16px',
+                                                    background: colors.bgCard,
+                                                    border: '1px solid rgba(0, 214, 143, 0.2)',
+                                                    borderRadius: '8px',
                                                     padding: isMobile ? '20px' : '24px',
                                                     transition: 'all 0.3s ease',
                                                     cursor: 'pointer',
                                                 }} onMouseEnter={e => {
                                                     e.currentTarget.style.transform = 'translateY(-4px)';
-                                                    e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.35)';
-                                                    e.currentTarget.style.boxShadow = '0 8px 30px rgba(16, 185, 129, 0.15)';
+                                                    e.currentTarget.style.borderColor = 'rgba(0, 214, 143, 0.45)';
+                                                    e.currentTarget.style.boxShadow = '0 8px 30px rgba(0, 214, 143, 0.12)';
                                                 }} onMouseLeave={e => {
                                                     e.currentTarget.style.transform = 'translateY(0)';
-                                                    e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.15)';
+                                                    e.currentTarget.style.borderColor = 'rgba(0, 214, 143, 0.2)';
                                                     e.currentTarget.style.boxShadow = 'none';
                                                 }}>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                                         <div>
-                                                            <p style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            <p style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: colors.textPrimary, display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                                 <span style={{ fontSize: '1.1rem' }}>&#127472;&#127479;</span> SK{i18n.language === 'ko' ? '하이닉스' : ' Hynix'}
-                                                                <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 400 }}>000660</span>
+                                                                <span style={{ fontSize: '0.75rem', color: colors.textMuted, fontWeight: 400 }}>000660</span>
                                                             </p>
                                                         </div>
                                                         <p style={{
                                                             margin: 0,
                                                             fontSize: isMobile ? '1.3rem' : '1.5rem',
                                                             fontWeight: 800,
-                                                            color: '#34d399',
-                                                            textShadow: '0 0 20px rgba(52, 211, 153, 0.3)',
+                                                            color: colors.positive,
+                                                            textShadow: '0 0 16px rgba(0, 214, 143, 0.3)',
                                                         }}>
                                                             {formatKrw(spotlightData.skHynix[spotlightData.skHynix.length - 1]?.revenue, i18n.language)}
                                                         </p>
                                                     </div>
-                                                    <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.5, margin: '6px 0 14px 0' }}>
+                                                    <p style={{ fontSize: '0.78rem', color: colors.textMuted, lineHeight: 1.5, margin: '6px 0 14px 0' }}>
                                                         {t('home.spotlightSkHynixHook')}
                                                     </p>
                                                     <ResponsiveContainer width="100%" height={isMobile ? 130 : 150}>
                                                         <BarChart data={spotlightData.skHynix} margin={{ top: 5, right: 5, left: 5, bottom: 0 }}>
                                                             <defs>
                                                                 <linearGradient id="spotSkNormal" x1="0" y1="0" x2="0" y2="1">
-                                                                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.4} />
-                                                                    <stop offset="100%" stopColor="#10b981" stopOpacity={0.1} />
+                                                                    <stop offset="0%" stopColor={colors.positive} stopOpacity={0.3} />
+                                                                    <stop offset="100%" stopColor={colors.positive} stopOpacity={0.05} />
                                                                 </linearGradient>
                                                                 <linearGradient id="spotSkLatest" x1="0" y1="0" x2="0" y2="1">
-                                                                    <stop offset="0%" stopColor="#34d399" stopOpacity={1} />
-                                                                    <stop offset="100%" stopColor="#10b981" stopOpacity={0.6} />
+                                                                    <stop offset="0%" stopColor={colors.positiveLight} stopOpacity={1} />
+                                                                    <stop offset="100%" stopColor={colors.positive} stopOpacity={0.7} />
                                                                 </linearGradient>
                                                             </defs>
-                                                            <XAxis dataKey="label" stroke="#64748b" fontSize={9} tickLine={false} axisLine={false} />
+                                                            <XAxis dataKey="label" stroke={colors.textFaded} fontSize={9} tickLine={false} axisLine={false} />
                                                             <YAxis hide />
-                                                            <Bar dataKey="revenue" radius={[4, 4, 0, 0]} animationDuration={1200}>
+                                                            <Bar dataKey="revenue" radius={[2, 2, 0, 0]} animationDuration={1200}>
                                                                 {spotlightData.skHynix.map((_, index) => (
                                                                     <Cell
                                                                         key={index}
@@ -604,7 +613,7 @@ const Home = () => {
                                                         margin: '12px 0 0 0',
                                                         fontSize: '0.78rem',
                                                         fontWeight: 600,
-                                                        color: '#34d399',
+                                                        color: colors.positive,
                                                     }}>
                                                         {t('home.spotlightViewAnalysis')}
                                                     </p>

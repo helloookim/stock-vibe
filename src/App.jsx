@@ -13,9 +13,11 @@ import NotFound from './pages/NotFound';
 import ShareButtons from './components/ShareButtons';
 import LanguageToggle from './components/LanguageToggle';
 import MarketToggle from './components/MarketToggle';
+import ThemeToggle from './components/ThemeToggle';
+import useThemeColors from './hooks/useThemeColors';
 
 // Info Tooltip Component
-const InfoTooltip = ({ text }) => {
+const InfoTooltip = ({ text, colors }) => {
     const [isVisible, setIsVisible] = React.useState(false);
 
     // Split text by sentences for better readability
@@ -38,7 +40,7 @@ const InfoTooltip = ({ text }) => {
                     parts.push(sentence.substring(lastIndex, match.index));
                 }
                 // Add quoted text with emphasis
-                parts.push(<span key={match.index} style={{ color: '#60a5fa', fontWeight: '500' }}>'{match[1]}'</span>);
+                parts.push(<span key={match.index} style={{ color: '#FF8C00', fontWeight: '500' }}>'{match[1]}'</span>);
                 lastIndex = match.index + match[0].length;
             }
 
@@ -58,12 +60,14 @@ const InfoTooltip = ({ text }) => {
         }).filter(Boolean);
     };
 
+    const c = colors || {};
+
     return (
         <div style={{ position: 'relative', display: 'inline-block', marginLeft: '8px' }}>
             <Info
                 size={16}
                 style={{
-                    color: '#94a3b8',
+                    color: c.textMuted || '#8888a0',
                     cursor: 'pointer',
                     transition: 'color 0.2s'
                 }}
@@ -77,8 +81,8 @@ const InfoTooltip = ({ text }) => {
                         left: '50%',
                         top: '50%',
                         transform: 'translate(-50%, -50%)',
-                        backgroundColor: '#1e293b',
-                        border: '1px solid #475569',
+                        backgroundColor: c.tooltipBg || '#1c1c22',
+                        border: `1px solid ${c.tooltipBorder || '#4a4a60'}`,
                         borderRadius: '8px',
                         padding: '20px 24px',
                         width: '360px',
@@ -88,8 +92,8 @@ const InfoTooltip = ({ text }) => {
                         zIndex: 1000,
                         fontSize: '0.875rem',
                         lineHeight: '1.7',
-                        color: '#e2e8f0',
-                        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
+                        color: c.textPrimary || '#f0f0f5',
+                        boxShadow: `0 10px 25px -5px ${c.tooltipShadow || 'rgba(0, 0, 0, 0.5)'}`,
                         pointerEvents: 'none',
                         textAlign: 'left'
                     }}>
@@ -101,25 +105,26 @@ const InfoTooltip = ({ text }) => {
 };
 
 // Custom Tooltip Component for displaying YoY on separate line
-const CustomTooltip = ({ active, payload, label, valueFormatter, yoyKey }) => {
+const CustomTooltip = ({ active, payload, label, valueFormatter, yoyKey, colors }) => {
     if (active && payload && payload.length) {
         const value = payload[0].value;
         const yoyChange = payload[0].payload[yoyKey];
+        const c = colors || {};
 
         return (
             <div style={{
-                backgroundColor: '#1e293b',
-                border: '1px solid #475569',
+                backgroundColor: c.tooltipBg || '#1c1c22',
+                border: `1px solid ${c.tooltipBorder || '#4a4a60'}`,
                 borderRadius: '8px',
                 padding: '8px 12px',
-                color: '#e2e8f0'
+                color: c.textPrimary || '#f0f0f5'
             }}>
-                <p style={{ margin: 0, marginBottom: '4px', color: '#94a3b8', fontSize: '12px' }}>{label}</p>
+                <p style={{ margin: 0, marginBottom: '4px', color: c.textMuted || '#8888a0', fontSize: '12px' }}>{label}</p>
                 <p style={{ margin: 0, fontWeight: 'bold', fontSize: '14px' }}>
                     {valueFormatter(value)}
                 </p>
                 {yoyChange !== null && yoyChange !== undefined && (
-                    <p style={{ margin: 0, marginTop: '4px', fontSize: '12px', color: yoyChange >= 0 ? '#10b981' : '#ef4444' }}>
+                    <p style={{ margin: 0, marginTop: '4px', fontSize: '12px', color: yoyChange >= 0 ? (c.positive || '#00d084') : (c.negative || '#ff4d4f') }}>
                         YoY: {yoyChange > 0 ? '+' : ''}{yoyChange.toFixed(1)}%
                     </p>
                 )}
@@ -133,6 +138,7 @@ const App = () => {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
+    const colors = useThemeColors();
 
     const [financialRawData, setFinancialRawData] = useState({});
     const [financialAnnualData, setFinancialAnnualData] = useState({});
@@ -619,8 +625,8 @@ const App = () => {
         return (
             <div className="app-container" style={{ alignItems: 'center', justifyContent: 'center' }}>
                 <div style={{ textAlign: 'center' }}>
-                    <h2 style={{ color: '#60a5fa', marginBottom: '20px' }}>{t('common.loading')}</h2>
-                    <p style={{ color: '#94a3b8' }}>{t('common.loadingWait')}</p>
+                    <h2 style={{ color: colors.accent, marginBottom: '20px' }}>{t('common.loading')}</h2>
+                    <p style={{ color: colors.textMuted }}>{t('common.loadingWait')}</p>
                 </div>
             </div>
         );
@@ -656,7 +662,10 @@ const App = () => {
                         {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                     </button>
                     <Link to="/" className="mobile-app-title" style={{ textDecoration: 'none', color: 'inherit' }}>KSTOCKVIEW</Link>
-                    <LanguageToggle />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <ThemeToggle />
+                        <LanguageToggle />
+                    </div>
                 </div>
 
                 {/* Mobile Overlay */}
@@ -672,7 +681,10 @@ const App = () => {
                     <div className="sidebar-header">
                         <div className="sidebar-header-top">
                             <Link to="/" className="app-title" style={{ textDecoration: 'none', color: 'inherit' }}>KSTOCKVIEW</Link>
-                            <LanguageToggle />
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <ThemeToggle />
+                                <LanguageToggle />
+                            </div>
                         </div>
                         <MarketToggle activeMarket={sidebarMarket} onChange={handleMarketToggle} />
                         {sidebarMarket === 'kr' ? (
@@ -769,7 +781,7 @@ const App = () => {
                             ))
                         ) : (
                             usIndexLoading ? (
-                                <div style={{ textAlign: 'center', padding: '20px', color: '#94a3b8' }}>
+                                <div style={{ textAlign: 'center', padding: '20px', color: colors.textMuted }}>
                                     {t('common.loadingSidebar')}
                                 </div>
                             ) : (
@@ -827,9 +839,9 @@ const App = () => {
                                     style={{
                                         padding: '6px 16px',
                                         borderRadius: '6px',
-                                        border: viewMode === 'quarterly' ? '2px solid #60a5fa' : '1px solid #475569',
-                                        backgroundColor: viewMode === 'quarterly' ? '#1e3a5f' : '#1e293b',
-                                        color: viewMode === 'quarterly' ? '#60a5fa' : '#94a3b8',
+                                        border: viewMode === 'quarterly' ? `2px solid ${colors.accent}` : `1px solid ${colors.textVeryFaded}`,
+                                        backgroundColor: viewMode === 'quarterly' ? colors.accentBg : colors.bgCard,
+                                        color: viewMode === 'quarterly' ? colors.accent : colors.textMuted,
                                         cursor: 'pointer',
                                         fontSize: '0.85rem',
                                         fontWeight: viewMode === 'quarterly' ? '600' : '400',
@@ -843,9 +855,9 @@ const App = () => {
                                     style={{
                                         padding: '6px 16px',
                                         borderRadius: '6px',
-                                        border: viewMode === 'annual' ? '2px solid #60a5fa' : '1px solid #475569',
-                                        backgroundColor: viewMode === 'annual' ? '#1e3a5f' : '#1e293b',
-                                        color: viewMode === 'annual' ? '#60a5fa' : '#94a3b8',
+                                        border: viewMode === 'annual' ? `2px solid ${colors.accent}` : `1px solid ${colors.textVeryFaded}`,
+                                        backgroundColor: viewMode === 'annual' ? colors.accentBg : colors.bgCard,
+                                        color: viewMode === 'annual' ? colors.accent : colors.textMuted,
                                         cursor: 'pointer',
                                         fontSize: '0.85rem',
                                         fontWeight: viewMode === 'annual' ? '600' : '400',
@@ -920,13 +932,13 @@ const App = () => {
                         <div className="chart-section">
                             <h3>
                                 {t('analysis.revenueYoy', { mode: viewMode === 'annual' ? t('analysis.annual') : t('analysis.quarterly') })}
-                                <InfoTooltip text={t('tooltips.revenueExplain')} />
+                                <InfoTooltip text={t('tooltips.revenueExplain')} colors={colors} />
                             </h3>
                             <div className="chart-legend">
                                 <span><span className="legend-bar"></span> {t('analysis.revenueLegend')}</span>
                                 <span>
-                                    <span className="legend-line-dual"><span style={{ background: '#10b981' }}></span><span style={{ background: '#ef4444' }}></span></span> {t('analysis.yoyLegend')}
-                                    <InfoTooltip text={t('tooltips.yoyExplain')} />
+                                    <span className="legend-line-dual"><span style={{ background: colors.positive }}></span><span style={{ background: colors.negative }}></span></span> {t('analysis.yoyLegend')}
+                                    <InfoTooltip text={t('tooltips.yoyExplain')} colors={colors} />
                                 </span>
                             </div>
                             <div className="chart-wrapper">
@@ -934,14 +946,14 @@ const App = () => {
                                     <BarChart data={chartData} margin={chartMargins}>
                                         <defs>
                                             <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.8} />
-                                                <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.3} />
+                                                <stop offset="0%" stopColor={colors.revenue} stopOpacity={0.8} />
+                                                <stop offset="100%" stopColor={colors.revenue} stopOpacity={0.3} />
                                             </linearGradient>
                                         </defs>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                        <XAxis dataKey="displayLabel" stroke="#94a3b8" {...xAxisProps} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
+                                        <XAxis dataKey="displayLabel" stroke={colors.textMuted} {...xAxisProps} />
                                         <YAxis
-                                            stroke="#94a3b8"
+                                            stroke={colors.textMuted}
                                             fontSize={11}
                                             tickFormatter={(val) => {
                                                 const maxVal = Math.max(...chartData.map(d => d.revenue_eok));
@@ -956,6 +968,7 @@ const App = () => {
                                         />
                                         <Tooltip
                                             content={<CustomTooltip
+                                                colors={colors}
                                                 valueFormatter={(value) => {
                                                     if (Math.abs(value) >= 10000) {
                                                         return `${(value / 10000).toLocaleString(undefined, { maximumFractionDigits: 2 })} ${t('currency.joWon')}`;
@@ -970,10 +983,10 @@ const App = () => {
                                 </ResponsiveContainer>
                                 <ResponsiveContainer width="100%" height={isMobile ? 120 : 180}>
                                     <ComposedChart data={chartData} margin={chartMargins}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                        <XAxis dataKey="displayLabel" stroke="#94a3b8" {...xAxisProps} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
+                                        <XAxis dataKey="displayLabel" stroke={colors.textMuted} {...xAxisProps} />
                                         <YAxis
-                                            stroke="#10b981"
+                                            stroke={colors.positive}
                                             fontSize={9}
                                             tickFormatter={(val) => `${val.toFixed(0)}%`}
                                             domain={revenueYoyDomain.domain}
@@ -981,20 +994,20 @@ const App = () => {
                                             width={isMobile ? 50 : 65}
                                         />
                                         <Tooltip
-                                            contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569', borderRadius: '8px' }}
+                                            contentStyle={{ backgroundColor: colors.tooltipBg, border: `1px solid ${colors.tooltipBorder}`, borderRadius: '8px' }}
                                             formatter={(value) => [`${value}%`, 'YoY']}
                                         />
-                                        <ReferenceLine y={0} stroke="#64748b" strokeDasharray="5 5" />
+                                        <ReferenceLine y={0} stroke={colors.chartRef} strokeDasharray="5 5" />
                                         <Line
                                             type="monotone"
                                             dataKey="rev_change"
                                             name="YoY"
-                                            stroke="#64748b"
+                                            stroke={colors.chartRef}
                                             strokeWidth={1.5}
                                             dot={(props) => {
                                                 const { cx, cy, payload } = props;
                                                 if (payload.rev_change === null) return null;
-                                                const color = payload.rev_change >= 0 ? '#10b981' : '#ef4444';
+                                                const color = payload.rev_change >= 0 ? colors.positive : colors.negative;
                                                 return <circle cx={cx} cy={cy} r={2.5} fill={color} stroke={color} strokeWidth={1} />;
                                             }}
                                         />
@@ -1007,25 +1020,25 @@ const App = () => {
                         <div className="chart-section">
                             <h3>
                                 {t('analysis.opProfitYoy', { mode: viewMode === 'annual' ? t('analysis.annual') : t('analysis.quarterly') })}
-                                <InfoTooltip text={t('tooltips.opProfitExplain')} />
+                                <InfoTooltip text={t('tooltips.opProfitExplain')} colors={colors} />
                             </h3>
                             <div className="chart-legend">
-                                <span><span className="legend-bar" style={{ background: 'rgba(16, 185, 129, 0.6)' }}></span> {t('analysis.opProfitLegend')}</span>
-                                <span><span className="legend-line-dual"><span style={{ background: '#3b82f6' }}></span><span style={{ background: '#ef4444' }}></span></span> {t('analysis.yoyLegend')}</span>
+                                <span><span className="legend-bar" style={{ background: 'rgba(0, 208, 132, 0.6)' }}></span> {t('analysis.opProfitLegend')}</span>
+                                <span><span className="legend-line-dual"><span style={{ background: colors.positive }}></span><span style={{ background: colors.negative }}></span></span> {t('analysis.yoyLegend')}</span>
                             </div>
                             <div className="chart-wrapper">
                                 <ResponsiveContainer width="100%" height={250}>
                                     <BarChart data={chartData} margin={chartMargins}>
                                         <defs>
                                             <linearGradient id="barGradGreen" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="0%" stopColor="#10b981" stopOpacity={0.8} />
-                                                <stop offset="100%" stopColor="#10b981" stopOpacity={0.3} />
+                                                <stop offset="0%" stopColor={colors.opIncome} stopOpacity={0.8} />
+                                                <stop offset="100%" stopColor={colors.opIncome} stopOpacity={0.3} />
                                             </linearGradient>
                                         </defs>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                        <XAxis dataKey="displayLabel" stroke="#94a3b8" {...xAxisProps} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
+                                        <XAxis dataKey="displayLabel" stroke={colors.textMuted} {...xAxisProps} />
                                         <YAxis
-                                            stroke="#94a3b8"
+                                            stroke={colors.textMuted}
                                             fontSize={11}
                                             domain={isDefaultRange ? [0, 'auto'] : [dataMin => Math.min(dataMin, 0), 'auto']}
                                             tickFormatter={(val) => {
@@ -1040,6 +1053,7 @@ const App = () => {
                                         />
                                         <Tooltip
                                             content={<CustomTooltip
+                                                colors={colors}
                                                 valueFormatter={(value) => {
                                                     if (Math.abs(value) >= 10000) {
                                                         return `${(value / 10000).toLocaleString(undefined, { maximumFractionDigits: 2 })} ${t('currency.joWon')}`;
@@ -1049,16 +1063,16 @@ const App = () => {
                                                 yoyKey="op_change"
                                             />}
                                         />
-                                        <ReferenceLine y={0} stroke="#64748b" />
+                                        <ReferenceLine y={0} stroke={colors.chartRef} />
                                         <Bar dataKey="op_profit_eok" name={t('analysis.opProfitBarName')} fill="url(#barGradGreen)" radius={[4, 4, 0, 0]} />
                                     </BarChart>
                                 </ResponsiveContainer>
                                 <ResponsiveContainer width="100%" height={isMobile ? 120 : 180}>
                                     <ComposedChart data={chartData} margin={chartMargins}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                        <XAxis dataKey="displayLabel" stroke="#94a3b8" {...xAxisProps} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
+                                        <XAxis dataKey="displayLabel" stroke={colors.textMuted} {...xAxisProps} />
                                         <YAxis
-                                            stroke="#f59e0b"
+                                            stroke={colors.positive}
                                             fontSize={9}
                                             tickFormatter={(val) => `${val.toFixed(0)}%`}
                                             domain={opProfitYoyDomain.domain}
@@ -1066,20 +1080,20 @@ const App = () => {
                                             width={isMobile ? 50 : 65}
                                         />
                                         <Tooltip
-                                            contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569', borderRadius: '8px' }}
+                                            contentStyle={{ backgroundColor: colors.tooltipBg, border: `1px solid ${colors.tooltipBorder}`, borderRadius: '8px' }}
                                             formatter={(value) => [`${value}%`, 'YoY']}
                                         />
-                                        <ReferenceLine y={0} stroke="#64748b" strokeDasharray="5 5" />
+                                        <ReferenceLine y={0} stroke={colors.chartRef} strokeDasharray="5 5" />
                                         <Line
                                             type="monotone"
                                             dataKey="op_change"
                                             name="YoY"
-                                            stroke="#64748b"
+                                            stroke={colors.chartRef}
                                             strokeWidth={1.5}
                                             dot={(props) => {
                                                 const { cx, cy, payload } = props;
                                                 if (payload.op_change === null) return null;
-                                                const color = payload.op_change >= 0 ? '#3b82f6' : '#ef4444';
+                                                const color = payload.op_change >= 0 ? colors.positive : colors.negative;
                                                 return <circle cx={cx} cy={cy} r={2.5} fill={color} stroke={color} strokeWidth={1} />;
                                             }}
                                         />
@@ -1092,21 +1106,21 @@ const App = () => {
                         <div className="chart-section profit-margin-chart">
                             <h3>
                                 {t('analysis.opMarginChart', { mode: viewMode === 'annual' ? t('analysis.annual') : t('analysis.quarterly') })}
-                                <InfoTooltip text={t('tooltips.opMarginExplain')} />
+                                <InfoTooltip text={t('tooltips.opMarginExplain')} colors={colors} />
                             </h3>
                             <div className="chart-wrapper">
                                 <ResponsiveContainer width="100%" height={300}>
                                     <AreaChart data={chartData} margin={isMobile ? { top: 10, right: 5, left: -10, bottom: 50 } : { top: 20, right: 10, left: 0, bottom: 60 }}>
                                         <defs>
                                             <linearGradient id="marginGrad" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8} />
-                                                <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                                                <stop offset="5%" stopColor={colors.margin} stopOpacity={0.8} />
+                                                <stop offset="95%" stopColor={colors.margin} stopOpacity={0} />
                                             </linearGradient>
                                         </defs>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                        <XAxis dataKey="displayLabel" stroke="#94a3b8" {...xAxisProps} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
+                                        <XAxis dataKey="displayLabel" stroke={colors.textMuted} {...xAxisProps} />
                                         <YAxis
-                                            stroke="#94a3b8"
+                                            stroke={colors.textMuted}
                                             fontSize={10}
                                             tickFormatter={(val) => `${Math.round(val)}%`}
                                             domain={['auto', 'auto']}
@@ -1114,11 +1128,11 @@ const App = () => {
                                             scale="linear"
                                         />
                                         <Tooltip
-                                            contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569', borderRadius: '8px' }}
+                                            contentStyle={{ backgroundColor: colors.tooltipBg, border: `1px solid ${colors.tooltipBorder}`, borderRadius: '8px' }}
                                             formatter={(value) => [`${value}%`, t('analysis.opMarginTooltip')]}
                                         />
-                                        <ReferenceLine y={0} stroke="#64748b" />
-                                        <Area type="monotone" dataKey="op_margin" name={t('analysis.opMarginTooltip')} stroke="#8b5cf6" fillOpacity={1} fill="url(#marginGrad)" />
+                                        <ReferenceLine y={0} stroke={colors.chartRef} />
+                                        <Area type="monotone" dataKey="op_margin" name={t('analysis.opMarginTooltip')} stroke={colors.margin} fillOpacity={1} fill="url(#marginGrad)" />
                                     </AreaChart>
                                 </ResponsiveContainer>
                             </div>
@@ -1129,25 +1143,25 @@ const App = () => {
                             <div className="chart-section">
                                 <h3>
                                     {t('analysis.epsYoy')}
-                                    <InfoTooltip text={t('tooltips.epsExplain')} />
+                                    <InfoTooltip text={t('tooltips.epsExplain')} colors={colors} />
                                 </h3>
                                 <div className="chart-legend">
-                                    <span><span className="legend-bar" style={{ background: 'rgba(245, 158, 11, 0.6)' }}></span> {t('analysis.epsLegend')}</span>
-                                    <span><span className="legend-line-dual"><span style={{ background: '#10b981' }}></span><span style={{ background: '#ef4444' }}></span></span> {t('analysis.yoyLegend')}</span>
+                                    <span><span className="legend-bar" style={{ background: 'rgba(255, 140, 0, 0.6)' }}></span> {t('analysis.epsLegend')}</span>
+                                    <span><span className="legend-line-dual"><span style={{ background: colors.positive }}></span><span style={{ background: colors.negative }}></span></span> {t('analysis.yoyLegend')}</span>
                                 </div>
                                 <div className="chart-wrapper">
                                     <ResponsiveContainer width="100%" height={250}>
                                         <BarChart data={epsChartData} margin={chartMargins}>
                                             <defs>
                                                 <linearGradient id="barGradOrange" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.8} />
-                                                    <stop offset="100%" stopColor="#f59e0b" stopOpacity={0.3} />
+                                                    <stop offset="0%" stopColor={colors.gold} stopOpacity={0.8} />
+                                                    <stop offset="100%" stopColor={colors.gold} stopOpacity={0.3} />
                                                 </linearGradient>
                                             </defs>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                            <XAxis dataKey="displayLabel" stroke="#94a3b8" {...xAxisProps} />
+                                            <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
+                                            <XAxis dataKey="displayLabel" stroke={colors.textMuted} {...xAxisProps} />
                                             <YAxis
-                                                stroke="#94a3b8"
+                                                stroke={colors.textMuted}
                                                 fontSize={11}
                                                 tickFormatter={(val) => `${val.toLocaleString()} ${t('currency.won')}`}
                                                 domain={isDefaultRange ? [0, 'auto'] : ['auto', 'auto']}
@@ -1156,20 +1170,21 @@ const App = () => {
                                             />
                                             <Tooltip
                                                 content={<CustomTooltip
+                                                    colors={colors}
                                                     valueFormatter={(value) => `${value.toLocaleString()} ${t('currency.won')}`}
                                                     yoyKey="eps_change"
                                                 />}
                                             />
-                                            <ReferenceLine y={0} stroke="#64748b" />
+                                            <ReferenceLine y={0} stroke={colors.chartRef} />
                                             <Bar dataKey="eps" name="EPS" fill="url(#barGradOrange)" radius={[4, 4, 0, 0]} />
                                         </BarChart>
                                     </ResponsiveContainer>
                                     <ResponsiveContainer width="100%" height={isMobile ? 120 : 180}>
                                         <ComposedChart data={epsChartData} margin={chartMargins}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                            <XAxis dataKey="displayLabel" stroke="#94a3b8" {...xAxisProps} />
+                                            <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
+                                            <XAxis dataKey="displayLabel" stroke={colors.textMuted} {...xAxisProps} />
                                             <YAxis
-                                                stroke="#10b981"
+                                                stroke={colors.positive}
                                                 fontSize={9}
                                                 tickFormatter={(val) => `${val.toFixed(0)}%`}
                                                 domain={epsYoyDomain.domain}
@@ -1177,20 +1192,20 @@ const App = () => {
                                                 width={isMobile ? 50 : 65}
                                             />
                                             <Tooltip
-                                                contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569', borderRadius: '8px' }}
+                                                contentStyle={{ backgroundColor: colors.tooltipBg, border: `1px solid ${colors.tooltipBorder}`, borderRadius: '8px' }}
                                                 formatter={(value) => [`${value}%`, 'YoY']}
                                             />
-                                            <ReferenceLine y={0} stroke="#64748b" strokeDasharray="5 5" />
+                                            <ReferenceLine y={0} stroke={colors.chartRef} strokeDasharray="5 5" />
                                             <Line
                                                 type="monotone"
                                                 dataKey="eps_change"
                                                 name="YoY"
-                                                stroke="#64748b"
+                                                stroke={colors.chartRef}
                                                 strokeWidth={1.5}
                                                 dot={(props) => {
                                                     const { cx, cy, payload } = props;
                                                     if (payload.eps_change === null) return null;
-                                                    const color = payload.eps_change >= 0 ? '#10b981' : '#ef4444';
+                                                    const color = payload.eps_change >= 0 ? colors.positive : colors.negative;
                                                     return <circle cx={cx} cy={cy} r={2.5} fill={color} stroke={color} strokeWidth={1} />;
                                                 }}
                                             />
@@ -1250,27 +1265,27 @@ const App = () => {
                         <footer style={{
                             marginTop: '60px',
                             padding: '30px 20px',
-                            borderTop: '1px solid #334155',
+                            borderTop: `1px solid ${colors.footerBorder}`,
                             textAlign: 'center',
-                            backgroundColor: '#0f172a',
-                            color: '#64748b',
+                            backgroundColor: colors.footerBg,
+                            color: colors.textFaded,
                             fontSize: '0.8rem',
                             lineHeight: '1.6'
                         }}>
                             <div style={{ marginBottom: '20px' }}>
-                                <h3 style={{ color: '#e2e8f0', fontSize: '1.2rem', marginBottom: '8px' }}>KSTOCKVIEW</h3>
-                                <p style={{ color: '#94a3b8', fontSize: '0.85rem', margin: 0 }}>{t('footer.serviceDesc')}</p>
+                                <h3 style={{ color: colors.textPrimary, fontSize: '1.2rem', marginBottom: '8px' }}>KSTOCKVIEW</h3>
+                                <p style={{ color: colors.textMuted, fontSize: '0.85rem', margin: 0 }}>{t('footer.serviceDesc')}</p>
                             </div>
 
                             {/* Data Source Notice */}
                             <div style={{
                                 marginBottom: '25px',
                                 padding: '15px',
-                                backgroundColor: '#1e293b',
-                                border: '1px solid #334155',
+                                backgroundColor: colors.bgCard,
+                                border: `1px solid ${colors.footerBorder}`,
                                 borderRadius: '8px'
                             }}>
-                                <p style={{ margin: '0 0 8px 0', fontWeight: '600', color: '#cbd5e1' }}>
+                                <p style={{ margin: '0 0 8px 0', fontWeight: '600', color: colors.textSecondary }}>
                                     {t('footer.dataSourceTitle')}
                                 </p>
                                 <p style={{ margin: 0, fontSize: '0.75rem' }} dangerouslySetInnerHTML={{ __html: t('footer.dataSourceText') }} />
@@ -1283,16 +1298,16 @@ const App = () => {
                             <div style={{
                                 marginBottom: '25px',
                                 padding: '20px',
-                                backgroundColor: '#0f172a',
-                                border: '1px solid #ef4444',
+                                backgroundColor: colors.disclaimerBg,
+                                border: `1px solid ${colors.disclaimerBorder}`,
                                 borderRadius: '8px',
                                 fontSize: '0.75rem',
                                 lineHeight: '1.7'
                             }}>
-                                <h4 style={{ color: '#ef4444', marginBottom: '12px', fontSize: '0.9rem', fontWeight: '600' }}>
+                                <h4 style={{ color: colors.negative, marginBottom: '12px', fontSize: '0.9rem', fontWeight: '600' }}>
                                     {t('footer.disclaimerTitle')}
                                 </h4>
-                                <div style={{ textAlign: 'left', maxWidth: '800px', margin: '0 auto', color: '#94a3b8' }}>
+                                <div style={{ textAlign: 'left', maxWidth: '800px', margin: '0 auto', color: colors.textMuted }}>
                                     <p style={{ margin: '0 0 10px 0' }}>
                                         <strong>{t('footer.disclaimer1Title')}</strong> <span dangerouslySetInnerHTML={{ __html: t('footer.disclaimer1') }} />
                                     </p>
@@ -1320,45 +1335,45 @@ const App = () => {
                                 <a
                                     href="/privacy"
                                     style={{
-                                        color: '#94a3b8',
+                                        color: colors.textMuted,
                                         textDecoration: 'underline',
                                         transition: 'color 0.2s'
                                     }}
-                                    onMouseEnter={(e) => e.target.style.color = '#e2e8f0'}
-                                    onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
+                                    onMouseEnter={(e) => e.target.style.color = colors.textPrimary}
+                                    onMouseLeave={(e) => e.target.style.color = colors.textMuted}
                                 >
                                     {t('footer.privacyPolicy')}
                                 </a>
-                                <span style={{ color: '#475569' }}>|</span>
+                                <span style={{ color: colors.textVeryFaded }}>|</span>
                                 <a
                                     href="/terms"
                                     style={{
-                                        color: '#94a3b8',
+                                        color: colors.textMuted,
                                         textDecoration: 'underline',
                                         transition: 'color 0.2s'
                                     }}
-                                    onMouseEnter={(e) => e.target.style.color = '#e2e8f0'}
-                                    onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
+                                    onMouseEnter={(e) => e.target.style.color = colors.textPrimary}
+                                    onMouseLeave={(e) => e.target.style.color = colors.textMuted}
                                 >
                                     {t('footer.terms')}
                                 </a>
-                                <span style={{ color: '#475569' }}>|</span>
+                                <span style={{ color: colors.textVeryFaded }}>|</span>
                                 <a
                                     href="/contact"
                                     style={{
-                                        color: '#94a3b8',
+                                        color: colors.textMuted,
                                         textDecoration: 'underline',
                                         transition: 'color 0.2s'
                                     }}
-                                    onMouseEnter={(e) => e.target.style.color = '#e2e8f0'}
-                                    onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
+                                    onMouseEnter={(e) => e.target.style.color = colors.textPrimary}
+                                    onMouseLeave={(e) => e.target.style.color = colors.textMuted}
                                 >
                                     {t('footer.contact')}
                                 </a>
                             </div>
 
                             {/* Copyright */}
-                            <div style={{ color: '#64748b', fontSize: '0.7rem', marginTop: '20px', opacity: 0.8 }}>
+                            <div style={{ color: colors.textFaded, fontSize: '0.7rem', marginTop: '20px', opacity: 0.8 }}>
                                 <p style={{ margin: '5px 0' }}>© 2026 KSTOCKVIEW. All rights reserved.</p>
                             </div>
                         </footer>

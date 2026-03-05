@@ -5,6 +5,10 @@ import './i18n'
 import { HelmetProvider } from 'react-helmet-async'
 import './index.css'
 
+// Initialize theme from localStorage before render to prevent flash
+const savedTheme = localStorage.getItem('theme') || 'dark'
+document.documentElement.setAttribute('data-theme', savedTheme)
+
 // Lazy load all page components
 const Home = React.lazy(() => import('./pages/Home.jsx'))
 const App = React.lazy(() => import('./App.jsx'))
@@ -27,7 +31,7 @@ const Kakao = React.lazy(() => import('./pages/blog/Kakao.jsx'))
 const LoadingFallback = () => (
     <div style={{
         display: 'flex', justifyContent: 'center', alignItems: 'center',
-        height: '100vh', backgroundColor: '#0f172a', color: '#94a3b8', fontSize: '0.9rem'
+        height: '100vh', backgroundColor: 'var(--bg-body)', color: 'var(--text-muted)', fontSize: '0.9rem'
     }}>
         Loading...
     </div>

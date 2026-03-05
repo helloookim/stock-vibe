@@ -23,7 +23,7 @@ const BlogList = () => {
             code: '005930',
             category: '반도체 · 전자',
             description: '국내 시가총액 1위 기업, 글로벌 반도체 및 가전 산업의 핵심 플레이어. 메모리 반도체, 스마트폰, TV 등 다각화된 사업 분석.',
-            color: '#3b82f6'
+            color: '#e67e00'
         },
         {
             slug: 'sk-hynix',
@@ -32,7 +32,7 @@ const BlogList = () => {
             code: '000660',
             category: '메모리 반도체',
             description: 'HBM 시장 선두주자, AI 시대의 핵심 수혜주. DRAM·NAND Flash 메모리 반도체 전문 기업 분석.',
-            color: '#ef4444'
+            color: '#ff4d4f'
         },
         {
             slug: 'hyundai-motor',
@@ -41,7 +41,7 @@ const BlogList = () => {
             code: '005380',
             category: '완성차 · EV',
             description: '글로벌 5위 자동차 제조사, 전기차 아이오닉 시리즈와 수소차 넥쏘로 친환경차 시장 공략.',
-            color: '#10b981'
+            color: '#00d084'
         },
         {
             slug: 'lg-energy-solution',
@@ -50,7 +50,7 @@ const BlogList = () => {
             code: '373220',
             category: '배터리',
             description: '글로벌 2위 배터리 기업, 테슬라·GM 등 글로벌 완성차 업체에 배터리 공급. ESS 사업 확대.',
-            color: '#f59e0b'
+            color: '#d4a853'
         },
         {
             slug: 'samsung-biologics',
@@ -59,7 +59,7 @@ const BlogList = () => {
             code: '207940',
             category: '바이오 CMO',
             description: '세계 최대 바이오의약품 위탁생산(CMO) 기업. 글로벌 제약사들의 바이오의약품 생산 파트너.',
-            color: '#8b5cf6'
+            color: '#cc6e00'
         },
         {
             slug: 'hanwha-aerospace',
@@ -108,8 +108,8 @@ const BlogList = () => {
             />
             <div style={{
                 minHeight: '100vh',
-                background: 'linear-gradient(135deg, #020617 0%, #0f172a 100%)',
-                color: '#e2e8f0',
+                background: 'linear-gradient(135deg, #141417 0%, #141417 100%)',
+                color: '#f0f0f5',
                 padding: isMobile ? '20px 15px 100px 15px' : '40px 20px 100px 20px'
             }}>
                 <div style={{ maxWidth: '1000px', margin: '0 auto', width: '100%' }}>
@@ -120,7 +120,7 @@ const BlogList = () => {
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: '8px',
-                            color: '#60a5fa',
+                            color: '#FF8C00',
                             textDecoration: 'none',
                             marginBottom: '30px',
                             fontSize: '0.9rem',
@@ -142,11 +142,11 @@ const BlogList = () => {
                             gap: '12px',
                             marginBottom: '20px'
                         }}>
-                            <FileText size={32} style={{ color: '#8b5cf6' }} />
+                            <FileText size={32} style={{ color: '#cc6e00' }} />
                             <h1 style={{
                                 fontSize: isMobile ? '1.8rem' : '2.5rem',
                                 fontWeight: '800',
-                                background: 'linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%)',
+                                background: 'linear-gradient(135deg, #FF8C00 0%, #FFb366 100%)',
                                 WebkitBackgroundClip: 'text',
                                 backgroundClip: 'text',
                                 color: 'transparent',
@@ -156,7 +156,7 @@ const BlogList = () => {
                             </h1>
                         </div>
                         <p style={{
-                            color: '#94a3b8',
+                            color: '#8888a0',
                             fontSize: '1rem',
                             maxWidth: '600px',
                             margin: '0 auto',
@@ -178,8 +178,8 @@ const BlogList = () => {
                                 key={post.slug}
                                 to={`/blog/${post.slug}`}
                                 style={{
-                                    backgroundColor: 'rgba(30, 41, 59, 0.6)',
-                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                                    border: '1px solid rgba(255, 255, 255, 0.06)',
                                     borderRadius: '16px',
                                     padding: '24px',
                                     textDecoration: 'none',
@@ -189,14 +189,14 @@ const BlogList = () => {
                                     gap: '12px'
                                 }}
                                 onMouseEnter={(e) => {
-                                    e.currentTarget.style.backgroundColor = 'rgba(30, 41, 59, 0.9)';
+                                    e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
                                     e.currentTarget.style.borderColor = post.color;
                                     e.currentTarget.style.transform = 'translateY(-4px)';
                                     e.currentTarget.style.boxShadow = `0 10px 30px -10px ${post.color}40`;
                                 }}
                                 onMouseLeave={(e) => {
-                                    e.currentTarget.style.backgroundColor = 'rgba(30, 41, 59, 0.6)';
-                                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                                    e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
+                                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.06)';
                                     e.currentTarget.style.transform = 'translateY(0)';
                                     e.currentTarget.style.boxShadow = 'none';
                                 }}
@@ -219,7 +219,7 @@ const BlogList = () => {
                                         {post.category}
                                     </span>
                                     <span style={{
-                                        color: '#64748b',
+                                        color: '#5a5a70',
                                         fontSize: '0.75rem'
                                     }}>
                                         {post.code}
@@ -228,7 +228,7 @@ const BlogList = () => {
 
                                 {/* Title */}
                                 <h2 style={{
-                                    color: '#e2e8f0',
+                                    color: '#f0f0f5',
                                     fontSize: '1.1rem',
                                     fontWeight: '700',
                                     margin: 0,
@@ -239,7 +239,7 @@ const BlogList = () => {
 
                                 {/* Description */}
                                 <p style={{
-                                    color: '#94a3b8',
+                                    color: '#8888a0',
                                     fontSize: '0.9rem',
                                     margin: 0,
                                     lineHeight: '1.6',
@@ -270,19 +270,19 @@ const BlogList = () => {
                         marginTop: '60px',
                         textAlign: 'center',
                         padding: '40px 20px',
-                        backgroundColor: 'rgba(30, 41, 59, 0.4)',
+                        backgroundColor: 'rgba(0, 0, 0, 0.4)',
                         borderRadius: '16px',
-                        border: '1px solid rgba(255, 255, 255, 0.1)'
+                        border: '1px solid rgba(255, 255, 255, 0.06)'
                     }}>
                         <h3 style={{
-                            color: '#e2e8f0',
+                            color: '#f0f0f5',
                             fontSize: '1.3rem',
                             marginBottom: '12px'
                         }}>
                             더 많은 종목의 재무 데이터가 필요하신가요?
                         </h3>
                         <p style={{
-                            color: '#94a3b8',
+                            color: '#8888a0',
                             fontSize: '0.95rem',
                             marginBottom: '24px'
                         }}>
@@ -294,7 +294,7 @@ const BlogList = () => {
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: '8px',
-                                background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+                                background: 'linear-gradient(135deg, #e67e00 0%, #cc6e00 100%)',
                                 color: '#fff',
                                 padding: '14px 32px',
                                 borderRadius: '12px',
@@ -302,15 +302,15 @@ const BlogList = () => {
                                 fontWeight: '600',
                                 fontSize: '1rem',
                                 transition: 'transform 0.2s, box-shadow 0.2s',
-                                boxShadow: '0 4px 15px rgba(59, 130, 246, 0.4)'
+                                boxShadow: '0 4px 15px rgba(255, 140, 0, 0.4)'
                             }}
                             onMouseEnter={(e) => {
                                 e.target.style.transform = 'translateY(-2px)';
-                                e.target.style.boxShadow = '0 6px 20px rgba(59, 130, 246, 0.5)';
+                                e.target.style.boxShadow = '0 6px 20px rgba(255, 140, 0, 0.5)';
                             }}
                             onMouseLeave={(e) => {
                                 e.target.style.transform = 'translateY(0)';
-                                e.target.style.boxShadow = '0 4px 15px rgba(59, 130, 246, 0.4)';
+                                e.target.style.boxShadow = '0 4px 15px rgba(255, 140, 0, 0.4)';
                             }}
                         >
                             전체 종목 보러가기
@@ -322,9 +322,9 @@ const BlogList = () => {
                     <footer style={{
                         marginTop: '60px',
                         padding: '30px 20px',
-                        borderTop: '1px solid #334155',
+                        borderTop: '1px solid #2a2a30',
                         textAlign: 'center',
-                        color: '#64748b',
+                        color: '#5a5a70',
                         fontSize: '0.8rem'
                     }}>
                         <p style={{ marginBottom: '15px' }}>© 2026 KSTOCKVIEW. All rights reserved.</p>
@@ -334,13 +334,13 @@ const BlogList = () => {
                             gap: '20px',
                             flexWrap: 'wrap'
                         }}>
-                            <Link to="/privacy" style={{ color: '#94a3b8', textDecoration: 'underline' }}>
+                            <Link to="/privacy" style={{ color: '#8888a0', textDecoration: 'underline' }}>
                                 개인정보처리방침
                             </Link>
-                            <Link to="/terms" style={{ color: '#94a3b8', textDecoration: 'underline' }}>
+                            <Link to="/terms" style={{ color: '#8888a0', textDecoration: 'underline' }}>
                                 이용약관
                             </Link>
-                            <Link to="/contact" style={{ color: '#94a3b8', textDecoration: 'underline' }}>
+                            <Link to="/contact" style={{ color: '#8888a0', textDecoration: 'underline' }}>
                                 문의하기
                             </Link>
                         </div>

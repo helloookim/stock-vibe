@@ -23,8 +23,8 @@ const Contact = () => {
             </Helmet>
             <div style={{
                 minHeight: '100vh',
-                background: 'linear-gradient(135deg, #020617 0%, #0f172a 100%)',
-                color: '#e2e8f0',
+                background: 'linear-gradient(135deg, #141417 0%, #141417 100%)',
+                color: '#f0f0f5',
                 padding: '20px 15px 100px 15px',
                 paddingTop: window.innerWidth > 768 ? '40px' : '20px',
                 paddingLeft: window.innerWidth > 768 ? '20px' : '15px',
@@ -42,14 +42,14 @@ const Contact = () => {
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: '8px',
-                            color: '#60a5fa',
+                            color: '#FF8C00',
                             textDecoration: 'none',
                             marginBottom: '30px',
                             fontSize: '0.9rem',
                             transition: 'color 0.2s'
                         }}
-                        onMouseEnter={(e) => e.target.style.color = '#93c5fd'}
-                        onMouseLeave={(e) => e.target.style.color = '#60a5fa'}
+                        onMouseEnter={(e) => e.target.style.color = '#cc9955'}
+                        onMouseLeave={(e) => e.target.style.color = '#FF8C00'}
                     >
                         <ArrowLeft size={18} />
                         {t('contact.goHome')}
@@ -60,12 +60,12 @@ const Contact = () => {
                     <header style={{
                         marginBottom: '40px',
                         paddingBottom: '20px',
-                        borderBottom: '2px solid #334155'
+                        borderBottom: '2px solid #2a2a30'
                     }}>
                         <h1 style={{
                             fontSize: window.innerWidth > 768 ? '2.5rem' : '1.8rem',
                             fontWeight: '900',
-                            background: 'linear-gradient(135deg, #60a5fa 0%, #a855f7 100%)',
+                            background: 'linear-gradient(135deg, #FF8C00 0%, #FFa040 100%)',
                             WebkitBackgroundClip: 'text',
                             backgroundClip: 'text',
                             color: 'transparent',
@@ -73,15 +73,15 @@ const Contact = () => {
                         }}>
                             {t('contact.title')}
                         </h1>
-                        <p style={{ color: '#94a3b8', fontSize: window.innerWidth > 768 ? '0.9rem' : '0.8rem' }}>
+                        <p style={{ color: '#8888a0', fontSize: window.innerWidth > 768 ? '0.9rem' : '0.8rem' }}>
                             {t('contact.subtitle')}
                         </p>
                     </header>
 
                     {/* Content */}
                     <div style={{
-                        background: 'rgba(30, 41, 59, 0.6)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        background: 'rgba(0, 0, 0, 0.6)',
+                        border: '1px solid rgba(255, 255, 255, 0.06)',
                         borderRadius: '16px',
                         padding: window.innerWidth > 768 ? '40px' : '20px',
                         lineHeight: '1.8',
@@ -95,9 +95,9 @@ const Contact = () => {
                                 gap: '12px',
                                 marginBottom: '20px'
                             }}>
-                                <Mail size={24} color="#60a5fa" />
+                                <Mail size={24} color="#FF8C00" />
                                 <h2 style={{
-                                    color: '#e2e8f0',
+                                    color: '#f0f0f5',
                                     fontSize: window.innerWidth > 768 ? '1.5rem' : '1.2rem',
                                     margin: 0
                                 }}>
@@ -106,35 +106,35 @@ const Contact = () => {
                             </div>
                             <div style={{
                                 padding: '30px',
-                                backgroundColor: '#0f172a',
+                                backgroundColor: '#141417',
                                 borderRadius: '12px',
-                                border: '1px solid #334155',
+                                border: '1px solid #2a2a30',
                                 textAlign: 'center'
                             }}>
-                                <p style={{ color: '#94a3b8', marginBottom: '15px', fontSize: '0.9rem' }}>
+                                <p style={{ color: '#8888a0', marginBottom: '15px', fontSize: '0.9rem' }}>
                                     {t('contact.inquiryEmail')}
                                 </p>
                                 <a
                                     href="mailto:contact@kstockview.com"
                                     style={{
                                         fontSize: window.innerWidth > 768 ? '1.3rem' : '0.95rem',
-                                        color: '#60a5fa',
+                                        color: '#FF8C00',
                                         textDecoration: 'none',
                                         fontWeight: '600',
                                         display: 'inline-block',
                                         padding: window.innerWidth > 768 ? '10px 20px' : '8px 12px',
-                                        background: 'rgba(96, 165, 250, 0.1)',
+                                        background: 'rgba(255, 140, 0, 0.1)',
                                         borderRadius: '8px',
                                         transition: 'all 0.2s',
                                         wordBreak: 'break-all',
                                         maxWidth: '100%'
                                     }}
                                     onMouseEnter={(e) => {
-                                        e.target.style.background = 'rgba(96, 165, 250, 0.2)';
+                                        e.target.style.background = 'rgba(255, 140, 0, 0.2)';
                                         e.target.style.transform = 'translateY(-2px)';
                                     }}
                                     onMouseLeave={(e) => {
-                                        e.target.style.background = 'rgba(96, 165, 250, 0.1)';
+                                        e.target.style.background = 'rgba(255, 140, 0, 0.1)';
                                         e.target.style.transform = 'translateY(0)';
                                     }}
                                 >
@@ -151,9 +151,9 @@ const Contact = () => {
                                 gap: '12px',
                                 marginBottom: '20px'
                             }}>
-                                <MessageSquare size={24} color="#10b981" />
+                                <MessageSquare size={24} color="#00d084" />
                                 <h2 style={{
-                                    color: '#e2e8f0',
+                                    color: '#f0f0f5',
                                     fontSize: window.innerWidth > 768 ? '1.5rem' : '1.2rem',
                                     margin: 0
                                 }}>
@@ -161,7 +161,7 @@ const Contact = () => {
                                 </h2>
                             </div>
                             <ul style={{
-                                color: '#cbd5e1',
+                                color: '#c0c0d0',
                                 paddingLeft: '20px',
                                 lineHeight: '2',
                                 fontSize: '1rem'
@@ -189,7 +189,7 @@ const Contact = () => {
                         {/* Response Time */}
                         <section style={{ marginTop: '30px' }}>
                             <p style={{
-                                color: '#94a3b8',
+                                color: '#8888a0',
                                 fontSize: '0.85rem',
                                 textAlign: 'center',
                                 margin: 0
@@ -203,7 +203,7 @@ const Contact = () => {
                     <footer style={{
                         marginTop: '40px',
                         textAlign: 'center',
-                        color: '#64748b',
+                        color: '#5a5a70',
                         fontSize: '0.85rem'
                     }}>
                         <p>© 2026 KSTOCKVIEW. All rights reserved.</p>

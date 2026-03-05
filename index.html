@@ -26,7 +26,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
   <link rel="manifest" href="/site.webmanifest" />
-  <meta name="theme-color" content="#0f172a" />
+  <meta name="theme-color" content="#141417" />
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
@@ -76,6 +76,14 @@
       "logo": "https://kstockview.com/logo.png"
     }
     </script>
+
+  <!-- Theme flash prevention -->
+  <script>
+    (function() {
+      var t = localStorage.getItem('theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
 
   <!-- Pretendard Font -->
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />

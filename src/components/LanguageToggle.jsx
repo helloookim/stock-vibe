@@ -17,7 +17,7 @@ const LanguageToggle = ({ style }) => {
                 gap: '2px',
                 padding: '4px 6px',
                 borderRadius: '6px',
-                border: '1px solid #475569',
+                border: '1px solid #555',
                 backgroundColor: 'transparent',
                 cursor: 'pointer',
                 fontSize: '0.7rem',
@@ -29,9 +29,9 @@ const LanguageToggle = ({ style }) => {
             }}
             title={isKo ? 'Switch to English' : '한국어로 전환'}
         >
-            <span style={{ color: isKo ? '#60a5fa' : '#64748b' }}>KO</span>
-            <span style={{ color: '#475569' }}>/</span>
-            <span style={{ color: !isKo ? '#60a5fa' : '#64748b' }}>EN</span>
+            <span style={{ color: isKo ? '#FFb366' : '#666' }}>KO</span>
+            <span style={{ color: '#555' }}>/</span>
+            <span style={{ color: !isKo ? '#FFb366' : '#666' }}>EN</span>
         </button>
     );
 };

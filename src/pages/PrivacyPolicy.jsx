@@ -20,8 +20,8 @@ const PrivacyPolicy = () => {
             </Helmet>
             <div style={{
                 minHeight: '100vh',
-                background: 'linear-gradient(135deg, #020617 0%, #0f172a 100%)',
-                color: '#e2e8f0',
+                background: 'linear-gradient(135deg, #141417 0%, #141417 100%)',
+                color: '#f0f0f5',
                 padding: '20px 15px 100px 15px',
                 paddingTop: window.innerWidth > 768 ? '40px' : '20px',
                 paddingLeft: window.innerWidth > 768 ? '20px' : '15px',
@@ -39,14 +39,14 @@ const PrivacyPolicy = () => {
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: '8px',
-                            color: '#60a5fa',
+                            color: '#FF8C00',
                             textDecoration: 'none',
                             marginBottom: '30px',
                             fontSize: '0.9rem',
                             transition: 'color 0.2s'
                         }}
-                        onMouseEnter={(e) => e.target.style.color = '#93c5fd'}
-                        onMouseLeave={(e) => e.target.style.color = '#60a5fa'}
+                        onMouseEnter={(e) => e.target.style.color = '#cc9955'}
+                        onMouseLeave={(e) => e.target.style.color = '#FF8C00'}
                     >
                         <ArrowLeft size={18} />
                         홈으로 돌아가기
@@ -56,12 +56,12 @@ const PrivacyPolicy = () => {
                     <header style={{
                         marginBottom: '40px',
                         paddingBottom: '20px',
-                        borderBottom: '2px solid #334155'
+                        borderBottom: '2px solid #2a2a30'
                     }}>
                         <h1 style={{
                             fontSize: window.innerWidth > 768 ? '2.5rem' : '1.8rem',
                             fontWeight: '900',
-                            background: 'linear-gradient(135deg, #60a5fa 0%, #a855f7 100%)',
+                            background: 'linear-gradient(135deg, #FF8C00 0%, #FFa040 100%)',
                             WebkitBackgroundClip: 'text',
                             backgroundClip: 'text',
                             color: 'transparent',
@@ -69,15 +69,15 @@ const PrivacyPolicy = () => {
                         }}>
                             개인정보처리방침
                         </h1>
-                        <p style={{ color: '#94a3b8', fontSize: window.innerWidth > 768 ? '0.9rem' : '0.8rem' }}>
+                        <p style={{ color: '#8888a0', fontSize: window.innerWidth > 768 ? '0.9rem' : '0.8rem' }}>
                             최종 수정일: 2026년 1월 15일
                         </p>
                     </header>
 
                     {/* Content */}
                     <div style={{
-                        background: 'rgba(30, 41, 59, 0.6)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        background: 'rgba(0, 0, 0, 0.6)',
+                        border: '1px solid rgba(255, 255, 255, 0.06)',
                         borderRadius: '16px',
                         padding: window.innerWidth > 768 ? '40px' : '20px',
                         lineHeight: '1.8',
@@ -85,7 +85,7 @@ const PrivacyPolicy = () => {
                     }}>
                         <section style={{ marginBottom: '40px' }}>
                             <h2 style={{
-                                color: '#e2e8f0',
+                                color: '#f0f0f5',
                                 fontSize: window.innerWidth > 768 ? '1.5rem' : '1.2rem',
                                 marginBottom: '20px',
                                 display: 'flex',
@@ -95,22 +95,22 @@ const PrivacyPolicy = () => {
                                 <span style={{
                                     width: '4px',
                                     height: '24px',
-                                    background: '#60a5fa',
+                                    background: '#FF8C00',
                                     borderRadius: '2px'
                                 }} />
                                 1. 개인정보의 수집 및 이용
                             </h2>
-                            <p style={{ color: '#cbd5e1', marginBottom: '15px' }}>
+                            <p style={{ color: '#c0c0d0', marginBottom: '15px' }}>
                                 본 사이트는 회원가입 없이 운영되며, <strong>별도의 개인정보를 수집하지 않습니다</strong>.
                             </p>
-                            <p style={{ color: '#cbd5e1' }}>
+                            <p style={{ color: '#c0c0d0' }}>
                                 사용자는 어떠한 개인정보도 제공하지 않고 모든 서비스를 자유롭게 이용할 수 있습니다.
                             </p>
                         </section>
 
                         <section style={{ marginBottom: '40px' }}>
                             <h2 style={{
-                                color: '#e2e8f0',
+                                color: '#f0f0f5',
                                 fontSize: window.innerWidth > 768 ? '1.5rem' : '1.2rem',
                                 marginBottom: '20px',
                                 display: 'flex',
@@ -120,25 +120,25 @@ const PrivacyPolicy = () => {
                                 <span style={{
                                     width: '4px',
                                     height: '24px',
-                                    background: '#60a5fa',
+                                    background: '#FF8C00',
                                     borderRadius: '2px'
                                 }} />
                                 2. 쿠키(Cookie) 사용
                             </h2>
-                            <p style={{ color: '#cbd5e1', marginBottom: '15px' }}>
+                            <p style={{ color: '#c0c0d0', marginBottom: '15px' }}>
                                 본 사이트는 사용자 경험 개선을 위해 쿠키를 사용할 수 있습니다.
                             </p>
-                            <p style={{ color: '#cbd5e1', marginBottom: '15px' }}>
+                            <p style={{ color: '#c0c0d0', marginBottom: '15px' }}>
                                 쿠키는 웹사이트 방문 기록, 설정 등을 저장하는 작은 텍스트 파일입니다.
                             </p>
-                            <p style={{ color: '#cbd5e1' }}>
+                            <p style={{ color: '#c0c0d0' }}>
                                 대부분의 웹 브라우저는 쿠키를 자동으로 수락하지만, 브라우저 설정을 통해 쿠키를 거부하거나 삭제할 수 있습니다.
                             </p>
                         </section>
 
                         <section style={{ marginBottom: '40px' }}>
                             <h2 style={{
-                                color: '#e2e8f0',
+                                color: '#f0f0f5',
                                 fontSize: window.innerWidth > 768 ? '1.5rem' : '1.2rem',
                                 marginBottom: '20px',
                                 display: 'flex',
@@ -148,24 +148,24 @@ const PrivacyPolicy = () => {
                                 <span style={{
                                     width: '4px',
                                     height: '24px',
-                                    background: '#60a5fa',
+                                    background: '#FF8C00',
                                     borderRadius: '2px'
                                 }} />
                                 3. Google AdSense
                             </h2>
-                            <p style={{ color: '#cbd5e1', marginBottom: '15px' }}>
+                            <p style={{ color: '#c0c0d0', marginBottom: '15px' }}>
                                 본 사이트는 Google AdSense 광고를 게재합니다.
                             </p>
-                            <p style={{ color: '#cbd5e1', marginBottom: '15px' }}>
+                            <p style={{ color: '#c0c0d0', marginBottom: '15px' }}>
                                 Google은 광고 게재를 위해 쿠키를 사용하며, 이를 통해 맞춤형 광고를 제공할 수 있습니다.
                             </p>
-                            <p style={{ color: '#cbd5e1' }}>
+                            <p style={{ color: '#c0c0d0' }}>
                                 Google의 개인정보 보호정책은{' '}
                                 <a
                                     href="https://policies.google.com/privacy"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    style={{ color: '#60a5fa', textDecoration: 'underline' }}
+                                    style={{ color: '#FF8C00', textDecoration: 'underline' }}
                                 >
                                     Google 개인정보처리방침
                                 </a>
@@ -175,7 +175,7 @@ const PrivacyPolicy = () => {
 
                         <section style={{ marginBottom: '40px' }}>
                             <h2 style={{
-                                color: '#e2e8f0',
+                                color: '#f0f0f5',
                                 fontSize: window.innerWidth > 768 ? '1.5rem' : '1.2rem',
                                 marginBottom: '20px',
                                 display: 'flex',
@@ -185,24 +185,24 @@ const PrivacyPolicy = () => {
                                 <span style={{
                                     width: '4px',
                                     height: '24px',
-                                    background: '#60a5fa',
+                                    background: '#FF8C00',
                                     borderRadius: '2px'
                                 }} />
                                 4. 개인정보 관련 문의
                             </h2>
-                            <p style={{ color: '#cbd5e1', marginBottom: '15px' }}>
+                            <p style={{ color: '#c0c0d0', marginBottom: '15px' }}>
                                 개인정보와 관련한 문의사항은 아래 이메일로 연락주시기 바랍니다.
                             </p>
                             <div style={{
                                 marginTop: '20px',
                                 padding: '20px',
-                                backgroundColor: '#0f172a',
+                                backgroundColor: '#141417',
                                 borderRadius: '8px',
-                                border: '1px solid #334155'
+                                border: '1px solid #2a2a30'
                             }}>
                                 <p style={{
                                     fontSize: window.innerWidth > 768 ? '1rem' : '0.85rem',
-                                    color: '#60a5fa',
+                                    color: '#FF8C00',
                                     margin: 0,
                                     wordBreak: 'break-all'
                                 }}>
@@ -213,7 +213,7 @@ const PrivacyPolicy = () => {
 
                         <section>
                             <h2 style={{
-                                color: '#e2e8f0',
+                                color: '#f0f0f5',
                                 fontSize: window.innerWidth > 768 ? '1.5rem' : '1.2rem',
                                 marginBottom: '20px',
                                 display: 'flex',
@@ -223,12 +223,12 @@ const PrivacyPolicy = () => {
                                 <span style={{
                                     width: '4px',
                                     height: '24px',
-                                    background: '#60a5fa',
+                                    background: '#FF8C00',
                                     borderRadius: '2px'
                                 }} />
                                 5. 정책 변경
                             </h2>
-                            <p style={{ color: '#cbd5e1' }}>
+                            <p style={{ color: '#c0c0d0' }}>
                                 본 개인정보처리방침은 관련 법령 및 서비스 변경에 따라 수정될 수 있습니다.
                                 변경 시 웹사이트를 통해 공지하며, 중요한 변경사항이 있을 경우 별도로 안내드립니다.
                             </p>
@@ -239,7 +239,7 @@ const PrivacyPolicy = () => {
                     <footer style={{
                         marginTop: '40px',
                         textAlign: 'center',
-                        color: '#64748b',
+                        color: '#5a5a70',
                         fontSize: '0.85rem'
                     }}>
                         <p>© 2026 KSTOCKVIEW. All rights reserved.</p>

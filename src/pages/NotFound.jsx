@@ -25,7 +25,7 @@ const NotFound = () => {
 
             <div style={{
                 minHeight: '100vh',
-                backgroundColor: '#0f172a',
+                backgroundColor: '#141417',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -41,14 +41,14 @@ const NotFound = () => {
                     padding: '24px',
                     marginBottom: '24px'
                 }}>
-                    <AlertCircle size={64} style={{ color: '#ef4444' }} />
+                    <AlertCircle size={64} style={{ color: '#ff4d4f' }} />
                 </div>
 
                 {/* Error Code */}
                 <h1 style={{
                     fontSize: 'clamp(3rem, 12vw, 6rem)',
                     fontWeight: '700',
-                    background: 'linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%)',
+                    background: 'linear-gradient(135deg, #FF8C00 0%, #FFb366 100%)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                     backgroundClip: 'text',
@@ -61,7 +61,7 @@ const NotFound = () => {
                 {/* Error Message */}
                 <h2 style={{
                     fontSize: 'clamp(1.1rem, 3vw, 1.5rem)',
-                    color: '#e2e8f0',
+                    color: '#f0f0f5',
                     fontWeight: '600',
                     margin: '0 0 12px 0'
                 }}>
@@ -70,7 +70,7 @@ const NotFound = () => {
 
                 <p style={{
                     fontSize: '0.95rem',
-                    color: '#94a3b8',
+                    color: '#8888a0',
                     maxWidth: '400px',
                     lineHeight: '1.6',
                     margin: '0 0 24px 0'
@@ -85,7 +85,7 @@ const NotFound = () => {
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '8px',
-                        backgroundColor: '#3b82f6',
+                        backgroundColor: '#e67e00',
                         color: '#ffffff',
                         padding: '14px 28px',
                         borderRadius: '10px',
@@ -93,14 +93,14 @@ const NotFound = () => {
                         fontSize: '1rem',
                         fontWeight: '600',
                         transition: 'all 0.2s',
-                        boxShadow: '0 4px 14px rgba(59, 130, 246, 0.4)'
+                        boxShadow: '0 4px 14px rgba(255, 140, 0, 0.4)'
                     }}
                     onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#2563eb';
+                        e.currentTarget.style.backgroundColor = '#cc6e00';
                         e.currentTarget.style.transform = 'translateY(-2px)';
                     }}
                     onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = '#3b82f6';
+                        e.currentTarget.style.backgroundColor = '#e67e00';
                         e.currentTarget.style.transform = 'translateY(0)';
                     }}
                 >
@@ -116,7 +116,7 @@ const NotFound = () => {
                 }}>
                     {/* Popular Stocks */}
                     <div style={{
-                        backgroundColor: 'rgba(30, 41, 59, 0.5)',
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
                         borderRadius: '12px',
                         padding: '24px',
                         marginBottom: '20px',
@@ -129,8 +129,8 @@ const NotFound = () => {
                             gap: '8px',
                             marginBottom: '16px'
                         }}>
-                            <TrendingUp size={20} style={{ color: '#10b981' }} />
-                            <h3 style={{ color: '#e2e8f0', fontSize: '1rem', fontWeight: '600', margin: 0 }}>
+                            <TrendingUp size={20} style={{ color: '#00d084' }} />
+                            <h3 style={{ color: '#f0f0f5', fontSize: '1rem', fontWeight: '600', margin: 0 }}>
                                 {t('notFound.popularStocks')}
                             </h3>
                         </div>
@@ -145,11 +145,11 @@ const NotFound = () => {
                                     key={stock.code}
                                     to={`/stocks/${stock.code}`}
                                     style={{
-                                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                                        border: '1px solid rgba(59, 130, 246, 0.2)',
+                                        backgroundColor: 'rgba(255, 140, 0, 0.1)',
+                                        border: '1px solid rgba(255, 140, 0, 0.2)',
                                         borderRadius: '8px',
                                         padding: '8px 14px',
-                                        color: '#e2e8f0',
+                                        color: '#f0f0f5',
                                         textDecoration: 'none',
                                         fontSize: '0.85rem',
                                         transition: 'all 0.2s',
@@ -158,15 +158,15 @@ const NotFound = () => {
                                         gap: '6px'
                                     }}
                                     onMouseEnter={(e) => {
-                                        e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.2)';
-                                        e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.4)';
+                                        e.currentTarget.style.backgroundColor = 'rgba(255, 140, 0, 0.2)';
+                                        e.currentTarget.style.borderColor = 'rgba(255, 140, 0, 0.4)';
                                     }}
                                     onMouseLeave={(e) => {
-                                        e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
-                                        e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.2)';
+                                        e.currentTarget.style.backgroundColor = 'rgba(255, 140, 0, 0.1)';
+                                        e.currentTarget.style.borderColor = 'rgba(255, 140, 0, 0.2)';
                                     }}
                                 >
-                                    <span style={{ color: '#60a5fa', fontWeight: '600', fontSize: '0.75rem' }}>
+                                    <span style={{ color: '#FF8C00', fontWeight: '600', fontSize: '0.75rem' }}>
                                         {stock.code}
                                     </span>
                                     <span>{stock.name}</span>
@@ -188,21 +188,21 @@ const NotFound = () => {
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '6px',
-                                backgroundColor: 'rgba(139, 92, 246, 0.1)',
-                                border: '1px solid rgba(139, 92, 246, 0.2)',
+                                backgroundColor: 'rgba(230, 126, 0, 0.1)',
+                                border: '1px solid rgba(230, 126, 0, 0.2)',
                                 borderRadius: '8px',
                                 padding: '10px 16px',
-                                color: '#a78bfa',
+                                color: '#FFb366',
                                 textDecoration: 'none',
                                 fontSize: '0.9rem',
                                 fontWeight: '500',
                                 transition: 'all 0.2s'
                             }}
                             onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = 'rgba(139, 92, 246, 0.2)';
+                                e.currentTarget.style.backgroundColor = 'rgba(230, 126, 0, 0.2)';
                             }}
                             onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'rgba(139, 92, 246, 0.1)';
+                                e.currentTarget.style.backgroundColor = 'rgba(230, 126, 0, 0.1)';
                             }}
                         >
                             <FileText size={16} />
@@ -214,21 +214,21 @@ const NotFound = () => {
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '6px',
-                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                                border: '1px solid rgba(16, 185, 129, 0.2)',
+                                backgroundColor: 'rgba(0, 208, 132, 0.1)',
+                                border: '1px solid rgba(0, 208, 132, 0.2)',
                                 borderRadius: '8px',
                                 padding: '10px 16px',
-                                color: '#10b981',
+                                color: '#00d084',
                                 textDecoration: 'none',
                                 fontSize: '0.9rem',
                                 fontWeight: '500',
                                 transition: 'all 0.2s'
                             }}
                             onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = 'rgba(16, 185, 129, 0.2)';
+                                e.currentTarget.style.backgroundColor = 'rgba(0, 208, 132, 0.2)';
                             }}
                             onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
+                                e.currentTarget.style.backgroundColor = 'rgba(0, 208, 132, 0.1)';
                             }}
                         >
                             <Search size={16} />
@@ -245,7 +245,7 @@ const NotFound = () => {
                     <span style={{
                         fontSize: '1.25rem',
                         fontWeight: '700',
-                        background: 'linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%)',
+                        background: 'linear-gradient(135deg, #FF8C00 0%, #FFb366 100%)',
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
                         backgroundClip: 'text'

@@ -13,10 +13,13 @@ import NotFound from './NotFound';
 import LanguageToggle from '../components/LanguageToggle';
 import MarketToggle from '../components/MarketToggle';
 import ShareButtons from '../components/ShareButtons';
+import ThemeToggle from '../components/ThemeToggle';
+import useThemeColors from '../hooks/useThemeColors';
 
 // Info Tooltip Component
-const InfoTooltip = ({ text }) => {
+const InfoTooltip = ({ text, colors }) => {
     const [isVisible, setIsVisible] = React.useState(false);
+    const c = colors || {};
 
     const formatText = (text) => {
         const sentences = text.split(/\.\s+/);
@@ -29,7 +32,7 @@ const InfoTooltip = ({ text }) => {
             let match;
             while ((match = quoteRegex.exec(sentence)) !== null) {
                 if (match.index > lastIndex) parts.push(sentence.substring(lastIndex, match.index));
-                parts.push(<span key={match.index} style={{ color: '#60a5fa', fontWeight: '500' }}>'{match[1]}'</span>);
+                parts.push(<span key={match.index} style={{ color: '#FF8C00', fontWeight: '500' }}>'{match[1]}'</span>);
                 lastIndex = match.index + match[0].length;
             }
             if (lastIndex < sentence.length) parts.push(sentence.substring(lastIndex));
@@ -44,15 +47,15 @@ const InfoTooltip = ({ text }) => {
 
     return (
         <div style={{ position: 'relative', display: 'inline-block', marginLeft: '8px' }}>
-            <Info size={16} style={{ color: '#94a3b8', cursor: 'pointer', transition: 'color 0.2s' }}
+            <Info size={16} style={{ color: c.textMuted || '#8888a0', cursor: 'pointer', transition: 'color 0.2s' }}
                 onMouseEnter={() => setIsVisible(true)} onMouseLeave={() => setIsVisible(false)} />
             {isVisible && (
                 <div style={{
                     position: 'fixed', left: '50%', top: '50%', transform: 'translate(-50%, -50%)',
-                    backgroundColor: '#1e293b', border: '1px solid #475569', borderRadius: '8px',
+                    backgroundColor: c.tooltipBg || '#1c1c22', border: `1px solid ${c.tooltipBorder || '#4a4a60'}`, borderRadius: '8px',
                     padding: '20px 24px', width: '360px', maxWidth: '90vw', maxHeight: '80vh',
                     overflow: 'auto', zIndex: 1000, fontSize: '0.875rem', lineHeight: '1.7',
-                    color: '#e2e8f0', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
+                    color: c.textPrimary || '#f0f0f5', boxShadow: `0 10px 25px -5px ${c.tooltipShadow || 'rgba(0, 0, 0, 0.5)'}`,
                     pointerEvents: 'none', textAlign: 'left'
                 }}>
                     {formatText(text)}
@@ -63,19 +66,20 @@ const InfoTooltip = ({ text }) => {
 };
 
 // Custom Tooltip for charts
-const CustomTooltip = ({ active, payload, label, valueFormatter, yoyKey }) => {
+const CustomTooltip = ({ active, payload, label, valueFormatter, yoyKey, colors }) => {
     if (active && payload && payload.length) {
         const value = payload[0].value;
         const yoyChange = payload[0].payload[yoyKey];
+        const c = colors || {};
         return (
             <div style={{
-                backgroundColor: '#1e293b', border: '1px solid #475569',
-                borderRadius: '8px', padding: '8px 12px', color: '#e2e8f0'
+                backgroundColor: c.tooltipBg || '#1c1c22', border: `1px solid ${c.tooltipBorder || '#4a4a60'}`,
+                borderRadius: '8px', padding: '8px 12px', color: c.textPrimary || '#f0f0f5'
             }}>
-                <p style={{ margin: 0, marginBottom: '4px', color: '#94a3b8', fontSize: '12px' }}>{label}</p>
+                <p style={{ margin: 0, marginBottom: '4px', color: c.textMuted || '#8888a0', fontSize: '12px' }}>{label}</p>
                 <p style={{ margin: 0, fontWeight: 'bold', fontSize: '14px' }}>{valueFormatter(value)}</p>
                 {yoyChange !== null && yoyChange !== undefined && (
-                    <p style={{ margin: 0, marginTop: '4px', fontSize: '12px', color: yoyChange >= 0 ? '#10b981' : '#ef4444' }}>
+                    <p style={{ margin: 0, marginTop: '4px', fontSize: '12px', color: yoyChange >= 0 ? (c.positive || '#00d084') : (c.negative || '#ff4d4f') }}>
                         YoY: {yoyChange > 0 ? '+' : ''}{yoyChange.toFixed(1)}%
                     </p>
                 )}
@@ -90,6 +94,7 @@ const UsStockPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { ticker: urlTicker } = useParams();
+    const colors = useThemeColors();
 
     const [companyIndex, setCompanyIndex] = useState([]);
     const [companyData, setCompanyData] = useState(null);
@@ -101,6 +106,7 @@ const UsStockPage = () => {
     const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
     const [sidebarMarket, setSidebarMarket] = useState('us');
     const [krFinancialData, setKrFinancialData] = useState({});
+    const [krMarketCapData, setKrMarketCapData] = useState({});
     const [krDataLoading, setKrDataLoading] = useState(false);
     const [krSortBy, setKrSortBy] = useState('revenue');
     const [krSearchTerm, setKrSearchTerm] = useState('');
@@ -211,8 +217,12 @@ const UsStockPage = () => {
         async function loadKrData() {
             setKrDataLoading(true);
             try {
-                const data = await loadAllFinancialData();
+                const [data, marketCap] = await Promise.all([
+                    loadAllFinancialData(),
+                    fetch('/market_cap_data.json').then(r => r.json())
+                ]);
                 setKrFinancialData(data || {});
+                setKrMarketCapData(marketCap || {});
             } catch (err) {
                 console.error('Error loading KR financial data:', err);
             } finally {
@@ -225,11 +235,13 @@ const UsStockPage = () => {
     const krCompanyList = useMemo(() => {
         let list = Object.entries(krFinancialData).map(([code, info]) => {
             const lastEntry = info.history && info.history.length > 0 ? info.history[info.history.length - 1] : null;
+            const marketCap = krMarketCapData[code]?.market_cap || 0;
             return {
                 code,
                 name: info.name,
                 latestRevenue: lastEntry ? (lastEntry.revenue || 0) : 0,
-                latestOpProfit: lastEntry ? (lastEntry.op_profit || 0) : 0
+                latestOpProfit: lastEntry ? (lastEntry.op_profit || 0) : 0,
+                marketCap
             };
         }).filter(c => {
             const term = krSearchTerm.toLowerCase();
@@ -237,9 +249,10 @@ const UsStockPage = () => {
         });
         if (krSortBy === 'revenue') list.sort((a, b) => b.latestRevenue - a.latestRevenue);
         else if (krSortBy === 'op_profit') list.sort((a, b) => b.latestOpProfit - a.latestOpProfit);
+        else if (krSortBy === 'market_cap') list.sort((a, b) => b.marketCap - a.marketCap);
         else list.sort((a, b) => a.code.localeCompare(b.code));
         return list;
-    }, [krFinancialData, krSearchTerm, krSortBy]);
+    }, [krFinancialData, krMarketCapData, krSearchTerm, krSortBy]);
 
     const handleMarketToggle = (market) => {
         setSidebarMarket(market);
@@ -308,8 +321,8 @@ const UsStockPage = () => {
         return (
             <div className="app-container" style={{ alignItems: 'center', justifyContent: 'center' }}>
                 <div style={{ textAlign: 'center' }}>
-                    <h2 style={{ color: '#60a5fa', marginBottom: '20px' }}>{t('common.loading')}</h2>
-                    <p style={{ color: '#94a3b8' }}>{t('common.loadingWait')}</p>
+                    <h2 style={{ color: colors.accent, marginBottom: '20px' }}>{t('common.loading')}</h2>
+                    <p style={{ color: colors.textMuted }}>{t('common.loadingWait')}</p>
                 </div>
             </div>
         );
@@ -327,7 +340,7 @@ const UsStockPage = () => {
                 <div className="chart-section">
                     <h3>
                         {title}
-                        <InfoTooltip text={tooltipText} />
+                        <InfoTooltip text={tooltipText} colors={colors} />
                     </h3>
                     <div className="chart-placeholder">
                         <div className="chart-placeholder-blur" />
@@ -340,7 +353,7 @@ const UsStockPage = () => {
         <div className="chart-section">
             <h3>
                 {title}
-                <InfoTooltip text={tooltipText} />
+                <InfoTooltip text={tooltipText} colors={colors} />
             </h3>
             <div className="chart-legend">
                 <span><span className="legend-bar" style={{ background: `${barColor}99` }}></span> {legendLabel}</span>
@@ -357,28 +370,29 @@ const UsStockPage = () => {
                                 <stop offset="100%" stopColor={barColor} stopOpacity={0.3} />
                             </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                        <XAxis dataKey="displayLabel" stroke="#94a3b8" {...xAxisProps} />
-                        <YAxis stroke="#94a3b8" fontSize={11} tickFormatter={dataKey === 'eps' ? (v) => `$${v.toFixed(1)}` : yAxisFormatter}
+                        <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
+                        <XAxis dataKey="displayLabel" stroke={colors.textMuted} {...xAxisProps} />
+                        <YAxis stroke={colors.textMuted} fontSize={11} tickFormatter={dataKey === 'eps' ? (v) => `$${v.toFixed(1)}` : yAxisFormatter}
                             domain={isDefaultRange ? [0, 'auto'] : [dataMin => Math.min(dataMin, 0), 'auto']}
                             padding={{ top: 20, bottom: 20 }} width={isMobile ? 55 : 70} />
                         <Tooltip content={<CustomTooltip
+                            colors={colors}
                             valueFormatter={(v) => dataKey === 'eps' ? `$${v.toFixed(2)}` : formatUsdCurrency(v)}
                             yoyKey={yoyKey} />} />
-                        <ReferenceLine y={0} stroke="#64748b" />
+                        <ReferenceLine y={0} stroke={colors.chartRef} />
                         <Bar dataKey={dataKey} name={barName} fill={`url(#grad-${dataKey})`} radius={[4, 4, 0, 0]} />
                     </BarChart>
                 </ResponsiveContainer>
                 <ResponsiveContainer width="100%" height={isMobile ? 120 : 180}>
                     <ComposedChart data={chartData} margin={chartMargins}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                        <XAxis dataKey="displayLabel" stroke="#94a3b8" {...xAxisProps} />
+                        <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
+                        <XAxis dataKey="displayLabel" stroke={colors.textMuted} {...xAxisProps} />
                         <YAxis stroke={yoyDotColors[0]} fontSize={9} tickFormatter={(v) => `${v.toFixed(0)}%`}
                             domain={yoyDomain.domain} ticks={yoyDomain.ticks} width={isMobile ? 55 : 70} />
-                        <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569', borderRadius: '8px' }}
+                        <Tooltip contentStyle={{ backgroundColor: colors.tooltipBg, border: `1px solid ${colors.tooltipBorder}`, borderRadius: '8px' }}
                             formatter={(v) => [`${v}%`, 'YoY']} />
-                        <ReferenceLine y={0} stroke="#64748b" strokeDasharray="5 5" />
-                        <Line type="monotone" dataKey={yoyKey} name="YoY" stroke="#64748b" strokeWidth={1.5}
+                        <ReferenceLine y={0} stroke={colors.chartRef} strokeDasharray="5 5" />
+                        <Line type="monotone" dataKey={yoyKey} name="YoY" stroke={colors.chartRef} strokeWidth={1.5}
                             dot={(props) => {
                                 const { cx, cy, payload } = props;
                                 if (payload[yoyKey] === null) return null;
@@ -413,7 +427,10 @@ const UsStockPage = () => {
                         {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                     </button>
                     <Link to="/" className="mobile-app-title" style={{ textDecoration: 'none', color: 'inherit' }}>KSTOCKVIEW</Link>
-                    <LanguageToggle />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <ThemeToggle />
+                        <LanguageToggle />
+                    </div>
                 </div>
 
                 {/* Mobile Overlay */}
@@ -424,7 +441,10 @@ const UsStockPage = () => {
                     <div className="sidebar-header">
                         <div className="sidebar-header-top">
                             <Link to="/" className="app-title" style={{ textDecoration: 'none', color: 'inherit' }}>KSTOCKVIEW</Link>
-                            <LanguageToggle />
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <ThemeToggle />
+                                <LanguageToggle />
+                            </div>
                         </div>
                         <MarketToggle activeMarket={sidebarMarket} onChange={handleMarketToggle} />
                         {sidebarMarket === 'us' ? (
@@ -459,7 +479,8 @@ const UsStockPage = () => {
                                     <ArrowUpDown size={16} />
                                     <span>
                                         {krSortBy === 'revenue' ? t('sidebar.sortByRevenue') :
-                                            krSortBy === 'op_profit' ? t('sidebar.sortByOpProfit') : t('sidebar.sortByCode')}
+                                            krSortBy === 'op_profit' ? t('sidebar.sortByOpProfit') :
+                                                krSortBy === 'market_cap' ? t('sidebar.sortByMarketCap') : t('sidebar.sortByCode')}
                                     </span>
                                 </button>
                                 {sortDropdownOpen && (
@@ -467,6 +488,10 @@ const UsStockPage = () => {
                                         <button className={`sort-option ${krSortBy === 'revenue' ? 'active' : ''}`}
                                             onClick={() => { setKrSortBy('revenue'); setSortDropdownOpen(false); }}>
                                             {t('sidebar.sortByRevenue')}
+                                        </button>
+                                        <button className={`sort-option ${krSortBy === 'market_cap' ? 'active' : ''}`}
+                                            onClick={() => { setKrSortBy('market_cap'); setSortDropdownOpen(false); }}>
+                                            {t('sidebar.sortByMarketCap')}
                                         </button>
                                         <button className={`sort-option ${krSortBy === 'op_profit' ? 'active' : ''}`}
                                             onClick={() => { setKrSortBy('op_profit'); setSortDropdownOpen(false); }}>
@@ -507,7 +532,7 @@ const UsStockPage = () => {
                             ))
                         ) : (
                             krDataLoading ? (
-                                <div style={{ textAlign: 'center', padding: '20px', color: '#94a3b8' }}>
+                                <div style={{ textAlign: 'center', padding: '20px', color: colors.textMuted }}>
                                     {t('common.loadingSidebar')}
                                 </div>
                             ) : (
@@ -550,9 +575,9 @@ const UsStockPage = () => {
                             <div className="view-mode-toggle" style={{ display: 'flex', gap: '6px', marginBottom: '8px', justifyContent: 'center' }}>
                                 <button onClick={() => setViewMode('quarterly')} style={{
                                     padding: '6px 16px', borderRadius: '6px',
-                                    border: viewMode === 'quarterly' ? '2px solid #60a5fa' : '1px solid #475569',
-                                    backgroundColor: viewMode === 'quarterly' ? '#1e3a5f' : '#1e293b',
-                                    color: viewMode === 'quarterly' ? '#60a5fa' : '#94a3b8',
+                                    border: viewMode === 'quarterly' ? `2px solid ${colors.accent}` : `1px solid ${colors.textVeryFaded}`,
+                                    backgroundColor: viewMode === 'quarterly' ? colors.accentBg : colors.bgCard,
+                                    color: viewMode === 'quarterly' ? colors.accent : colors.textMuted,
                                     cursor: 'pointer', fontSize: '0.85rem',
                                     fontWeight: viewMode === 'quarterly' ? '600' : '400', transition: 'all 0.2s'
                                 }}>
@@ -560,9 +585,9 @@ const UsStockPage = () => {
                                 </button>
                                 <button onClick={() => setViewMode('annual')} style={{
                                     padding: '6px 16px', borderRadius: '6px',
-                                    border: viewMode === 'annual' ? '2px solid #60a5fa' : '1px solid #475569',
-                                    backgroundColor: viewMode === 'annual' ? '#1e3a5f' : '#1e293b',
-                                    color: viewMode === 'annual' ? '#60a5fa' : '#94a3b8',
+                                    border: viewMode === 'annual' ? `2px solid ${colors.accent}` : `1px solid ${colors.textVeryFaded}`,
+                                    backgroundColor: viewMode === 'annual' ? colors.accentBg : colors.bgCard,
+                                    color: viewMode === 'annual' ? colors.accent : colors.textMuted,
                                     cursor: 'pointer', fontSize: '0.85rem',
                                     fontWeight: viewMode === 'annual' ? '600' : '400', transition: 'all 0.2s'
                                 }}>
@@ -588,11 +613,11 @@ const UsStockPage = () => {
                     <div className="charts-container">
                         {companyLoading ? (
                             <div style={{ textAlign: 'center', padding: '60px 0' }}>
-                                <p style={{ color: '#94a3b8' }}>{t('common.loading')}</p>
+                                <p style={{ color: colors.textMuted }}>{t('common.loading')}</p>
                             </div>
                         ) : !companyData || chartData.length === 0 ? (
                             <div style={{ textAlign: 'center', padding: '60px 0' }}>
-                                <p style={{ color: '#94a3b8' }}>{t('usAnalysis.noData')}</p>
+                                <p style={{ color: colors.textMuted }}>{t('usAnalysis.noData')}</p>
                             </div>
                         ) : (
                             <>
@@ -628,34 +653,34 @@ const UsStockPage = () => {
                                 {renderBarYoyChart({
                                     title: t('usAnalysis.revenueYoy', { mode: modeLabel }),
                                     tooltipText: t('usTooltips.revenueExplain'),
-                                    dataKey: 'revenue', yoyKey: 'rev_change', barColor: '#3b82f6',
+                                    dataKey: 'revenue', yoyKey: 'rev_change', barColor: colors.revenue,
                                     yoyDomain: revenueYoyDomain, legendLabel: t('usAnalysis.revenueLegend'),
-                                    barName: t('usAnalysis.revenueBarName'), yoyDotColors: ['#10b981', '#ef4444']
+                                    barName: t('usAnalysis.revenueBarName'), yoyDotColors: [colors.positive, colors.negative]
                                 })}
 
                                 {/* Operating Income Chart */}
                                 {renderBarYoyChart({
                                     title: t('usAnalysis.opIncomeYoy', { mode: modeLabel }),
                                     tooltipText: t('usTooltips.opIncomeExplain'),
-                                    dataKey: 'operating_income', yoyKey: 'op_change', barColor: '#10b981',
+                                    dataKey: 'operating_income', yoyKey: 'op_change', barColor: colors.opIncome,
                                     yoyDomain: opIncomeYoyDomain, legendLabel: t('usAnalysis.opIncomeLegend'),
-                                    barName: t('usAnalysis.opIncomeBarName'), yoyDotColors: ['#3b82f6', '#ef4444']
+                                    barName: t('usAnalysis.opIncomeBarName'), yoyDotColors: [colors.positive, colors.negative]
                                 })}
 
                                 {/* Net Income Chart */}
                                 {renderBarYoyChart({
                                     title: t('usAnalysis.netIncomeYoy', { mode: modeLabel }),
                                     tooltipText: t('usTooltips.netIncomeExplain'),
-                                    dataKey: 'net_income', yoyKey: 'ni_change', barColor: '#6366f1',
+                                    dataKey: 'net_income', yoyKey: 'ni_change', barColor: colors.netIncome,
                                     yoyDomain: netIncomeYoyDomain, legendLabel: t('usAnalysis.netIncomeLegend'),
-                                    barName: t('usAnalysis.netIncomeBarName'), yoyDotColors: ['#8b5cf6', '#ef4444']
+                                    barName: t('usAnalysis.netIncomeBarName'), yoyDotColors: [colors.positive, colors.negative]
                                 })}
 
                                 {/* Operating Margin Chart */}
                                 <div className="chart-section profit-margin-chart">
                                     <h3>
                                         {t('usAnalysis.opMarginChart', { mode: modeLabel })}
-                                        <InfoTooltip text={t('usTooltips.opMarginExplain')} />
+                                        <InfoTooltip text={t('usTooltips.opMarginExplain')} colors={colors} />
                                     </h3>
                                     {chartData.some(d => d.op_margin != null) ? (
                                         <div className="chart-wrapper">
@@ -663,19 +688,19 @@ const UsStockPage = () => {
                                                 <AreaChart data={chartData} margin={isMobile ? { top: 10, right: 5, left: -10, bottom: 50 } : { top: 20, right: 10, left: 0, bottom: 60 }}>
                                                     <defs>
                                                         <linearGradient id="usMarginGrad" x1="0" y1="0" x2="0" y2="1">
-                                                            <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8} />
-                                                            <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                                                            <stop offset="5%" stopColor={colors.margin} stopOpacity={0.8} />
+                                                            <stop offset="95%" stopColor={colors.margin} stopOpacity={0} />
                                                         </linearGradient>
                                                     </defs>
-                                                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                                    <XAxis dataKey="displayLabel" stroke="#94a3b8" {...xAxisProps} />
-                                                    <YAxis stroke="#94a3b8" fontSize={10} tickFormatter={(v) => `${Math.round(v)}%`}
+                                                    <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
+                                                    <XAxis dataKey="displayLabel" stroke={colors.textMuted} {...xAxisProps} />
+                                                    <YAxis stroke={colors.textMuted} fontSize={10} tickFormatter={(v) => `${Math.round(v)}%`}
                                                         domain={['auto', 'auto']} allowDecimals={false} scale="linear" />
-                                                    <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569', borderRadius: '8px' }}
+                                                    <Tooltip contentStyle={{ backgroundColor: colors.tooltipBg, border: `1px solid ${colors.tooltipBorder}`, borderRadius: '8px' }}
                                                         formatter={(v) => [`${v}%`, t('usAnalysis.opMarginTooltip')]} />
-                                                    <ReferenceLine y={0} stroke="#64748b" />
+                                                    <ReferenceLine y={0} stroke={colors.chartRef} />
                                                     <Area type="monotone" dataKey="op_margin" name={t('usAnalysis.opMarginTooltip')}
-                                                        stroke="#8b5cf6" fillOpacity={1} fill="url(#usMarginGrad)" />
+                                                        stroke={colors.margin} fillOpacity={1} fill="url(#usMarginGrad)" />
                                                 </AreaChart>
                                             </ResponsiveContainer>
                                         </div>
@@ -691,10 +716,11 @@ const UsStockPage = () => {
                                 {renderBarYoyChart({
                                     title: t('usAnalysis.epsYoy', { mode: modeLabel }),
                                     tooltipText: t('usTooltips.epsExplain'),
-                                    dataKey: 'eps', yoyKey: 'eps_change', barColor: '#f59e0b',
+                                    dataKey: 'eps', yoyKey: 'eps_change', barColor: colors.gold,
                                     yoyDomain: epsYoyDomain, legendLabel: t('usAnalysis.epsLegend'),
-                                    barName: 'EPS', yoyDotColors: ['#10b981', '#ef4444']
+                                    barName: 'EPS', yoyDotColors: [colors.positive, colors.negative]
                                 })}
+
 
                                 {/* Browse Other Stocks - Mobile */}
                                 <div className="browse-stocks-mobile" onClick={() => setIsMobileMenuOpen(true)}>
@@ -718,24 +744,24 @@ const UsStockPage = () => {
 
                         {/* Footer */}
                         <footer style={{
-                            marginTop: '60px', padding: '30px 20px', borderTop: '1px solid #334155',
-                            textAlign: 'center', backgroundColor: '#0f172a', color: '#64748b', fontSize: '0.8rem', lineHeight: '1.6'
+                            marginTop: '60px', padding: '30px 20px', borderTop: `1px solid ${colors.footerBorder}`,
+                            textAlign: 'center', backgroundColor: colors.footerBg, color: colors.textFaded, fontSize: '0.8rem', lineHeight: '1.6'
                         }}>
                             <div style={{ marginBottom: '20px' }}>
-                                <h3 style={{ color: '#e2e8f0', fontSize: '1.2rem', marginBottom: '8px' }}>KSTOCKVIEW</h3>
-                                <p style={{ color: '#94a3b8', fontSize: '0.85rem', margin: 0 }}>{t('usFooter.serviceDesc')}</p>
+                                <h3 style={{ color: colors.textPrimary, fontSize: '1.2rem', marginBottom: '8px' }}>KSTOCKVIEW</h3>
+                                <p style={{ color: colors.textMuted, fontSize: '0.85rem', margin: 0 }}>{t('usFooter.serviceDesc')}</p>
                             </div>
-                            <div style={{ marginBottom: '25px', padding: '15px', backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}>
-                                <p style={{ margin: '0 0 8px 0', fontWeight: '600', color: '#cbd5e1' }}>
+                            <div style={{ marginBottom: '25px', padding: '15px', backgroundColor: colors.bgCard, border: `1px solid ${colors.footerBorder}`, borderRadius: '8px' }}>
+                                <p style={{ margin: '0 0 8px 0', fontWeight: '600', color: colors.textSecondary }}>
                                     {t('usFooter.dataSourceTitle')}
                                 </p>
                                 <p style={{ margin: 0, fontSize: '0.75rem' }} dangerouslySetInnerHTML={{ __html: t('usFooter.dataSourceText') }} />
                             </div>
-                            <div style={{ marginBottom: '25px', padding: '20px', backgroundColor: '#0f172a', border: '1px solid #ef4444', borderRadius: '8px', fontSize: '0.75rem', lineHeight: '1.7' }}>
-                                <h4 style={{ color: '#ef4444', marginBottom: '12px', fontSize: '0.9rem', fontWeight: '600' }}>
+                            <div style={{ marginBottom: '25px', padding: '20px', backgroundColor: colors.disclaimerBg, border: `1px solid ${colors.disclaimerBorder}`, borderRadius: '8px', fontSize: '0.75rem', lineHeight: '1.7' }}>
+                                <h4 style={{ color: colors.negative, marginBottom: '12px', fontSize: '0.9rem', fontWeight: '600' }}>
                                     {t('usFooter.disclaimerTitle')}
                                 </h4>
-                                <div style={{ textAlign: 'left', maxWidth: '800px', margin: '0 auto', color: '#94a3b8' }}>
+                                <div style={{ textAlign: 'left', maxWidth: '800px', margin: '0 auto', color: colors.textMuted }}>
                                     <p style={{ margin: '0 0 10px 0' }}>
                                         <strong>{t('usFooter.disclaimer1Title')}</strong> <span dangerouslySetInnerHTML={{ __html: t('usFooter.disclaimer1') }} />
                                     </p>
@@ -748,22 +774,22 @@ const UsStockPage = () => {
                                 </div>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap', marginBottom: '20px', fontSize: '0.85rem' }}>
-                                <a href="/privacy" style={{ color: '#94a3b8', textDecoration: 'underline', transition: 'color 0.2s' }}
-                                    onMouseEnter={(e) => e.target.style.color = '#e2e8f0'} onMouseLeave={(e) => e.target.style.color = '#94a3b8'}>
+                                <a href="/privacy" style={{ color: colors.textMuted, textDecoration: 'underline', transition: 'color 0.2s' }}
+                                    onMouseEnter={(e) => e.target.style.color = colors.textPrimary} onMouseLeave={(e) => e.target.style.color = colors.textMuted}>
                                     {t('footer.privacyPolicy')}
                                 </a>
-                                <span style={{ color: '#475569' }}>|</span>
-                                <a href="/terms" style={{ color: '#94a3b8', textDecoration: 'underline', transition: 'color 0.2s' }}
-                                    onMouseEnter={(e) => e.target.style.color = '#e2e8f0'} onMouseLeave={(e) => e.target.style.color = '#94a3b8'}>
+                                <span style={{ color: colors.textVeryFaded }}>|</span>
+                                <a href="/terms" style={{ color: colors.textMuted, textDecoration: 'underline', transition: 'color 0.2s' }}
+                                    onMouseEnter={(e) => e.target.style.color = colors.textPrimary} onMouseLeave={(e) => e.target.style.color = colors.textMuted}>
                                     {t('footer.terms')}
                                 </a>
-                                <span style={{ color: '#475569' }}>|</span>
-                                <a href="/contact" style={{ color: '#94a3b8', textDecoration: 'underline', transition: 'color 0.2s' }}
-                                    onMouseEnter={(e) => e.target.style.color = '#e2e8f0'} onMouseLeave={(e) => e.target.style.color = '#94a3b8'}>
+                                <span style={{ color: colors.textVeryFaded }}>|</span>
+                                <a href="/contact" style={{ color: colors.textMuted, textDecoration: 'underline', transition: 'color 0.2s' }}
+                                    onMouseEnter={(e) => e.target.style.color = colors.textPrimary} onMouseLeave={(e) => e.target.style.color = colors.textMuted}>
                                     {t('footer.contact')}
                                 </a>
                             </div>
-                            <div style={{ color: '#64748b', fontSize: '0.7rem', marginTop: '20px', opacity: 0.8 }}>
+                            <div style={{ color: colors.textFaded, fontSize: '0.7rem', marginTop: '20px', opacity: 0.8 }}>
                                 <p style={{ margin: '5px 0' }}>© 2026 KSTOCKVIEW. All rights reserved.</p>
                             </div>
                         </footer>
