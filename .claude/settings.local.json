@@ -39,7 +39,9 @@
       "Bash(do if grep -q \"\"\"005930\"\"\" \"$file\")",
       "Bash(then echo \"Found in: $file\" grep \"\"\"005930\"\"\" \"$file\")",
       "Bash(break)",
-      "Bash(fi)"
+      "Bash(fi)",
+      "Bash(xargs -d '\\\\n' git add)",
+      "Bash(npx vite:*)"
     ]
   }
 }

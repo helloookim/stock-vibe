@@ -78,6 +78,7 @@ const darkColors = {
     // Misc
     codeBg: '#1c1c22',
     boxShadow: 'rgba(255, 255, 255, 0.04)',
+    isLight: false,
 };
 
 const lightColors = {
@@ -145,6 +146,7 @@ const lightColors = {
     // Misc
     codeBg: '#F0EDE8',
     boxShadow: 'rgba(0, 0, 0, 0.06)',
+    isLight: true,
 };
 
 export default function useThemeColors() {

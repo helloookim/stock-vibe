@@ -7,7 +7,7 @@ import {
     ComposedChart, Line, ReferenceLine, AreaChart, Area
 } from 'recharts';
 import { Search, ArrowUpDown, ChevronLeft, ChevronRight, Menu, X, Info } from 'lucide-react';
-import { loadAllFinancialData, loadAllAnnualFinancialData, loadAllEpsData } from './dataLoader';
+import { loadAllFinancialData, loadAllAnnualFinancialData } from './dataLoader';
 import { loadUsCompanyIndex } from './usDataLoader';
 import NotFound from './pages/NotFound';
 import ShareButtons from './components/ShareButtons';
@@ -142,7 +142,6 @@ const App = () => {
 
     const [financialRawData, setFinancialRawData] = useState({});
     const [financialAnnualData, setFinancialAnnualData] = useState({});
-    const [epsData, setEpsData] = useState({});
     const [marketCapData, setMarketCapData] = useState({});
     const [dataLoading, setDataLoading] = useState(true);
     const [selectedCode, setSelectedCode] = useState('');
@@ -220,13 +219,7 @@ const App = () => {
         loadData();
     }, []);
 
-    // Phase 2: Load EPS data in background (visible on page but below fold)
-    useEffect(() => {
-        if (dataLoading) return;
-        loadAllEpsData().then(eps => setEpsData(eps || {})).catch(() => {});
-    }, [dataLoading]);
-
-    // Phase 3: Load annual data only when user switches to annual view
+    // Phase 2: Load annual data only when user switches to annual view
     useEffect(() => {
         if (viewMode !== 'annual' || Object.keys(financialAnnualData).length > 0) return;
         loadAllAnnualFinancialData().then(annual => setFinancialAnnualData(annual || {})).catch(() => {});
@@ -442,7 +435,7 @@ const App = () => {
 
     // Update yearRange when company or viewMode changes to fit company's data range
     useEffect(() => {
-        setYearRange([companyDataRange.min, companyDataRange.max]);
+        setYearRange([Math.max(companyDataRange.min, 2020), companyDataRange.max]);
         setIsDefaultRange(true); // Reset to default when company changes
     }, [companyDataRange, viewMode]);
 
@@ -554,36 +547,37 @@ const App = () => {
         return calculateYoyDomain(changes);
     }, [chartData]);
 
-    // EPS chart data
+    // EPS chart data (EPS is now integrated into quarterly financial data)
     const epsChartData = useMemo(() => {
-        const currentEpsData = epsData[selectedCode];
-        if (!currentEpsData) return [];
+        const company = financialRawData[selectedCode];
+        if (!company?.history?.length) return [];
+
+        // Filter to entries that have EPS data
+        const epsEntries = company.history.filter(e => e.eps != null);
+        if (epsEntries.length === 0) return [];
 
         // First, calculate YoY change using FULL history
-        const fullEpsHistory = currentEpsData.history.map((entry) => {
+        const fullEpsHistory = epsEntries.map((entry) => {
             const eps = entry.eps || 0;
 
-            // Calculate YoY change from FULL history
             let eps_change = null;
-            const prevYearEntry = currentEpsData.history.find(e => e.year === entry.year - 1 && e.quarter === entry.quarter);
+            const prevYearEntry = epsEntries.find(e => e.year === entry.year - 1 && e.quarter === entry.quarter);
             if (prevYearEntry && prevYearEntry.eps) {
                 eps_change = parseFloat(((eps - prevYearEntry.eps) / Math.abs(prevYearEntry.eps) * 100).toFixed(1));
             }
 
             return {
                 displayLabel: `${entry.year} ${entry.quarter}`,
-                eps: eps,
-                eps_change: eps_change,
+                eps,
+                eps_change,
                 year: entry.year,
                 quarter: entry.quarter
             };
         });
 
         // Then filter by year range AFTER calculating changes
-        const filteredEpsHistory = fullEpsHistory.filter(entry => entry.year >= yearRange[0] && entry.year <= yearRange[1]);
-
-        return filteredEpsHistory;
-    }, [epsData, selectedCode, yearRange]);
+        return fullEpsHistory.filter(entry => entry.year >= yearRange[0] && entry.year <= yearRange[1]);
+    }, [financialRawData, selectedCode, yearRange]);
 
     // Calculate EPS YoY change domain
     const epsYoyDomain = useMemo(() => {
@@ -681,7 +675,7 @@ const App = () => {
                     <div className="sidebar-header">
                         <div className="sidebar-header-top">
                             <Link to="/" className="app-title" style={{ textDecoration: 'none', color: 'inherit' }}>KSTOCKVIEW</Link>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <div className="sidebar-toggles">
                                 <ThemeToggle />
                                 <LanguageToggle />
                             </div>
@@ -946,8 +940,8 @@ const App = () => {
                                     <BarChart data={chartData} margin={chartMargins}>
                                         <defs>
                                             <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="0%" stopColor={colors.revenue} stopOpacity={0.8} />
-                                                <stop offset="100%" stopColor={colors.revenue} stopOpacity={0.3} />
+                                                <stop offset="0%" stopColor={colors.revenue} stopOpacity={colors.isLight ? 1 : 0.8} />
+                                                <stop offset="100%" stopColor={colors.revenue} stopOpacity={colors.isLight ? 1 : 0.3} />
                                             </linearGradient>
                                         </defs>
                                         <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
@@ -1031,8 +1025,8 @@ const App = () => {
                                     <BarChart data={chartData} margin={chartMargins}>
                                         <defs>
                                             <linearGradient id="barGradGreen" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="0%" stopColor={colors.opIncome} stopOpacity={0.8} />
-                                                <stop offset="100%" stopColor={colors.opIncome} stopOpacity={0.3} />
+                                                <stop offset="0%" stopColor={colors.opIncome} stopOpacity={colors.isLight ? 1 : 0.8} />
+                                                <stop offset="100%" stopColor={colors.opIncome} stopOpacity={colors.isLight ? 1 : 0.3} />
                                             </linearGradient>
                                         </defs>
                                         <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
@@ -1154,8 +1148,8 @@ const App = () => {
                                         <BarChart data={epsChartData} margin={chartMargins}>
                                             <defs>
                                                 <linearGradient id="barGradOrange" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="0%" stopColor={colors.gold} stopOpacity={0.8} />
-                                                    <stop offset="100%" stopColor={colors.gold} stopOpacity={0.3} />
+                                                    <stop offset="0%" stopColor={colors.gold} stopOpacity={colors.isLight ? 1 : 0.8} />
+                                                    <stop offset="100%" stopColor={colors.gold} stopOpacity={colors.isLight ? 1 : 0.3} />
                                                 </linearGradient>
                                             </defs>
                                             <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />

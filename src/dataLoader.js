@@ -1,61 +1,46 @@
 /**
- * Data Loader for chunked financial data
- * Handles lazy loading of company data from split JSON files
+ * Data Loader for Korean stock financial data (restructured format)
+ *
+ * Data files:
+ *   - kr_quarterly_00.json, kr_quarterly_01.json (pre-merged, EPS integrated)
+ *   - kr_quarterly_index.json (chunk index)
+ *   - kr_annual.json (pre-merged annual data)
  */
 
 class DataLoader {
-    constructor(dataType = 'financial_data') {
-        this.dataType = dataType;
+    constructor(indexFile) {
+        this.indexFile = indexFile;
         this.index = null;
         this.loadedChunks = new Map();
         this.allData = null;
     }
 
-    /**
-     * Initialize by loading the index file
-     */
     async init() {
         try {
-            const response = await fetch(`/data/${this.dataType}_index.json`);
-            if (!response.ok) {
-                throw new Error(`Failed to load index: ${response.status}`);
-            }
+            const response = await fetch(`/data/${this.indexFile}`);
+            if (!response.ok) throw new Error(`Failed to load index: ${response.status}`);
             this.index = await response.json();
             return true;
         } catch (error) {
-            console.error(`Error loading ${this.dataType} index:`, error);
+            console.error(`Error loading index ${this.indexFile}:`, error);
             return false;
         }
     }
 
-    /**
-     * Find which chunk contains a specific stock code
-     */
     findChunkForCode(code) {
         if (!this.index) return null;
-
         for (const chunk of this.index.chunks) {
-            if (code >= chunk.start && code <= chunk.end) {
-                return chunk;
-            }
+            if (code >= chunk.start && code <= chunk.end) return chunk;
         }
         return null;
     }
 
-    /**
-     * Load a specific chunk by index
-     */
     async loadChunk(chunkIndex) {
-        if (this.loadedChunks.has(chunkIndex)) {
-            return this.loadedChunks.get(chunkIndex);
-        }
-
+        if (this.loadedChunks.has(chunkIndex)) return this.loadedChunks.get(chunkIndex);
         const chunk = this.index.chunks[chunkIndex];
         try {
             const response = await fetch(`/data/${chunk.file}`);
-            if (!response.ok) {
-                throw new Error(`Failed to load chunk: ${response.status}`);
-            }
+            if (!response.ok) throw new Error(`Failed to load chunk: ${response.status}`);
             const data = await response.json();
             this.loadedChunks.set(chunkIndex, data);
             return data;
@@ -65,265 +50,56 @@ class DataLoader {
         }
     }
 
-    /**
-     * Get data for a specific company code
-     */
     async getCompany(code) {
-        if (!this.index) {
-            await this.init();
-        }
-
-        // If all data is already loaded, return directly
-        if (this.allData && this.allData[code]) {
-            return this.allData[code];
-        }
-
-        // Find and load the chunk containing this code
+        if (!this.index) await this.init();
+        if (this.allData && this.allData[code]) return this.allData[code];
         const chunkInfo = this.findChunkForCode(code);
-        if (!chunkInfo) {
-            return null;
-        }
-
+        if (!chunkInfo) return null;
         const chunkIndex = this.index.chunks.indexOf(chunkInfo);
         const chunkData = await this.loadChunk(chunkIndex);
-
         return chunkData ? chunkData[code] : null;
     }
 
-    /**
-     * Load all data at once (for complete list)
-     * This loads all chunks in parallel
-     */
     async loadAll() {
-        if (this.allData) {
-            return this.allData;
-        }
-
-        if (!this.index) {
-            await this.init();
-        }
-
-        console.log(`Loading all ${this.index.num_chunks} chunks for ${this.dataType}...`);
-
-        // Load all chunks in parallel
-        const chunkPromises = this.index.chunks.map((_, idx) => this.loadChunk(idx));
-        const chunks = await Promise.all(chunkPromises);
-
-        // Merge all chunks
+        if (this.allData) return this.allData;
+        if (!this.index) await this.init();
+        const chunks = await Promise.all(
+            this.index.chunks.map((_, idx) => this.loadChunk(idx))
+        );
         this.allData = {};
-        chunks.forEach(chunk => {
-            if (chunk) {
-                Object.assign(this.allData, chunk);
-            }
-        });
-
-        console.log(`Loaded ${Object.keys(this.allData).length} companies for ${this.dataType}`);
+        chunks.forEach(chunk => { if (chunk) Object.assign(this.allData, chunk); });
         return this.allData;
     }
-
-    /**
-     * Get all company codes (lightweight, from index only)
-     */
-    getAllCodes() {
-        if (!this.index) return [];
-
-        const codes = [];
-        for (const chunk of this.index.chunks) {
-            // Generate codes in range (this is approximate)
-            // For exact codes, you'd need to load the chunks
-            codes.push(chunk.start, chunk.end);
-        }
-        return codes;
-    }
-
-    /**
-     * Preload specific chunks based on code ranges
-     */
-    async preloadRange(startCode, endCode) {
-        if (!this.index) {
-            await this.init();
-        }
-
-        const chunksToLoad = [];
-        this.index.chunks.forEach((chunk, idx) => {
-            if (chunk.start <= endCode && chunk.end >= startCode) {
-                chunksToLoad.push(idx);
-            }
-        });
-
-        const promises = chunksToLoad.map(idx => this.loadChunk(idx));
-        await Promise.all(promises);
-    }
 }
 
-// Create singleton instances
-export const financialDataLoader = new DataLoader('financial_data');
-export const financialDataSeparateLoader = new DataLoader('financial_data_separate');
-export const epsDataLoader = new DataLoader('eps_data');
+// Singleton loader for quarterly data (includes EPS)
+const quarterlyDataLoader = new DataLoader('kr_quarterly_index.json');
 
-// Helper function to load and merge financial data (consolidated + separate + income statement)
+// Backward-compatible alias (used by Home.jsx via financialDataLoader.getCompany())
+export const financialDataLoader = quarterlyDataLoader;
+
+// Cache for annual data
+let annualDataCache = null;
+
+/**
+ * Load all quarterly financial data (pre-merged, includes EPS)
+ */
 export async function loadAllFinancialData() {
-    const [consolidated, separate, incomeStatement] = await Promise.all([
-        financialDataLoader.loadAll(),
-        financialDataSeparateLoader.loadAll(),
-        fetch('/income_statement_revenue.json').then(r => r.json()).catch(() => ({}))
-    ]);
-
-    // Start with consolidated + separate
-    const merged = { ...consolidated, ...separate };
-
-    // Merge income statement data (for companies missing from 포괄손익계산서)
-    // These are companies like 한화오션 that have revenue in 손익계산서 but not in 포괄손익계산서
-    Object.entries(incomeStatement).forEach(([code, data]) => {
-        if (!merged[code]) {
-            // Company not in consolidated/separate - add entirely
-            merged[code] = data;
-        } else {
-            // Company exists but might be missing revenue data
-            // Update name and sector to latest (from income statement which uses 2025 Q3 data)
-            merged[code].name = data.name;
-            merged[code].sector = data.sector;
-
-            // Merge history entries that have revenue
-            const existingHistory = merged[code].history || [];
-            const incomeHistory = data.history || [];
-
-            incomeHistory.forEach(incomeEntry => {
-                const existingEntry = existingHistory.find(
-                    e => e.year === incomeEntry.year && e.quarter === incomeEntry.quarter
-                );
-
-                if (existingEntry) {
-                    // Entry exists - fill in missing revenue if needed
-                    if (existingEntry.revenue === null || existingEntry.revenue === undefined) {
-                        existingEntry.revenue = incomeEntry.revenue;
-                    }
-                    if (existingEntry.op_profit === null || existingEntry.op_profit === undefined) {
-                        existingEntry.op_profit = incomeEntry.op_profit;
-                    }
-                } else {
-                    // Entry doesn't exist - add it
-                    existingHistory.push(incomeEntry);
-                }
-            });
-
-            // Sort history by year and quarter
-            merged[code].history = existingHistory.sort((a, b) => {
-                if (a.year !== b.year) return a.year - b.year;
-                const qOrder = { '1Q': 1, '2Q': 2, '3Q': 3, '4Q': 4 };
-                return (qOrder[a.quarter] || 0) - (qOrder[b.quarter] || 0);
-            });
-        }
-    });
-
-    return merged;
+    return quarterlyDataLoader.loadAll();
 }
 
-// Helper function to load and merge annual financial data
+/**
+ * Load all annual financial data
+ */
 export async function loadAllAnnualFinancialData() {
-    const [annual, incomeStatementAnnual] = await Promise.all([
-        fetch('/financial_data_annual.json').then(r => r.json()).catch(() => ({})),
-        fetch('/income_statement_annual.json').then(r => r.json()).catch(() => ({}))
-    ]);
-
-    // Merge income statement annual data
-    Object.entries(incomeStatementAnnual).forEach(([code, data]) => {
-        if (!annual[code]) {
-            // Company not in annual - add entirely
-            annual[code] = data;
-        } else {
-            // Company exists but might be missing revenue data
-            // Update name and sector to latest (from income statement which uses 2025 Q3 data)
-            annual[code].name = data.name;
-            annual[code].sector = data.sector;
-
-            const existingHistory = annual[code].history || [];
-            const incomeHistory = data.history || [];
-
-            incomeHistory.forEach(incomeEntry => {
-                const existingEntry = existingHistory.find(e => e.year === incomeEntry.year);
-
-                if (existingEntry) {
-                    // Entry exists - fill in missing revenue if needed
-                    if (existingEntry.revenue === null || existingEntry.revenue === undefined) {
-                        existingEntry.revenue = incomeEntry.revenue;
-                    }
-                    if (existingEntry.op_profit === null || existingEntry.op_profit === undefined) {
-                        existingEntry.op_profit = incomeEntry.op_profit;
-                    }
-                    if (existingEntry.net_income === null || existingEntry.net_income === undefined) {
-                        existingEntry.net_income = incomeEntry.net_income;
-                    }
-                } else {
-                    // Entry doesn't exist - add it
-                    existingHistory.push(incomeEntry);
-                }
-            });
-
-            // Sort history by year
-            annual[code].history = existingHistory.sort((a, b) => a.year - b.year);
-        }
-    });
-
-    return annual;
-}
-
-// Helper function to load and merge EPS data (eps_data + income_statement_eps)
-export async function loadAllEpsData() {
-    const [eps, incomeStatementEps] = await Promise.all([
-        epsDataLoader.loadAll(),
-        fetch('/income_statement_eps.json').then(r => r.json()).catch(() => ({}))
-    ]);
-
-    // Merge income statement EPS data
-    Object.entries(incomeStatementEps).forEach(([code, data]) => {
-        if (!eps[code]) {
-            // Company not in eps - add entirely
-            eps[code] = data;
-        } else {
-            // Company exists but might be missing EPS data
-            // Update name and sector to latest (from income statement which uses 2025 Q3 data)
-            eps[code].name = data.name;
-            eps[code].sector = data.sector;
-
-            const existingHistory = eps[code].history || [];
-            const incomeHistory = data.history || [];
-
-            incomeHistory.forEach(incomeEntry => {
-                const existingEntry = existingHistory.find(
-                    e => e.year === incomeEntry.year && e.quarter === incomeEntry.quarter
-                );
-
-                if (existingEntry) {
-                    // Entry exists - fill in missing EPS if needed
-                    if (existingEntry.eps === null || existingEntry.eps === undefined) {
-                        existingEntry.eps = incomeEntry.eps;
-                    }
-                } else {
-                    // Entry doesn't exist - add it
-                    existingHistory.push(incomeEntry);
-                }
-            });
-
-            // Sort history by year and quarter
-            eps[code].history = existingHistory.sort((a, b) => {
-                if (a.year !== b.year) return a.year - b.year;
-                const qOrder = { '1Q': 1, '2Q': 2, '3Q': 3, '4Q': 4 };
-                return (qOrder[a.quarter] || 0) - (qOrder[b.quarter] || 0);
-            });
-        }
-    });
-
-    return eps;
-}
-
-// Helper function to initialize all loaders
-export async function initializeDataLoaders() {
-    const results = await Promise.all([
-        financialDataLoader.init(),
-        financialDataSeparateLoader.init(),
-        epsDataLoader.init()
-    ]);
-
-    return results.every(r => r === true);
+    if (annualDataCache) return annualDataCache;
+    try {
+        const response = await fetch('/data/kr_annual.json');
+        if (!response.ok) throw new Error(`Failed to load annual data: ${response.status}`);
+        annualDataCache = await response.json();
+        return annualDataCache;
+    } catch (error) {
+        console.error('Error loading annual data:', error);
+        return {};
+    }
 }

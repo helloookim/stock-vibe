@@ -63,11 +63,11 @@ src/
     └── en.json               # English translations
 
 public/
-├── data/                     # Static JSON data files (~50MB total)
-│   ├── financial_data_00.json ... financial_data_04.json   # Korean stock chunks
-│   ├── financial_data_separate_00.json                     # Separate financial data
-│   ├── eps_data_00.json ... eps_data_05.json               # EPS data chunks
-│   ├── market_cap_data.json                                # Market cap data
+├── data/                     # Static JSON data files (~10MB KR + US)
+│   ├── kr_quarterly_00.json, kr_quarterly_01.json          # KR quarterly + EPS (pre-merged)
+│   ├── kr_quarterly_index.json                             # KR chunk index
+│   ├── kr_annual.json                                      # KR annual data (loaded on-demand)
+│   ├── market_cap_data.json                                # Market cap data (sidebar)
 │   ├── us_stocks/            # Individual JSON per US ticker
 │   └── us_company_index.json # US company index
 ├── og-image.png              # Open Graph social image
@@ -100,11 +100,20 @@ All page components are lazy-loaded via `React.lazy()` with a shared `<Suspense>
 
 ### Data Loading Strategy
 
-Korean stock data is split into chunks to stay under Cloudflare Pages' 25MB file size limit:
+**Korean stocks** — Pre-merged, chunked data with no runtime merge logic:
 
 - `DataLoader` class in `dataLoader.js` manages chunked loading with caching
-- Three loader instances exported: `financialDataLoader`, `financialDataSeparateLoader`, `epsDataLoader`
-- US stock data loaded on-demand per ticker via `usDataLoader.js`. Data includes `fiscal_year`/`fiscal_quarter` labels and pre-derived Q4 entries, so the loader simply parses labels and filters `type === "single"` quarters.
+- Single loader instance: `quarterlyDataLoader` (aliased as `financialDataLoader` for backward compat)
+- Quarterly data (includes EPS): 2 chunks (`kr_quarterly_00.json`, `kr_quarterly_01.json`) — ~8 MB total, 2,743 companies
+- Annual data: single file (`kr_annual.json`) — 1.7 MB, loaded on-demand when user toggles annual view
+- Index file: `kr_quarterly_index.json` maps stock code ranges to chunks
+- Migration script: `scripts/migrate_kr_data.js` regenerates these from raw source data
+- **Missing companies**: 359 financial companies (금융지주/보험/증권) and preferred stocks (우선주) are not in the data — they need a dedicated parser due to different DART reporting format
+
+**US stocks** — On-demand per ticker via `usDataLoader.js`:
+
+- Data includes `fiscal_year`/`fiscal_quarter` labels and pre-derived Q4 entries
+- Loader parses labels and filters `type === "single"` quarters
 - All data fetching uses the native `fetch()` API (no axios)
 
 ## Code Conventions
@@ -170,18 +179,37 @@ All IDs/keys are hardcoded (no environment variables used).
 ## Key Data Structures
 
 ### Korean Stock Data
+
+Quarterly chunks (`public/data/kr_quarterly_XX.json`) — pre-merged, EPS integrated, no IFRS metadata:
+
 ```javascript
 {
   "005930": {
-    "code": "005930",
     "name": "삼성전자",
-    "sector": "전자",
+    "sector": "통신 및 방송장비 제조업",
     "history": [
-      { "year": 2024, "quarter": "Q1", "revenue": 12345, "op_profit": 5678, "eps": 123 }
+      // Each entry: year, quarter, revenue (KRW), op_profit, net_income, eps
+      { "year": 2024, "quarter": "1Q", "revenue": 71922637000000, "op_profit": 6609803000000, "net_income": 6174526000000, "eps": 444 }
     ]
   }
 }
 ```
+
+Annual data (`public/data/kr_annual.json`) — same structure but no `quarter` field:
+
+```javascript
+{
+  "005930": {
+    "name": "삼성전자",
+    "sector": "통신 및 방송장비 제조업",
+    "history": [
+      { "year": 2024, "revenue": 300922432000000, "op_profit": 32726417000000, "net_income": null }
+    ]
+  }
+}
+```
+
+To update KR data, edit the raw source files and re-run `node scripts/migrate_kr_data.js`.
 
 ### US Stock Data
 
@@ -227,6 +255,6 @@ Per-company JSON files from SEC EDGAR (2015q1–2025q4). See `us_fixed_company_j
 3. **Inline styles dominate** — most visual styling is in JSX `style={{}}` objects, not CSS classes.
 4. **Static data** — all financial data is pre-generated JSON. There is no backend API or database.
 5. **Bilingual content** — any user-facing text must be added to both `ko.json` and `en.json` locale files.
-6. **Chunked data loading** — Korean stock data is split across multiple JSON files. Changes to data structure require updating `dataLoader.js` and potentially `generate-sitemap.js`.
+6. **Chunked data loading** — Korean stock data is in 2 pre-merged quarterly chunks + 1 annual file (total ~10 MB). To regenerate after raw data changes, run `node scripts/migrate_kr_data.js`. The chunks, index, and `generate-sitemap.js` all use the `kr_quarterly_*` / `kr_annual.json` naming convention.
 7. **No tests exist** — there is no test infrastructure to run or maintain.
 8. **Hardcoded config** — analytics IDs, API keys, and the domain are hardcoded. No `.env` files are used.

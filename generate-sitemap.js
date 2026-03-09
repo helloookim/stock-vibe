@@ -5,8 +5,8 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Read financial data index to get all stock codes
-const indexPath = path.join(__dirname, 'public', 'data', 'financial_data_index.json');
+// Read quarterly data index to get all stock codes
+const indexPath = path.join(__dirname, 'public', 'data', 'kr_quarterly_index.json');
 const index = JSON.parse(fs.readFileSync(indexPath, 'utf-8'));
 
 const baseUrl = 'https://kstockview.com';
@@ -15,22 +15,10 @@ const today = new Date().toISOString().split('T')[0];
 // Collect all stock codes from all chunks
 const stockCodes = new Set();
 
-// Load each chunk and collect stock codes
 for (let i = 0; i < index.chunks.length; i++) {
-  const chunkPath = path.join(__dirname, 'public', 'data', `financial_data_0${i}.json`);
+  const chunkPath = path.join(__dirname, 'public', 'data', index.chunks[i].file);
   const chunkData = JSON.parse(fs.readFileSync(chunkPath, 'utf-8'));
   Object.keys(chunkData).forEach(code => stockCodes.add(code));
-}
-
-// Also check separate financial data
-const separateIndexPath = path.join(__dirname, 'public', 'data', 'financial_data_separate_index.json');
-if (fs.existsSync(separateIndexPath)) {
-  const separateIndex = JSON.parse(fs.readFileSync(separateIndexPath, 'utf-8'));
-  for (let i = 0; i < separateIndex.chunks.length; i++) {
-    const chunkPath = path.join(__dirname, 'public', 'data', `financial_data_separate_0${i}.json`);
-    const chunkData = JSON.parse(fs.readFileSync(chunkPath, 'utf-8'));
-    Object.keys(chunkData).forEach(code => stockCodes.add(code));
-  }
 }
 
 console.log(`Generating sitemap for ${stockCodes.size} stocks...`);

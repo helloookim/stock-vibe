@@ -250,7 +250,7 @@ const Home = () => {
                     <div className="sidebar-header">
                         <div className="sidebar-header-top">
                             <Link to="/" className="app-title" style={{ textDecoration: 'none', color: 'inherit' }}>KSTOCKVIEW</Link>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <div className="sidebar-toggles">
                                 <ThemeToggle />
                                 <LanguageToggle />
                             </div>

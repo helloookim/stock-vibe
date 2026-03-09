@@ -10,6 +10,7 @@ const LanguageToggle = ({ style }) => {
 
     return (
         <button
+            className="lang-toggle"
             onClick={toggle}
             style={{
                 display: 'flex',

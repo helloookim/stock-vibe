@@ -129,32 +129,60 @@ html.page-scroll-enabled body {
   min-width: 60px;
 }
 
+/* Hide content sections in collapsed mode */
 .sidebar.collapsed .sort-dropdown-container,
 .sidebar.collapsed .search-box,
 .sidebar.collapsed .ticker-list {
   opacity: 0;
   pointer-events: none;
+  height: 0;
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
+  border: none;
+  flex: 0;
 }
 
-/* Keep logo visible when collapsed */
-.sidebar.collapsed .sidebar-header {
-  padding: 20px 10px;
-  align-items: center;
-}
-
-.sidebar.collapsed .sidebar-header-top {
-  justify-content: center;
-}
-
-.sidebar.collapsed .sidebar-header-top .lang-toggle {
+.sidebar.collapsed .market-toggle {
   display: none;
 }
 
+/* Sidebar header fills remaining space when collapsed */
+.sidebar.collapsed .sidebar-header {
+  flex: 1;
+  padding: 16px 0;
+  border-bottom: none;
+  align-items: center;
+  overflow: hidden;
+}
+
+.sidebar.collapsed .sidebar-header-top {
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+/* KSTOCKVIEW at top, rotated 90 degrees */
 .sidebar.collapsed .app-title {
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   writing-mode: vertical-rl;
   text-orientation: mixed;
-  letter-spacing: 2px;
+  letter-spacing: 3px;
+  white-space: nowrap;
+  order: -1;
+}
+
+/* Toggles below logo, stacked vertically */
+.sidebar.collapsed .sidebar-toggles {
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* Rotate KO/EN toggle 90 degrees to match vertical layout */
+.sidebar.collapsed .sidebar-toggles .lang-toggle {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
 }
 
 /* Sidebar Toggle Button */
@@ -199,6 +227,12 @@ html.page-scroll-enabled body {
   align-items: center;
 }
 
+.sidebar-toggles {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 /* Market Toggle (KR/US) */
 .market-toggle {
   display: flex;
@@ -230,9 +264,6 @@ html.page-scroll-enabled body {
 .market-toggle-btn:hover:not(.active) {
   color: #ccc;
   background: rgba(255, 255, 255, 0.06);
-}
-.sidebar.collapsed .market-toggle {
-  display: none;
 }
 
 .app-title {
@@ -1281,11 +1312,65 @@ input[type="range"]::-moz-range-thumb {
     min-width: 280px;
   }
 
-  .sidebar.collapsed .sidebar-header,
+  /* Reset all collapsed desktop styles on mobile */
+  .sidebar.collapsed .sidebar-header {
+    opacity: 1;
+    pointer-events: all;
+    flex: unset;
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    overflow: visible;
+  }
+
+  .sidebar.collapsed .sidebar-header-top {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .sidebar.collapsed .sidebar-toggles {
+    flex-direction: row;
+    order: unset;
+    margin-top: 0;
+  }
+
+  .sidebar.collapsed .sidebar-toggles .lang-toggle {
+    writing-mode: horizontal-tb;
+    text-orientation: initial;
+  }
+
+  .sidebar.collapsed .app-title {
+    font-size: 1.5rem;
+    writing-mode: horizontal-tb;
+    text-orientation: initial;
+    letter-spacing: normal;
+    order: unset;
+    white-space: normal;
+    margin-top: 0;
+  }
+
+  .sidebar.collapsed .market-toggle {
+    display: flex;
+  }
+
+  .sidebar.collapsed .sort-dropdown-container,
   .sidebar.collapsed .search-box,
   .sidebar.collapsed .ticker-list {
     opacity: 1;
     pointer-events: all;
+    height: auto;
+    overflow: visible;
+    flex: unset;
+  }
+
+  .sidebar.collapsed .search-box {
+    padding: 15px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .sidebar.collapsed .ticker-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
   }
 
   /* Main Content - Full width on mobile */

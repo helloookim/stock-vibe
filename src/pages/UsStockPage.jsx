@@ -276,7 +276,7 @@ const UsStockPage = () => {
 
     // Update year range when company or viewMode changes
     useEffect(() => {
-        setYearRange([companyDataRange.min, companyDataRange.max]);
+        setYearRange([Math.max(companyDataRange.min, 2020), companyDataRange.max]);
         setIsDefaultRange(true);
     }, [companyDataRange, viewMode]);
 
@@ -366,8 +366,8 @@ const UsStockPage = () => {
                     <BarChart data={chartData} margin={chartMargins}>
                         <defs>
                             <linearGradient id={`grad-${dataKey}`} x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor={barColor} stopOpacity={0.8} />
-                                <stop offset="100%" stopColor={barColor} stopOpacity={0.3} />
+                                <stop offset="0%" stopColor={barColor} stopOpacity={colors.isLight ? 1 : 0.8} />
+                                <stop offset="100%" stopColor={barColor} stopOpacity={colors.isLight ? 1 : 0.3} />
                             </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
@@ -441,7 +441,7 @@ const UsStockPage = () => {
                     <div className="sidebar-header">
                         <div className="sidebar-header-top">
                             <Link to="/" className="app-title" style={{ textDecoration: 'none', color: 'inherit' }}>KSTOCKVIEW</Link>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <div className="sidebar-toggles">
                                 <ThemeToggle />
                                 <LanguageToggle />
                             </div>
