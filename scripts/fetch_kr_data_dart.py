@@ -445,6 +445,7 @@ def main():
     parser.add_argument('--eps-backfill', type=int, metavar='N', help='Backfill EPS for top N companies')
     parser.add_argument('--refresh-codes', action='store_true', help='Force refresh corp codes')
     parser.add_argument('--index-only', action='store_true', help='Only regenerate index')
+    parser.add_argument('--fix-q4', action='store_true', help='Detect and fix Q4 anomalies only (no full fetch)')
     args = parser.parse_args()
 
     print('=== DART OpenAPI Data Pipeline ===\n')
@@ -465,6 +466,17 @@ def main():
     if args.index_only:
         OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
         generate_index(corp_codes, market_info, OUTPUT_DIR)
+        return
+
+    # Fix Q4 anomalies only (skip full fetch)
+    if args.fix_q4:
+        print('Scanning for Q4 anomalies...')
+        anomalies = detect_q4_anomalies(OUTPUT_DIR)
+        print(f'Found {len(anomalies)} anomalous Q4 entries\n')
+        if anomalies:
+            fix_q4_with_cumulative(anomalies, OUTPUT_DIR)
+        nullify_negative_q4(OUTPUT_DIR)
+        print('\nDone!')
         return
 
     # Step 2: Fetch key accounts
@@ -521,7 +533,17 @@ def main():
 
     print(f'Saved: {saved} companies, Skipped: {skipped} (no data)')
 
-    # Step 4: Generate index
+    # Step 4: Detect and fix Q4 anomalies
+    print('\nScanning for Q4 anomalies...')
+    anomalies = detect_q4_anomalies(OUTPUT_DIR)
+    print(f'Found {len(anomalies)} anomalous Q4 entries')
+    if anomalies:
+        fix_q4_with_cumulative(anomalies, OUTPUT_DIR)
+
+    # Step 4b: Nullify any remaining negative Q4 revenue (unfixable scope issues)
+    nullify_negative_q4(OUTPUT_DIR)
+
+    # Step 5: Generate index
     print()
     generate_index(corp_codes, market_info, OUTPUT_DIR)
 
@@ -540,6 +562,210 @@ def merge_existing_eps(company_json, existing):
         key = f"{q['year']}_{q['quarter']}"
         if key in eps_map:
             q['eps'] = eps_map[key]
+
+
+# ─── Q4 Anomaly Detection & Fix ─────────────────────────────────────────────
+
+def detect_q4_anomalies(output_dir):
+    """
+    Scan all company JSONs for anomalous Q4 values.
+    Returns list of (stock_code, corp_code, year) tuples that need fixing.
+    """
+    anomalies = []
+    for json_file in output_dir.glob('*.json'):
+        with open(json_file, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+
+        stock_code = data.get('stock_code', '')
+        corp_code = data.get('corp_code', '')
+        quarterly = data.get('quarterly', [])
+
+        # Group by year
+        by_year = {}
+        for q in quarterly:
+            yr = q['year']
+            if yr not in by_year:
+                by_year[yr] = {}
+            by_year[yr][q['quarter']] = q
+
+        for year, quarters in by_year.items():
+            if not all(k in quarters for k in ('1Q', '2Q', '3Q', '4Q')):
+                continue
+
+            q1r = quarters['1Q'].get('revenue')
+            q2r = quarters['2Q'].get('revenue')
+            q3r = quarters['3Q'].get('revenue')
+            q4r = quarters['4Q'].get('revenue')
+
+            if any(v is None for v in (q1r, q2r, q3r, q4r)):
+                continue
+
+            avg123 = (q1r + q2r + q3r) / 3
+            if avg123 <= 0:
+                continue
+
+            is_anomalous = False
+            if q4r < 0:
+                is_anomalous = True
+            elif q4r < avg123 * 0.1:
+                is_anomalous = True
+            elif q4r > avg123 * 3 and avg123 > 1_000_000_000:
+                # Only flag >300% if the company has meaningful revenue (>10억)
+                # to avoid false positives on tiny companies with volatile revenue
+                is_anomalous = True
+
+            if is_anomalous:
+                anomalies.append((stock_code, corp_code, year))
+
+    return anomalies
+
+
+def fix_q4_with_cumulative(anomalies, output_dir):
+    """
+    Fix anomalous Q4 values using fnlttSinglAcnt's thstrm_add_amount
+    (9-month cumulative from Q3 report).
+
+    Q4_correct = Annual - 9m_cumulative (same consolidation scope)
+    """
+    if not anomalies:
+        print('No Q4 anomalies to fix.')
+        return 0
+
+    print(f'Fixing {len(anomalies)} Q4 anomalies using fnlttSinglAcnt...')
+    fixed = 0
+    failed = 0
+
+    for i, (stock_code, corp_code, year) in enumerate(anomalies):
+        if (i + 1) % 50 == 0:
+            print(f'  Progress: {i+1}/{len(anomalies)}...')
+
+        # Fetch Q3 report (11014) for this company/year to get 9-month cumulative
+        data = api_get('fnlttSinglAcnt.json', {
+            'corp_code': corp_code,
+            'bsns_year': str(year),
+            'reprt_code': '11014',  # Q3 report
+            'fs_div': 'CFS',
+        })
+        time.sleep(RATE_LIMIT_DELAY)
+
+        if not data or 'list' not in data:
+            # Try OFS if CFS not available
+            data = api_get('fnlttSinglAcnt.json', {
+                'corp_code': corp_code,
+                'bsns_year': str(year),
+                'reprt_code': '11014',
+                'fs_div': 'OFS',
+            })
+            time.sleep(RATE_LIMIT_DELAY)
+
+        if not data or 'list' not in data:
+            failed += 1
+            continue
+
+        # Extract thstrm_add_amount (9-month cumulative) for IS items
+        cum_9m = {}
+        for item in data['list']:
+            if item.get('fs_div') not in ('CFS', 'OFS'):
+                continue
+            if item.get('sj_div') != 'IS':
+                continue
+
+            account_nm = item.get('account_nm', '')
+            add_amount_str = item.get('thstrm_add_amount', '')
+            add_amount = parse_amount(add_amount_str)
+
+            if add_amount is None:
+                continue
+
+            # Map account names to our field names
+            if account_nm in REVENUE_NAMES:
+                cum_9m['revenue'] = add_amount
+            elif account_nm in OP_PROFIT_NAMES:
+                cum_9m['op_profit'] = add_amount
+            elif account_nm in NET_INCOME_NAMES:
+                cum_9m['net_income'] = add_amount
+
+        if not cum_9m:
+            failed += 1
+            continue
+
+        # Load company JSON
+        json_file = output_dir / f'{stock_code}.json'
+        if not json_file.exists():
+            failed += 1
+            continue
+
+        with open(json_file, 'r', encoding='utf-8') as f:
+            company = json.load(f)
+
+        # Find annual data for this year
+        annual_entry = next((a for a in company['annual'] if a['year'] == year), None)
+        if not annual_entry:
+            failed += 1
+            continue
+
+        # Find Q4 entry
+        q4_entry = next((q for q in company['quarterly']
+                        if q['year'] == year and q['quarter'] == '4Q'), None)
+        if not q4_entry:
+            failed += 1
+            continue
+
+        # Recalculate Q4 = Annual - 9m_cumulative
+        old_rev = q4_entry.get('revenue')
+        changed = False
+
+        if 'revenue' in cum_9m and annual_entry.get('revenue') is not None:
+            new_rev = annual_entry['revenue'] - cum_9m['revenue']
+            q4_entry['revenue'] = new_rev
+            changed = True
+
+        if 'op_profit' in cum_9m and annual_entry.get('op_profit') is not None:
+            q4_entry['op_profit'] = annual_entry['op_profit'] - cum_9m['op_profit']
+            changed = True
+
+        if 'net_income' in cum_9m and annual_entry.get('net_income') is not None:
+            q4_entry['net_income'] = annual_entry['net_income'] - cum_9m['net_income']
+            changed = True
+
+        if changed:
+            # Save updated JSON
+            with open(json_file, 'w', encoding='utf-8') as f:
+                json.dump(company, f, ensure_ascii=False)
+            fixed += 1
+
+    print(f'  Fixed: {fixed}, Failed: {failed}')
+    return fixed
+
+
+def nullify_negative_q4(output_dir):
+    """
+    Set Q4 revenue/op_profit/net_income to null when derived Q4 revenue is negative.
+    Negative Q4 revenue is almost always a data artifact, not real.
+    """
+    nullified = 0
+    for json_file in output_dir.glob('*.json'):
+        with open(json_file, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+
+        changed = False
+        for q in data.get('quarterly', []):
+            if q['quarter'] != '4Q':
+                continue
+            if q.get('revenue') is not None and q['revenue'] < 0:
+                q['revenue'] = None
+                q['op_profit'] = None
+                q['net_income'] = None
+                changed = True
+                nullified += 1
+
+        if changed:
+            with open(json_file, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False)
+
+    if nullified:
+        print(f'  Nullified {nullified} negative Q4 entries')
+    return nullified
 
 
 if __name__ == '__main__':

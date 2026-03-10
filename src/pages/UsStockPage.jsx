@@ -689,7 +689,7 @@ const UsStockPage = () => {
                                                     <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
                                                     <XAxis dataKey="displayLabel" stroke={colors.textMuted} {...xAxisProps} />
                                                     <YAxis stroke={colors.textMuted} fontSize={10} tickFormatter={(v) => `${Math.round(v)}%`}
-                                                        domain={['auto', 'auto']} allowDecimals={false} scale="linear" />
+                                                        domain={[dataMin => Math.min(dataMin, 0), 'auto']} allowDecimals={false} scale="linear" />
                                                     <Tooltip contentStyle={{ backgroundColor: colors.tooltipBg, border: `1px solid ${colors.tooltipBorder}`, borderRadius: '8px' }}
                                                         formatter={(v) => [`${v}%`, t('usAnalysis.opMarginTooltip')]} />
                                                     <ReferenceLine y={0} stroke={colors.chartRef} />

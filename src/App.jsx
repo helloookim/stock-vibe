@@ -377,14 +377,14 @@ const App = () => {
         const pathCode = pathname.startsWith('/stocks/') ? pathname.slice(8) : '';
 
         // If URL has an invalid code, don't set default (let 404 show)
-        if (pathCode && Object.keys(financialRawData).length > 0 && !financialRawData[pathCode]) {
+        if (pathCode && krCompanyIndex.length > 0 && !krCompanyIndex.some(c => c.stock_code === pathCode)) {
             return;
         }
 
         if (companyList.length > 0 && !selectedCode && !pathCode) {
             setSelectedCode(companyList[0].code);
         }
-    }, [companyList, selectedCode, location.pathname, isInvalidCode, financialRawData]);
+    }, [companyList, selectedCode, location.pathname, isInvalidCode, krCompanyIndex]);
 
     // Process loaded company data into chart-ready format
     const { quarterlyData: processedQuarterly, annualData: processedAnnual } = useMemo(
@@ -1054,7 +1054,7 @@ const App = () => {
                                             stroke={colors.textMuted}
                                             fontSize={10}
                                             tickFormatter={(val) => `${Math.round(val)}%`}
-                                            domain={['auto', 'auto']}
+                                            domain={[dataMin => Math.min(dataMin, 0), 'auto']}
                                             allowDecimals={false}
                                             scale="linear"
                                         />
