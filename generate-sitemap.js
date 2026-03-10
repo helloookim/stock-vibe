@@ -5,23 +5,17 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Read quarterly data index to get all stock codes
-const indexPath = path.join(__dirname, 'public', 'data', 'kr_quarterly_index.json');
-const index = JSON.parse(fs.readFileSync(indexPath, 'utf-8'));
+// Read KR company index to get all stock codes
+const indexPath = path.join(__dirname, 'public', 'data', 'kr_company_index.json');
+const krIndex = JSON.parse(fs.readFileSync(indexPath, 'utf-8'));
 
 const baseUrl = 'https://kstockview.com';
 const today = new Date().toISOString().split('T')[0];
 
-// Collect all stock codes from all chunks
-const stockCodes = new Set();
+const stockCodes = krIndex.map(c => c.stock_code);
+stockCodes.sort();
 
-for (let i = 0; i < index.chunks.length; i++) {
-  const chunkPath = path.join(__dirname, 'public', 'data', index.chunks[i].file);
-  const chunkData = JSON.parse(fs.readFileSync(chunkPath, 'utf-8'));
-  Object.keys(chunkData).forEach(code => stockCodes.add(code));
-}
-
-console.log(`Generating sitemap for ${stockCodes.size} stocks...`);
+console.log(`Generating sitemap for ${stockCodes.length} KR stocks...`);
 
 // Blog pages
 const blogPages = [
@@ -90,8 +84,7 @@ sitemap += `  <!-- Stock Pages -->
 `;
 
 // Add all stock pages (sorted for consistency)
-const sortedCodes = Array.from(stockCodes).sort();
-sortedCodes.forEach(code => {
+stockCodes.forEach(code => {
   sitemap += `  <url>
     <loc>${baseUrl}/stocks/${code}</loc>
     <lastmod>${today}</lastmod>
@@ -129,4 +122,4 @@ fs.writeFileSync(sitemapPath, sitemap);
 
 console.log(`✅ Sitemap generated successfully!`);
 console.log(`📍 Location: ${sitemapPath}`);
-console.log(`📊 Total URLs: ${sortedCodes.length + 5 + blogPages.length + usTickerCount} (1 homepage + 1 blogs + 3 static pages + ${blogPages.length} blog pages + ${sortedCodes.length} KR stocks + ${usTickerCount} US stocks)`);
+console.log(`📊 Total URLs: ${stockCodes.length + 5 + blogPages.length + usTickerCount} (1 homepage + 1 blogs + 3 static pages + ${blogPages.length} blog pages + ${stockCodes.length} KR stocks + ${usTickerCount} US stocks)`);

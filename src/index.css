@@ -1570,13 +1570,13 @@ input[type="range"]::-moz-range-thumb {
   .browse-stocks-title {
     font-size: 15px;
     font-weight: 700;
-    color: #f5f5f5;
+    color: var(--text-primary);
     letter-spacing: -0.01em;
   }
 
   .browse-stocks-desc {
     font-size: 12px;
-    color: #8888a0;
+    color: var(--text-muted);
     line-height: 1.3;
   }
 

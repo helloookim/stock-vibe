@@ -8,7 +8,7 @@ import {
 } from 'recharts';
 import { Search, ArrowUpDown, ChevronLeft, ChevronRight, Menu, X, Info } from 'lucide-react';
 import { loadUsCompanyIndex, loadUsCompanyData, formatUsdCurrency } from '../usDataLoader';
-import { loadAllFinancialData } from '../dataLoader';
+import { loadKrCompanyIndex } from '../krDataLoader';
 import NotFound from './NotFound';
 import LanguageToggle from '../components/LanguageToggle';
 import MarketToggle from '../components/MarketToggle';
@@ -90,7 +90,8 @@ const CustomTooltip = ({ active, payload, label, valueFormatter, yoyKey, colors 
 };
 
 const UsStockPage = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const isEn = i18n.language === 'en';
     const navigate = useNavigate();
     const location = useLocation();
     const { ticker: urlTicker } = useParams();
@@ -105,10 +106,9 @@ const UsStockPage = () => {
     const [sortBy, setSortBy] = useState('rank');
     const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
     const [sidebarMarket, setSidebarMarket] = useState('us');
-    const [krFinancialData, setKrFinancialData] = useState({});
-    const [krMarketCapData, setKrMarketCapData] = useState({});
+    const [krCompanyIndex, setKrCompanyIndex] = useState([]);
     const [krDataLoading, setKrDataLoading] = useState(false);
-    const [krSortBy, setKrSortBy] = useState('revenue');
+    const [krSortBy, setKrSortBy] = useState('market_cap');
     const [krSearchTerm, setKrSearchTerm] = useState('');
     const [yearRange, setYearRange] = useState([2015, 2025]);
     const [isDefaultRange, setIsDefaultRange] = useState(true);
@@ -211,20 +211,16 @@ const UsStockPage = () => {
         return list;
     }, [companyIndex, searchTerm, sortBy]);
 
-    // Load KR financial data when sidebar switches to KR
+    // Load KR company index when sidebar switches to KR
     useEffect(() => {
-        if (sidebarMarket !== 'kr' || Object.keys(krFinancialData).length > 0) return;
+        if (sidebarMarket !== 'kr' || krCompanyIndex.length > 0) return;
         async function loadKrData() {
             setKrDataLoading(true);
             try {
-                const [data, marketCap] = await Promise.all([
-                    loadAllFinancialData(),
-                    fetch('/market_cap_data.json').then(r => r.json())
-                ]);
-                setKrFinancialData(data || {});
-                setKrMarketCapData(marketCap || {});
+                const index = await loadKrCompanyIndex();
+                setKrCompanyIndex(index || []);
             } catch (err) {
-                console.error('Error loading KR financial data:', err);
+                console.error('Error loading KR company index:', err);
             } finally {
                 setKrDataLoading(false);
             }
@@ -233,26 +229,24 @@ const UsStockPage = () => {
     }, [sidebarMarket]);
 
     const krCompanyList = useMemo(() => {
-        let list = Object.entries(krFinancialData).map(([code, info]) => {
-            const lastEntry = info.history && info.history.length > 0 ? info.history[info.history.length - 1] : null;
-            const marketCap = krMarketCapData[code]?.market_cap || 0;
-            return {
-                code,
-                name: info.name,
-                latestRevenue: lastEntry ? (lastEntry.revenue || 0) : 0,
-                latestOpProfit: lastEntry ? (lastEntry.op_profit || 0) : 0,
-                marketCap
-            };
-        }).filter(c => {
+        let list = krCompanyIndex.map(c => ({
+            code: c.stock_code,
+            name: isEn ? (c.name_en || c.name) : c.name,
+            nameKo: c.name,
+            nameEn: c.name_en || '',
+            latestRevenue: c.last_revenue || 0,
+            latestOpProfit: c.last_op_profit || 0,
+            rank: c.rank || 99999
+        })).filter(c => {
             const term = krSearchTerm.toLowerCase();
-            return c.name.toLowerCase().includes(term) || c.code.includes(krSearchTerm);
+            return c.name.toLowerCase().includes(term) || c.code.includes(krSearchTerm) || c.nameKo.toLowerCase().includes(term) || c.nameEn.toLowerCase().includes(term);
         });
         if (krSortBy === 'revenue') list.sort((a, b) => b.latestRevenue - a.latestRevenue);
         else if (krSortBy === 'op_profit') list.sort((a, b) => b.latestOpProfit - a.latestOpProfit);
-        else if (krSortBy === 'market_cap') list.sort((a, b) => b.marketCap - a.marketCap);
+        else if (krSortBy === 'market_cap') list.sort((a, b) => a.rank - b.rank);
         else list.sort((a, b) => a.code.localeCompare(b.code));
         return list;
-    }, [krFinancialData, krMarketCapData, krSearchTerm, krSortBy]);
+    }, [krCompanyIndex, krSearchTerm, krSortBy, isEn]);
 
     const handleMarketToggle = (market) => {
         setSidebarMarket(market);

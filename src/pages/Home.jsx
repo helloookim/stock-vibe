@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import SEOHead from '../components/SEOHead';
 import { Search, Menu, X, BarChart3, TrendingUp, PieChart, ArrowUpDown, ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
 import { loadUsCompanyIndex } from '../usDataLoader';
-import { financialDataLoader } from '../dataLoader';
+import { loadKrCompanyIndex } from '../krDataLoader';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts';
 import LanguageToggle from '../components/LanguageToggle';
 import MarketToggle from '../components/MarketToggle';
@@ -17,7 +17,7 @@ const Home = () => {
     const navigate = useNavigate();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-    const [marketCapData, setMarketCapData] = useState({});
+    const [krCompanyIndex, setKrCompanyIndex] = useState([]);
     const [dataLoading, setDataLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [sortBy, setSortBy] = useState('market_cap');
@@ -40,13 +40,15 @@ const Home = () => {
     }, []);
 
     const popularStocks = [
-        { code: '005930', name: '삼성전자' },
-        { code: '000660', name: 'SK하이닉스' },
-        { code: '373220', name: 'LG에너지솔루션' },
-        { code: '005380', name: '현대자동차' },
-        { code: '035420', name: 'NAVER' },
-        { code: '035720', name: '카카오' },
+        { code: '005930', name: '삼성전자', name_en: 'Samsung Electronics' },
+        { code: '000660', name: 'SK하이닉스', name_en: 'SK hynix' },
+        { code: '373220', name: 'LG에너지솔루션', name_en: 'LG Energy Solution' },
+        { code: '005380', name: '현대자동차', name_en: 'Hyundai Motor' },
+        { code: '035420', name: 'NAVER', name_en: 'NAVER' },
+        { code: '035720', name: '카카오', name_en: 'Kakao' },
     ];
+
+    const isEn = i18n.language === 'en';
 
     const usPopularStocks = [
         { ticker: 'AAPL', name: 'Apple Inc.' },
@@ -63,7 +65,7 @@ const Home = () => {
             try {
                 const [nvdaRaw, skHynixRaw] = await Promise.all([
                     fetch('/data/us_stocks/NVDA.json').then(r => r.json()),
-                    financialDataLoader.getCompany('000660')
+                    fetch('/data/kr_stocks/000660.json').then(r => r.json())
                 ]);
 
                 const nvdaQuarters = (nvdaRaw.quarterly || [])
@@ -78,7 +80,8 @@ const Home = () => {
                         };
                     });
 
-                const skHynixQuarters = (skHynixRaw?.history || [])
+                const skHynixQuarters = (skHynixRaw?.quarterly || [])
+                    .sort((a, b) => a.year - b.year || a.quarter.localeCompare(b.quarter))
                     .slice(-8)
                     .map(e => ({
                         label: `${String(e.year).slice(-2)}.${e.quarter}`,
@@ -117,13 +120,13 @@ const Home = () => {
         return val.toLocaleString();
     };
 
-    // Load lightweight market cap data for sidebar (587KB instead of 40MB)
+    // Load KR company index for sidebar
     useEffect(() => {
         async function loadData() {
             setDataLoading(true);
             try {
-                const marketCap = await fetch('/market_cap_data.json').then(r => r.json());
-                setMarketCapData(marketCap || {});
+                const index = await loadKrCompanyIndex();
+                setKrCompanyIndex(index || []);
             } catch (error) {
                 console.error('Error loading data:', error);
             } finally {
@@ -134,15 +137,15 @@ const Home = () => {
     }, []);
 
     const companyList = useMemo(() => {
-        let list = Object.entries(marketCapData).map(([code, info]) => ({
-            code,
-            name: info.name,
-            marketCap: info.market_cap || 0,
-            rank: info.rank || 9999
+        let list = krCompanyIndex.map(c => ({
+            code: c.stock_code,
+            name: isEn ? (c.name_en || c.name) : c.name,
+            rank: c.rank || 9999
         }))
         .filter(c => {
-            const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.code.includes(searchTerm);
-            return matchesSearch;
+            const term = searchTerm.toLowerCase();
+            const idx = krCompanyIndex.find(i => i.stock_code === c.code);
+            return c.name.toLowerCase().includes(term) || c.code.includes(searchTerm) || (idx?.name_en || '').toLowerCase().includes(term) || (idx?.name || '').toLowerCase().includes(term);
         });
 
         if (sortBy === 'market_cap') {
@@ -152,7 +155,7 @@ const Home = () => {
         }
 
         return list;
-    }, [searchTerm, sortBy, marketCapData]);
+    }, [searchTerm, sortBy, krCompanyIndex, isEn]);
 
     // Load US company index when sidebar switches to US
     useEffect(() => {
@@ -709,7 +712,7 @@ const Home = () => {
                                             className="home-popular-chip"
                                         >
                                             <span className="home-popular-chip-code">{stock.code}</span>
-                                            <span className="home-popular-chip-name">{stock.name}</span>
+                                            <span className="home-popular-chip-name">{isEn ? stock.name_en : stock.name}</span>
                                         </Link>
                                     ))}
                                 </div>

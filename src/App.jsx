@@ -7,7 +7,7 @@ import {
     ComposedChart, Line, ReferenceLine, AreaChart, Area
 } from 'recharts';
 import { Search, ArrowUpDown, ChevronLeft, ChevronRight, Menu, X, Info } from 'lucide-react';
-import { loadAllFinancialData, loadAllAnnualFinancialData } from './dataLoader';
+import { loadKrCompanyIndex, loadKrCompanyData, processKrCompanyData } from './krDataLoader';
 import { loadUsCompanyIndex } from './usDataLoader';
 import NotFound from './pages/NotFound';
 import ShareButtons from './components/ShareButtons';
@@ -139,10 +139,11 @@ const App = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const colors = useThemeColors();
+    const isEn = i18n.language === 'en';
 
-    const [financialRawData, setFinancialRawData] = useState({});
-    const [financialAnnualData, setFinancialAnnualData] = useState({});
-    const [marketCapData, setMarketCapData] = useState({});
+    const [krCompanyIndex, setKrCompanyIndex] = useState([]);
+    const [currentCompanyRaw, setCurrentCompanyRaw] = useState(null);
+    const [companyLoading, setCompanyLoading] = useState(false);
     const [dataLoading, setDataLoading] = useState(true);
     const [selectedCode, setSelectedCode] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
@@ -186,44 +187,47 @@ const App = () => {
         : { fontSize: 10, angle: -45, textAnchor: 'end', height: 70 };
 
     // Phase 1: Load quarterly data + market cap (essential for initial render)
+    // Load lightweight company index for sidebar (~666KB)
     useEffect(() => {
         async function loadData() {
             setDataLoading(true);
             try {
-                const [financial, marketCap] = await Promise.all([
-                    loadAllFinancialData(),
-                    fetch('/market_cap_data.json').then(r => r.json())
-                ]);
-
-                setFinancialRawData(financial || {});
-                setMarketCapData(marketCap || {});
+                const index = await loadKrCompanyIndex();
+                setKrCompanyIndex(index || []);
 
                 const pathname = window.location.pathname;
                 const pathCode = pathname.startsWith('/stocks/') ? pathname.slice(8) : '';
 
-                const codes = Object.keys(financial || {});
-                if (codes.length > 0) {
-                    if (!pathCode || financial[pathCode]) {
-                        if (pathCode && financial[pathCode]) {
-                            setSelectedCode(pathCode);
-                        }
+                if (pathCode) {
+                    const exists = (index || []).some(c => c.stock_code === pathCode);
+                    if (exists) {
+                        setSelectedCode(pathCode);
                     }
                 }
             } catch (error) {
-                console.error('Error loading data:', error);
+                console.error('Error loading index:', error);
             } finally {
                 setDataLoading(false);
             }
         }
-
         loadData();
     }, []);
 
-    // Phase 2: Load annual data only when user switches to annual view
+    // Load individual company data on-demand when selectedCode changes
     useEffect(() => {
-        if (viewMode !== 'annual' || Object.keys(financialAnnualData).length > 0) return;
-        loadAllAnnualFinancialData().then(annual => setFinancialAnnualData(annual || {})).catch(() => {});
-    }, [viewMode]);
+        if (!selectedCode) return;
+        let cancelled = false;
+        setCompanyLoading(true);
+        loadKrCompanyData(selectedCode).then(data => {
+            if (!cancelled) {
+                setCurrentCompanyRaw(data);
+                setCompanyLoading(false);
+            }
+        }).catch(() => {
+            if (!cancelled) setCompanyLoading(false);
+        });
+        return () => { cancelled = true; };
+    }, [selectedCode]);
 
     // Track if we have an invalid stock code
     const [isInvalidCode, setIsInvalidCode] = useState(false);
@@ -235,18 +239,19 @@ const App = () => {
         const pathname = location.pathname;
         const pathCode = pathname.startsWith('/stocks/') ? pathname.slice(8) : '';
 
-        if (pathCode && financialRawData[pathCode]) {
-            // Valid stock code - update if different
-            setIsInvalidCode(false);
-            if (pathCode !== selectedCode) {
-                isUrlChangeRef.current = true; // Mark this as URL-driven change
-                setSelectedCode(pathCode);
+        if (pathCode) {
+            const exists = krCompanyIndex.some(c => c.stock_code === pathCode);
+            if (exists) {
+                setIsInvalidCode(false);
+                if (pathCode !== selectedCode) {
+                    isUrlChangeRef.current = true;
+                    setSelectedCode(pathCode);
+                }
+            } else if (krCompanyIndex.length > 0) {
+                setIsInvalidCode(true);
             }
-        } else if (Object.keys(financialRawData).length > 0 && pathCode) {
-            // Invalid stock code - show 404
-            setIsInvalidCode(true);
         }
-    }, [location.pathname, financialRawData, dataLoading]);
+    }, [location.pathname, krCompanyIndex, dataLoading]);
 
     // Track unique stock views and show donation popup at 10 unique views (1-day cooldown)
     useEffect(() => {
@@ -277,7 +282,7 @@ const App = () => {
             const pathCode = pathname.startsWith('/stocks/') ? pathname.slice(8) : '';
 
             // If URL has an invalid code, don't navigate (let 404 show)
-            if (pathCode && !financialRawData[pathCode]) {
+            if (pathCode && !krCompanyIndex.some(c => c.stock_code === pathCode)) {
                 return;
             }
 
@@ -292,30 +297,21 @@ const App = () => {
                 navigate(`/stocks/${selectedCode}`, { replace: true });
             }
         }
-    }, [selectedCode, dataLoading, navigate, location.pathname, isInvalidCode, financialRawData]);
+    }, [selectedCode, dataLoading, navigate, location.pathname, isInvalidCode, krCompanyIndex]);
 
     const companyList = useMemo(() => {
-        let list = Object.entries(financialRawData).map(([code, info]) => {
-            // Find latest revenue and op_profit for sorting
-            const lastEntry = info.history && info.history.length > 0 ? info.history[info.history.length - 1] : null;
-            const latestRevenue = lastEntry ? (lastEntry.revenue || 0) : 0;
-            const latestOpProfit = lastEntry ? (lastEntry.op_profit || 0) : 0;
-
-            // Get market cap data
-            const marketCap = marketCapData[code]?.market_cap || 0;
-
-            return {
-                code,
-                name: info.name,
-                sector: info.sector,
-                latestRevenue,
-                latestOpProfit,
-                marketCap
-            };
-        })
+        let list = krCompanyIndex.map(c => ({
+            code: c.stock_code,
+            name: isEn ? (c.name_en || c.name) : c.name,
+            sector: c.sector,
+            latestRevenue: c.last_revenue || 0,
+            latestOpProfit: c.last_op_profit || 0,
+            rank: c.rank || 9999,
+        }))
             .filter(c => {
-                const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.code.includes(searchTerm);
-                return matchesSearch;
+                const term = searchTerm.toLowerCase();
+                const idx = krCompanyIndex.find(i => i.stock_code === c.code);
+                return c.name.toLowerCase().includes(term) || c.code.includes(searchTerm) || (idx?.name || '').toLowerCase().includes(term) || (idx?.name_en || '').toLowerCase().includes(term);
             });
 
         if (sortBy === 'revenue') {
@@ -325,15 +321,15 @@ const App = () => {
             // Sort by operating profit descending
             list.sort((a, b) => b.latestOpProfit - a.latestOpProfit);
         } else if (sortBy === 'market_cap') {
-            // Sort by market cap descending
-            list.sort((a, b) => b.marketCap - a.marketCap);
+            // Sort by market cap rank ascending (rank 1 = largest)
+            list.sort((a, b) => a.rank - b.rank);
         } else {
             // Sort by code ascending
             list.sort((a, b) => a.code.localeCompare(b.code));
         }
 
         return list;
-    }, [searchTerm, sortBy, financialRawData, marketCapData]);
+    }, [searchTerm, sortBy, krCompanyIndex, isEn]);
 
     // Load US company index when sidebar switches to US
     useEffect(() => {
@@ -390,48 +386,50 @@ const App = () => {
         }
     }, [companyList, selectedCode, location.pathname, isInvalidCode, financialRawData]);
 
-    const currentCompany = viewMode === 'quarterly' ? financialRawData[selectedCode] : financialAnnualData[selectedCode];
+    // Process loaded company data into chart-ready format
+    const { quarterlyData: processedQuarterly, annualData: processedAnnual } = useMemo(
+        () => processKrCompanyData(currentCompanyRaw),
+        [currentCompanyRaw]
+    );
 
-    // Calculate the min/max years for the current company's data
-    // Skip years that only have Q4 without Q1-Q3 (since Q4 calculation needs Q1-Q3) for quarterly mode
+    // Build a currentCompany-like object for backward compatibility
+    const currentCompany = useMemo(() => {
+        if (!currentCompanyRaw) return null;
+        const history = viewMode === 'quarterly' ? processedQuarterly : processedAnnual;
+        return {
+            name: currentCompanyRaw.name,
+            name_en: currentCompanyRaw.name_en,
+            sector: currentCompanyRaw.sector,
+            history,
+        };
+    }, [currentCompanyRaw, viewMode, processedQuarterly, processedAnnual]);
+
+    const displayName = currentCompany ? (isEn ? (currentCompany.name_en || currentCompany.name) : currentCompany.name) : '';
+
     const companyDataRange = useMemo(() => {
-        if (!currentCompany?.history?.length) return { min: 2015, max: 2025 };
+        const history = viewMode === 'quarterly' ? processedQuarterly : processedAnnual;
+        if (!history?.length) return { min: 2015, max: 2025 };
 
         if (viewMode === 'annual') {
-            // For annual mode, just get min/max years
-            const years = currentCompany.history.map(h => h.year);
+            const years = history.map(h => h.year);
             return { min: Math.min(...years), max: Math.max(...years) };
         }
 
-        // For quarterly mode: Find years that have valid data (not just Q4-only without Q1-Q3)
-        const validYears = [];
         const yearGroups = {};
-
-        // Group entries by year
-        currentCompany.history.forEach(h => {
+        history.forEach(h => {
             if (!yearGroups[h.year]) yearGroups[h.year] = [];
             yearGroups[h.year].push(h.quarter);
         });
 
-        // Check each year for valid data
+        const validYears = [];
         Object.entries(yearGroups).forEach(([year, quarters]) => {
-            // Year is valid if it has any quarter other than just 4Q alone
-            const has4Q = quarters.includes('4Q');
             const hasOtherQuarters = quarters.some(q => q === '1Q' || q === '2Q' || q === '3Q');
-
-            // Valid if: has Q1/Q2/Q3, or has 4Q with other quarters
-            if (hasOtherQuarters || (has4Q && hasOtherQuarters)) {
-                validYears.push(parseInt(year));
-            } else if (!has4Q) {
-                // Has some other quarter data but not 4Q - still valid
-                validYears.push(parseInt(year));
-            }
-            // Skip if only has 4Q without Q1-Q3
+            if (hasOtherQuarters) validYears.push(parseInt(year));
         });
 
         if (validYears.length === 0) return { min: 2015, max: 2025 };
         return { min: Math.min(...validYears), max: Math.max(...validYears) };
-    }, [currentCompany, viewMode]);
+    }, [processedQuarterly, processedAnnual, viewMode]);
 
     // Update yearRange when company or viewMode changes to fit company's data range
     useEffect(() => {
@@ -442,61 +440,17 @@ const App = () => {
     const chartData = useMemo(() => {
         if (!currentCompany) return [];
 
-        // First, process ALL history data and calculate YoY changes using full dataset
-        const fullHistory = currentCompany.history.map(entry => ({
+        const history = currentCompany.history;
+        // YoY is already calculated in processKrCompanyData, just add 억원 units
+        const withEok = history.map(entry => ({
             ...entry,
-            revenue_adjusted: entry.revenue || 0,
-            op_profit_adjusted: entry.op_profit || 0,
-            net_income_adjusted: entry.net_income || 0
+            revenue_eok: (entry.revenue || 0) / 100000000,
+            op_profit_eok: (entry.op_profit || 0) / 100000000,
+            net_income_eok: (entry.net_income || 0) / 100000000,
         }));
 
-        // Calculate changes using FULL history (before filtering)
-        const historyWithChanges = fullHistory.map((entry) => {
-            // Convert to 억원 (100,000,000 won) units
-            const revenue_eok = entry.revenue_adjusted / 100000000;
-            const op_profit_eok = entry.op_profit_adjusted / 100000000;
-            const net_income_eok = entry.net_income_adjusted / 100000000;
-
-            let rev_change = null;  // null means no previous data
-            let op_change = null;
-
-            if (viewMode === 'annual') {
-                // YoY for annual: Find previous year
-                const prevYearEntry = fullHistory.find(e => e.year === entry.year - 1);
-                if (prevYearEntry) {
-                    const prev_rev_eok = prevYearEntry.revenue_adjusted / 100000000;
-                    const prev_op_eok = prevYearEntry.op_profit_adjusted / 100000000;
-                    rev_change = prev_rev_eok ? parseFloat(((revenue_eok - prev_rev_eok) / Math.abs(prev_rev_eok) * 100).toFixed(1)) : 0;
-                    op_change = prev_op_eok ? parseFloat(((op_profit_eok - prev_op_eok) / Math.abs(prev_op_eok) * 100).toFixed(1)) : 0;
-                }
-            } else {
-                // YoY for quarterly: Find same quarter in previous year from FULL history
-                const prevYearEntry = fullHistory.find(e => e.year === entry.year - 1 && e.quarter === entry.quarter);
-                if (prevYearEntry) {
-                    const prev_rev_eok = prevYearEntry.revenue_adjusted / 100000000;
-                    const prev_op_eok = prevYearEntry.op_profit_adjusted / 100000000;
-                    rev_change = prev_rev_eok ? parseFloat(((revenue_eok - prev_rev_eok) / Math.abs(prev_rev_eok) * 100).toFixed(1)) : 0;
-                    op_change = prev_op_eok ? parseFloat(((op_profit_eok - prev_op_eok) / Math.abs(prev_op_eok) * 100).toFixed(1)) : 0;
-                }
-            }
-
-            return {
-                ...entry,
-                displayLabel: viewMode === 'annual' ? `${entry.year}` : `${entry.year} ${entry.quarter}`,
-                revenue_eok,
-                op_profit_eok,
-                net_income_eok,
-                rev_change,
-                op_change,
-                op_margin: entry.revenue_adjusted ? parseFloat(((entry.op_profit_adjusted / entry.revenue_adjusted) * 100).toFixed(1)) : 0
-            };
-        });
-
-        // Now filter by year range AFTER calculating changes
-        const filteredHistory = historyWithChanges.filter(entry => entry.year >= yearRange[0] && entry.year <= yearRange[1]);
-
-        return filteredHistory;
-    }, [currentCompany, yearRange, viewMode]);
+        return withEok.filter(entry => entry.year >= yearRange[0] && entry.year <= yearRange[1]);
+    }, [currentCompany, yearRange]);
 
     // Calculate YoY change domain with smart ticks (must include 0)
     const calculateYoyDomain = (changes) => {
@@ -547,37 +501,21 @@ const App = () => {
         return calculateYoyDomain(changes);
     }, [chartData]);
 
-    // EPS chart data (EPS is now integrated into quarterly financial data)
+    // EPS chart data from processed quarterly data
     const epsChartData = useMemo(() => {
-        const company = financialRawData[selectedCode];
-        if (!company?.history?.length) return [];
-
-        // Filter to entries that have EPS data
-        const epsEntries = company.history.filter(e => e.eps != null);
+        const epsEntries = processedQuarterly.filter(e => e.eps != null);
         if (epsEntries.length === 0) return [];
 
-        // First, calculate YoY change using FULL history
-        const fullEpsHistory = epsEntries.map((entry) => {
-            const eps = entry.eps || 0;
-
-            let eps_change = null;
-            const prevYearEntry = epsEntries.find(e => e.year === entry.year - 1 && e.quarter === entry.quarter);
-            if (prevYearEntry && prevYearEntry.eps) {
-                eps_change = parseFloat(((eps - prevYearEntry.eps) / Math.abs(prevYearEntry.eps) * 100).toFixed(1));
-            }
-
-            return {
-                displayLabel: `${entry.year} ${entry.quarter}`,
-                eps,
-                eps_change,
+        return epsEntries
+            .map(entry => ({
+                displayLabel: entry.displayLabel,
+                eps: entry.eps,
+                eps_change: entry.eps_change,
                 year: entry.year,
-                quarter: entry.quarter
-            };
-        });
-
-        // Then filter by year range AFTER calculating changes
-        return fullEpsHistory.filter(entry => entry.year >= yearRange[0] && entry.year <= yearRange[1]);
-    }, [financialRawData, selectedCode, yearRange]);
+                quarter: entry.quarter,
+            }))
+            .filter(entry => entry.year >= yearRange[0] && entry.year <= yearRange[1]);
+    }, [processedQuarterly, yearRange]);
 
     // Calculate EPS YoY change domain
     const epsYoyDomain = useMemo(() => {
@@ -587,12 +525,11 @@ const App = () => {
 
     const peerCompanies = useMemo(() => {
         if (!currentCompany?.sector) return [];
-        return Object.entries(financialRawData)
-            .filter(([code, info]) => info.sector === currentCompany.sector && code !== selectedCode)
-            .map(([code, info]) => ({ code, name: info.name }))
-            .sort((a, b) => a.code.localeCompare(b.code))
+        return krCompanyIndex
+            .filter(c => c.sector === currentCompany.sector && c.stock_code !== selectedCode)
+            .map(c => ({ code: c.stock_code, name: isEn ? (c.name_en || c.name) : c.name }))
             .slice(0, 15);
-    }, [currentCompany, selectedCode]);
+    }, [currentCompany, selectedCode, krCompanyIndex, isEn]);
 
     const formatCurrency = (val) => {
         if (!val && val !== 0) return t('currency.zeroEok');
@@ -634,14 +571,14 @@ const App = () => {
     return (
         <>
             <SEOHead
-                title={currentCompany?.name ? t('helmet.appTitle', { name: currentCompany.name, code: selectedCode }) : t('helmet.appTitleDefault')}
-                description={currentCompany?.name ? t('helmet.appDesc', { name: currentCompany.name, code: selectedCode }) : t('helmet.appDescDefault')}
+                title={displayName ? t('helmet.appTitle', { name: displayName, code: selectedCode }) : t('helmet.appTitleDefault')}
+                description={displayName ? t('helmet.appDesc', { name: displayName, code: selectedCode }) : t('helmet.appDescDefault')}
                 canonical={`https://kstockview.com/stocks/${selectedCode || ''}`}
                 jsonLd={currentCompany ? [{
                     '@type': 'BreadcrumbList',
                     itemListElement: [
                         { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://kstockview.com' },
-                        { '@type': 'ListItem', position: 2, name: currentCompany.name }
+                        { '@type': 'ListItem', position: 2, name: displayName }
                     ]
                 }] : []}
             />
@@ -812,11 +749,11 @@ const App = () => {
                       <div className="main-header-inner">
                         <div className="header-top-row">
                             <div className="company-info">
-                                <h1>{currentCompany?.name}</h1>
+                                <h1>{displayName || currentCompany?.name}</h1>
                                 <span className="company-code">{selectedCode}</span>
                                 <span className="company-sector">{currentCompany?.sector || t('common.general')}</span>
                                 <ShareButtons
-                                    companyName={currentCompany?.name || ''}
+                                    companyName={displayName || currentCompany?.name || ''}
                                     stockCode={selectedCode}
                                     url={`https://kstockview.com/stocks/${selectedCode}`}
                                 />
