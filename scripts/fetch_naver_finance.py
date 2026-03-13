@@ -66,7 +66,15 @@ ROW_LABELS = [
     ('영업이익(발표기준)', None),   # skip "announced basis" variant
     ('영업이익률', None),          # skip operating margin % (would falsely match 영업이익)
     ('영업이익', 'op_profit'),
+    ('자본총계(지배)', None),      # skip controlling equity
+    ('자본총계(비지배)', None),    # skip non-controlling equity
+    ('자본총계', 'total_equity'),   # total equity (annual only)
+    ('자산총계', 'total_assets'),   # total assets (annual only)
+    ('부채총계', 'total_debt'),     # total liabilities (annual only)
 ]
+
+# Fields only meaningful for annual data (not stored in quarterly entries)
+ANNUAL_ONLY_FIELDS = {'total_assets', 'total_equity', 'total_debt'}
 
 
 # ─── Selenium Setup ──────────────────────────────────────────────────────────
@@ -105,14 +113,14 @@ def create_driver(headless=True):
 def scrape_company(driver, stock_code, fy_end_month=12):
     """
     Navigate to Naver Finance page and parse the financial summary table.
-    Returns list of quarterly entries: [{year, quarter, revenue, op_profit, net_income, eps}, ...]
+    Returns (quarterly_list, annual_list) tuple.
     """
     url = BASE_URL.format(code=stock_code)
     try:
         driver.get(url)
     except WebDriverException as e:
         print(f'  [{stock_code}] Page load error: {e}')
-        return []
+        return [], []
 
     # Wait for the financial summary table to render (AJAX loaded)
     try:
@@ -123,7 +131,7 @@ def scrape_company(driver, stock_code, fy_end_month=12):
         time.sleep(2)
     except TimeoutException:
         print(f'  [{stock_code}] Table not found (timeout)')
-        return []
+        return [], []
 
     # Parse the rendered HTML
     soup = BeautifulSoup(driver.page_source, 'html.parser')
@@ -134,7 +142,7 @@ def scrape_company(driver, stock_code, fy_end_month=12):
 
     if not table:
         print(f'  [{stock_code}] Financial summary table not found')
-        return []
+        return [], []
 
     return parse_financial_table(table, stock_code, fy_end_month)
 
@@ -167,15 +175,15 @@ def parse_financial_table(table, stock_code, fy_end_month=12):
     - Row 1: 8 date headers (no label cell, since Row 0 label has rowspan)
     - Row 2+: label cell + 8 data cells
 
-    Returns list of quarterly entries (only actual data, no estimates).
+    Returns (quarterly_list, annual_list) tuple.
     """
     month_to_quarter = build_quarter_mapping(fy_end_month)
     rows = table.find_all('tr')
 
     if len(rows) < 3:
-        return []
+        return [], []
 
-    # --- Parse Row 0 to find quarterly column range ---
+    # --- Parse Row 0 to find annual/quarterly column ranges ---
     row0_cells = rows[0].find_all(['th', 'td'])
     annual_cols = 0
     quarterly_start = 0
@@ -186,83 +194,105 @@ def parse_financial_table(table, stock_code, fy_end_month=12):
         if '연간' in text:
             annual_cols = colspan
         elif '분기' in text:
-            quarterly_start = annual_cols  # quarterly starts after annual columns
+            quarterly_start = annual_cols
             break
 
     if annual_cols == 0:
-        # Fallback: assume 4 annual + 4 quarterly
         annual_cols = 4
         quarterly_start = 4
 
     # --- Parse Row 1: date headers ---
     row1_cells = rows[1].find_all(['th', 'td'])
-    # Row 1 has 8 cells (no label cell): indices 0..7
-    # Quarterly columns: indices quarterly_start .. quarterly_start+3
 
-    quarterly_columns = []  # List of (year, quarter, is_estimate, col_index_in_row1)
+    # Annual columns (indices 0 .. annual_cols-1)
+    annual_columns = []
     for i, cell in enumerate(row1_cells):
-        if i < quarterly_start:
-            continue  # Skip annual columns
-
+        if i >= annual_cols:
+            break
         text = cell.get_text(strip=True)
         match = re.match(r'(\d{4})/(\d{2})', text)
         if not match:
             continue
+        year = int(match.group(1))
+        is_estimate = '(E)' in text
+        annual_columns.append({
+            'year': year,
+            'is_estimate': is_estimate,
+            'col_index': i,
+        })
 
+    # Quarterly columns (indices quarterly_start .. end)
+    quarterly_columns = []
+    for i, cell in enumerate(row1_cells):
+        if i < quarterly_start:
+            continue
+        text = cell.get_text(strip=True)
+        match = re.match(r'(\d{4})/(\d{2})', text)
+        if not match:
+            continue
         year = int(match.group(1))
         month = match.group(2)
         is_estimate = '(E)' in text
-
         quarter = month_to_quarter.get(month)
         if quarter:
             quarterly_columns.append({
                 'year': year,
                 'quarter': quarter,
                 'is_estimate': is_estimate,
-                'col_index': i,  # index in row1 (0-based among 8 headers)
+                'col_index': i,
             })
 
-    if not quarterly_columns:
-        print(f'  [{stock_code}] No quarterly columns found in headers')
-        return []
-
     # --- Parse data rows (Row 2+) ---
-    data_by_quarter = {}  # (year, quarter) -> {field: value}
+    data_by_annual = {}    # year -> {field: value}
+    data_by_quarter = {}   # (year, quarter) -> {field: value}
 
     for row in rows[2:]:
         cells = row.find_all(['th', 'td'])
         if len(cells) < 2:
             continue
 
-        # First cell is the label
         label_text = cells[0].get_text(strip=True)
-
-        # Match label to field name (None = no match or intentionally skipped)
         field_name = match_row_label(label_text)
         if not field_name:
             continue
 
-        # Data cells: cells[1:] correspond to the 8 date columns
-        # cells[1+i] corresponds to row1_cells[i]
         data_cells = cells[1:]
 
-        for qcol in quarterly_columns:
-            if qcol['is_estimate']:
+        # --- Annual columns ---
+        for acol in annual_columns:
+            if acol['is_estimate']:
                 continue
-
-            idx = qcol['col_index']
+            idx = acol['col_index']
             if idx >= len(data_cells):
                 continue
-
             cell = data_cells[idx]
-
-            # Double-check cell-level estimate class
             cell_classes = cell.get('class', [])
             if isinstance(cell_classes, str):
                 cell_classes = cell_classes.split()
             if 'bgE' in cell_classes:
                 continue
+            value = parse_cell_value(cell)
+            if value is not None:
+                if acol['year'] not in data_by_annual:
+                    data_by_annual[acol['year']] = {}
+                data_by_annual[acol['year']][field_name] = value
 
+        # --- Quarterly columns (skip annual-only fields) ---
+        if field_name in ANNUAL_ONLY_FIELDS:
+            continue
+
+        for qcol in quarterly_columns:
+            if qcol['is_estimate']:
+                continue
+            idx = qcol['col_index']
+            if idx >= len(data_cells):
+                continue
+            cell = data_cells[idx]
+            cell_classes = cell.get('class', [])
+            if isinstance(cell_classes, str):
+                cell_classes = cell_classes.split()
+            if 'bgE' in cell_classes:
+                continue
             value = parse_cell_value(cell)
             if value is not None:
                 key = (qcol['year'], qcol['quarter'])
@@ -270,23 +300,29 @@ def parse_financial_table(table, stock_code, fy_end_month=12):
                     data_by_quarter[key] = {}
                 data_by_quarter[key][field_name] = value
 
-    # --- Build result ---
-    result = []
+    # --- Build quarterly result ---
+    quarterly_result = []
     for (year, quarter), fields in sorted(data_by_quarter.items()):
         entry = {'year': year, 'quarter': quarter}
-
-        # Convert from table unit (억원) to 원 for monetary values
         for field in ('revenue', 'op_profit', 'net_income'):
             if field in fields:
                 entry[field] = int(round(fields[field] * 1e8))
-
-        # EPS is already in 원 (no conversion)
         if 'eps' in fields:
             entry['eps'] = int(round(fields['eps']))
+        quarterly_result.append(entry)
 
-        result.append(entry)
+    # --- Build annual result ---
+    annual_result = []
+    for year, fields in sorted(data_by_annual.items()):
+        entry = {'year': year}
+        for field in ('revenue', 'op_profit', 'net_income', 'total_assets', 'total_equity', 'total_debt'):
+            if field in fields:
+                entry[field] = int(round(fields[field] * 1e8))
+        if 'eps' in fields:
+            entry['eps'] = int(round(fields['eps']))
+        annual_result.append(entry)
 
-    return result
+    return quarterly_result, annual_result
 
 
 def match_row_label(label_text):
@@ -349,57 +385,80 @@ def build_quarter_mapping(fy_end_month):
 
 # ─── Merge Logic ──────────────────────────────────────────────────────────────
 
-def merge_naver_data(stock_code, naver_quarters, dry_run=False):
+def merge_naver_data(stock_code, naver_quarters, naver_annuals, dry_run=False):
     """
-    Merge scraped Naver Finance quarterly data into existing per-company JSON.
+    Merge scraped Naver Finance data into existing per-company JSON.
     Only fills in missing (null) fields - does not overwrite existing data.
-    Returns (new_count, updated_count).
+    Returns dict with counts: {q_new, q_updated, a_new, a_updated}.
     """
     json_path = OUTPUT_DIR / f'{stock_code}.json'
 
     if not json_path.exists():
         print(f'  [{stock_code}] JSON file not found, skipping')
-        return 0, 0
+        return {'q_new': 0, 'q_updated': 0, 'a_new': 0, 'a_updated': 0}
 
     with open(json_path, 'r', encoding='utf-8') as f:
         company_data = json.load(f)
 
-    existing_q = {(q['year'], q['quarter']): q for q in company_data.get('quarterly', [])}
+    counts = {'q_new': 0, 'q_updated': 0, 'a_new': 0, 'a_updated': 0}
 
-    new_count = 0
-    updated_count = 0
+    # --- Merge quarterly ---
+    existing_q = {(q['year'], q['quarter']): q for q in company_data.get('quarterly', [])}
 
     for nq in naver_quarters:
         key = (nq['year'], nq['quarter'])
         if key in existing_q:
             existing = existing_q[key]
             changed = False
-
-            # Fill in missing/null fields from Naver data
             for field in ('revenue', 'op_profit', 'net_income', 'eps'):
                 if field in nq and nq[field] is not None:
                     if existing.get(field) is None:
                         existing[field] = nq[field]
                         changed = True
-
             if changed:
-                updated_count += 1
+                counts['q_updated'] += 1
         else:
-            # New quarter entry
             existing_q[key] = nq
-            new_count += 1
+            counts['q_new'] += 1
 
-    # Rebuild sorted quarterly list
     company_data['quarterly'] = sorted(
         existing_q.values(),
         key=lambda x: (x['year'], x['quarter'])
     )
 
-    if not dry_run and (new_count > 0 or updated_count > 0):
+    # --- Merge annual ---
+    existing_a = {a['year']: a for a in company_data.get('annual', [])}
+    annual_fields = ('revenue', 'op_profit', 'net_income', 'eps',
+                     'total_assets', 'total_equity', 'total_debt')
+
+    for na in naver_annuals:
+        year = na['year']
+        if year in existing_a:
+            existing = existing_a[year]
+            changed = False
+            for field in annual_fields:
+                if field in na and na[field] is not None:
+                    if existing.get(field) is None:
+                        existing[field] = na[field]
+                        changed = True
+            if changed:
+                counts['a_updated'] += 1
+        else:
+            existing_a[year] = na
+            counts['a_new'] += 1
+
+    company_data['annual'] = sorted(
+        existing_a.values(),
+        key=lambda x: x['year']
+    )
+
+    # --- Save ---
+    total_changes = sum(counts.values())
+    if not dry_run and total_changes > 0:
         with open(json_path, 'w', encoding='utf-8') as f:
             json.dump(company_data, f, ensure_ascii=False)
 
-    return new_count, updated_count
+    return counts
 
 
 # ─── Main ─────────────────────────────────────────────────────────────────────
@@ -437,7 +496,7 @@ def main():
     parser.add_argument('--no-headless', action='store_true', help='Show browser window')
     args = parser.parse_args()
 
-    print('=== Naver Finance Quarterly Data Scraper ===\n')
+    print('=== Naver Finance Data Scraper (Quarterly + Annual) ===\n')
 
     # Determine which companies to scrape
     if args.code:
@@ -468,8 +527,7 @@ def main():
     total = len(companies)
     scraped = 0
     with_new_data = 0
-    total_new_quarters = 0
-    total_updated_quarters = 0
+    totals = {'q_new': 0, 'q_updated': 0, 'a_new': 0, 'a_updated': 0}
     errors = 0
 
     try:
@@ -483,14 +541,14 @@ def main():
             fy_end_month = get_fy_end_month(stock_code)
 
             try:
-                quarters = scrape_company(driver, stock_code, fy_end_month)
+                quarters, annuals = scrape_company(driver, stock_code, fy_end_month)
             except Exception as e:
                 print(f'ERROR: {e}')
                 errors += 1
                 time.sleep(REQUEST_DELAY)
                 continue
 
-            if not quarters:
+            if not quarters and not annuals:
                 print('no data')
                 time.sleep(REQUEST_DELAY)
                 continue
@@ -499,7 +557,13 @@ def main():
 
             # Show what we found
             q_labels = [f"{q['year']}_{q['quarter']}" for q in quarters]
-            print(f'{len(quarters)} quarters: {", ".join(q_labels)}')
+            a_labels = [str(a['year']) for a in annuals]
+            parts = []
+            if quarters:
+                parts.append(f'{len(quarters)}Q: {", ".join(q_labels)}')
+            if annuals:
+                parts.append(f'{len(annuals)}A: {", ".join(a_labels)}')
+            print(' / '.join(parts))
 
             # Print details in dry-run mode
             if args.dry_run:
@@ -513,16 +577,35 @@ def main():
                     ni_s = f'{ni/1e8:,.0f}' if ni else 'N/A'
                     eps_s = f'{eps:,.0f}' if eps else 'N/A'
                     print(f'    {q["year"]} {q["quarter"]}: rev={rev_s} / op={op_s} / ni={ni_s} / eps={eps_s}')
+                for a in annuals:
+                    rev = a.get('revenue')
+                    op = a.get('op_profit')
+                    ni = a.get('net_income')
+                    eps = a.get('eps')
+                    rev_s = f'{rev/1e8:,.0f}' if rev else 'N/A'
+                    op_s = f'{op/1e8:,.0f}' if op else 'N/A'
+                    ni_s = f'{ni/1e8:,.0f}' if ni else 'N/A'
+                    eps_s = f'{eps:,.0f}' if eps else 'N/A'
+                    print(f'    {a["year"]} annual: rev={rev_s} / op={op_s} / ni={ni_s} / eps={eps_s}')
 
             # Merge into existing JSON
-            new_count, updated_count = merge_naver_data(stock_code, quarters, dry_run=args.dry_run)
+            counts = merge_naver_data(stock_code, quarters, annuals, dry_run=args.dry_run)
 
-            if new_count > 0 or updated_count > 0:
+            if sum(counts.values()) > 0:
                 with_new_data += 1
-                total_new_quarters += new_count
-                total_updated_quarters += updated_count
+                for k in totals:
+                    totals[k] += counts[k]
                 if not args.dry_run:
-                    print(f'    -> Saved: {new_count} new, {updated_count} updated quarters')
+                    parts = []
+                    if counts['q_new']:
+                        parts.append(f"{counts['q_new']} new Q")
+                    if counts['q_updated']:
+                        parts.append(f"{counts['q_updated']} upd Q")
+                    if counts['a_new']:
+                        parts.append(f"{counts['a_new']} new A")
+                    if counts['a_updated']:
+                        parts.append(f"{counts['a_updated']} upd A")
+                    print(f'    -> Saved: {", ".join(parts)}')
 
             # Rate limiting
             time.sleep(REQUEST_DELAY)
@@ -538,8 +621,8 @@ def main():
     print(f'Total companies: {total}')
     print(f'Successfully scraped: {scraped}')
     print(f'Companies with new/updated data: {with_new_data}')
-    print(f'New quarters added: {total_new_quarters}')
-    print(f'Existing quarters updated: {total_updated_quarters}')
+    print(f'Quarterly - new: {totals["q_new"]}, updated: {totals["q_updated"]}')
+    print(f'Annual    - new: {totals["a_new"]}, updated: {totals["a_updated"]}')
     print(f'Errors: {errors}')
     if args.dry_run:
         print('\n(DRY RUN - no files were modified)')

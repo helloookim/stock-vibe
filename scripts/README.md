@@ -133,6 +133,7 @@ and PBR (Price-to-Book) into existing per-company JSON files.
 - **Endpoint:** `GetStockSecuritiesInfoService/getStockPriceInfo`
 - **Rate limit:** 10,000 calls/day, 30 TPS
 - **Coverage:** KOSPI + KOSDAQ, all stocks in one call per date
+- **Historical data:** Only available from **2020 onwards**. Pre-2020 dates return no data.
 
 ### Usage
 

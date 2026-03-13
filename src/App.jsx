@@ -434,7 +434,8 @@ const App = () => {
 
     // Update yearRange when company or viewMode changes to fit company's data range
     useEffect(() => {
-        setYearRange([companyDataRange.min, companyDataRange.max]);
+        const defaultMin = Math.max(companyDataRange.min, 2020);
+        setYearRange([defaultMin, companyDataRange.max]);
         setIsDefaultRange(true); // Reset to default when company changes
     }, [companyDataRange, viewMode]);
 

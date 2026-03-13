@@ -44,7 +44,7 @@ python scripts/fetch_krx_data.py --latest-only           # Latest PER/PBR only (
 python scripts/fetch_krx_data.py --start-year 2020       # Historical prices from 2020+
 
 # US stock data
-python scripts/process_us_data.py
+python scripts/prepare_us_data.py
 ```
 
 ## Architecture
@@ -94,9 +94,12 @@ public/
 └── _redirects                # SPA fallback rule
 
 scripts/
-├── fetch_kr_data_dart.py     # DART OpenAPI pipeline — generates kr_stocks/ and kr_company_index.json
-├── fetch_krx_data.py         # KRX price pipeline — merges close_price, PER, PBR into kr_stocks/ JSONs
-├── fetch_naver_finance.py    # Naver Finance scraper — quarterly data + EPS via Selenium
+├── README.md                 # Comprehensive pipeline documentation
+├── fetch_kr_data_dart.py     # ① DART OpenAPI pipeline — generates kr_stocks/ and kr_company_index.json
+├── fetch_krx_data.py         # ② KRX price pipeline — merges close_price, PER, PBR into kr_stocks/ JSONs
+├── fetch_naver_finance.py    # ③ Naver Finance scraper — quarterly/annual data + EPS via Selenium
+├── prepare_us_data.py        # ④ US stock data preparation — copies SEC EDGAR data to public/
+├── daily_update.bat          # Windows Task Scheduler script for daily KRX price update
 └── migrate_kr_data.js        # [LEGACY] Old chunked data migration
 
 data/
@@ -337,13 +340,37 @@ Per-company JSON files from SEC EDGAR (2015q1–2025q4). See `us_fixed_company_j
 - Computes **PBR** = market cap / total_equity (latest annual)
 - Merges close_price, PER, PBR into existing per-company JSON files
 - `--latest-only` for quick daily update (1 API call)
+- **Must be re-run after Naver scraper** if new net_income was added, to recalculate PER/PBR
+- **Historical data limitation:** data.go.kr API only has data from **2020 onwards**. Pre-2020 close_price/PER/PBR is unavailable from this source.
+
+### Naver Finance Scraper: `scripts/fetch_naver_finance.py`
+- Selenium + BeautifulSoup scraper for Naver Finance WiseReport pages
+- Fills data not available from DART: **Q4 data** (before official filing), **EPS**, **annual data** (preliminary earnings)
+- Scrapes `주요재무정보` table: revenue, op_profit, net_income, EPS (quarterly) + total_assets, total_equity, total_debt (annual)
+- **Merge strategy:** only fills null/missing fields, never overwrites existing DART data
+- Skips estimate columns (marked with `(E)` or `bgE` CSS class)
+- Unit conversion: 억원 × 1e8 = 원 for monetary values; EPS already in 원
+- Rate limiting: 2.5s delay between pages, 2s AJAX wait
+- **Dependencies:** `selenium`, `beautifulsoup4`, `webdriver-manager`, Chrome browser
+
+### Daily Update: `scripts/daily_update.bat`
+- Windows Task Scheduler script for automated daily KRX price updates
+- Runs `fetch_krx_data.py --latest-only` (1 API call)
+- Logs to `logs/daily_update_YYYYMMDD.log`, auto-cleans logs older than 30 days
+- Schedule: weekdays 18:00 KST (after market close)
 
 ### Known Data Quality Issues
 - **Q4 derivation:** `Q4 = Annual − Q1 − Q2 − Q3` can produce incorrect values when consolidation scope changes mid-year. The pipeline auto-detects anomalies and fixes them using `fnlttSinglAcnt` endpoint's `thstrm_add_amount` (9-month cumulative). Remaining negative Q4 entries are nullified.
 - **Missing financials from batch API:** ~140+ companies had missing revenue/op_profit/net_income because the batch API (`fnlttMultiAcnt`) only returns standard "주요계정" names. Companies using `영업수익` (e.g., POSCO홀딩스, 카카오 after holding company conversion) or `연결당기순이익` (e.g., 현대자동차) were missing data. Fixed by falling back to `fnlttSinglAcntAll` (full financial statement API). ~70 small companies still have missing revenue where DART has no revenue account at all (SPACs, pre-revenue biotech).
-- **EPS:** Not available from key accounts API. Backfilled from legacy chunked data for companies that existed in old dataset.
+- **EPS:** Not available from DART key accounts API. Backfilled from legacy chunked data and Naver Finance scraper (`fetch_naver_finance.py`).
 - **Report period semantics:** For IS items, `fnlttMultiAcnt` returns `thstrm_amount` = single-quarter figure for Q1/H1/Q3 reports. H1 report's `thstrm_amount` = Q2 single (not 6-month cumulative).
-- **Data freshness:** DART only has historical filings. Q1 reports appear ~May, H1 ~August, Q3 ~November, annual ~March of next year. No forward/consensus estimates available.
+- **Data freshness:** DART only has historical filings. Q1 reports appear ~May, H1 ~August, Q3 ~November, annual ~March of next year. No forward/consensus estimates available. Naver Finance often has preliminary earnings before official DART filings.
+
+### Typical Pipeline Order
+1. `fetch_kr_data_dart.py` — DART financials (revenue, op_profit, net_income, assets, equity, debt)
+2. `fetch_krx_data.py` — KRX prices + PER/PBR computation
+3. `fetch_naver_finance.py` — Fill Q4 data, EPS, annual data from Naver
+4. `fetch_krx_data.py --latest-only` — Recalculate PER/PBR with updated net_income
 
 ## Important Notes for AI Assistants
 
