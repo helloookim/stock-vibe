@@ -906,9 +906,9 @@ const App = () => {
                     </header>
 
                     <div className="charts-container">
-                        {/* Summary Cards — Row 1: Market Overview */}
-                        <div style={{ marginBottom: '6px' }}>
-                            <span style={{ fontSize: '11px', fontWeight: 600, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        {/* Summary Cards — Market Overview */}
+                        <div style={{ marginBottom: '4px' }}>
+                            <span style={{ fontSize: '10px', fontWeight: 600, color: colors.textFaded, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                                 {t('analysis.marketOverview')}
                             </span>
                         </div>
@@ -917,8 +917,8 @@ const App = () => {
                                 <span className="card-label">
                                     {t('analysis.latestClosePrice')}
                                     {currentCompanyRaw?.last_close_date && (
-                                        <span style={{ fontWeight: 400, fontSize: '10px', marginLeft: '6px', opacity: 0.7 }}>
-                                            ({currentCompanyRaw.last_close_date.replace(/(\d{4})(\d{2})(\d{2})/, '$1.$2.$3')})
+                                        <span style={{ fontWeight: 400, fontSize: '9px', marginLeft: '4px', opacity: 0.6 }}>
+                                            {currentCompanyRaw.last_close_date.replace(/(\d{4})(\d{2})(\d{2})/, '$1.$2.$3')}
                                         </span>
                                     )}
                                 </span>
@@ -953,9 +953,9 @@ const App = () => {
                             </div>
                         </div>
 
-                        {/* Summary Cards — Row 2: Financial Summary */}
-                        <div style={{ marginTop: '12px', marginBottom: '6px' }}>
-                            <span style={{ fontSize: '11px', fontWeight: 600, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        {/* Summary Cards — Financial Summary */}
+                        <div style={{ marginBottom: '4px' }}>
+                            <span style={{ fontSize: '10px', fontWeight: 600, color: colors.textFaded, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                                 {t('analysis.financialSummary')}
                             </span>
                         </div>
