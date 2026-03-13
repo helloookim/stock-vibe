@@ -503,6 +503,11 @@ const App = () => {
         return calculateYoyDomain(changes);
     }, [chartData]);
 
+    const netIncomeYoyDomain = useMemo(() => {
+        const changes = chartData.map(d => d.ni_change).filter(v => v !== null);
+        return calculateYoyDomain(changes);
+    }, [chartData]);
+
     // EPS chart data from processed quarterly data
     const epsChartData = useMemo(() => {
         const epsEntries = processedQuarterly.filter(e => e.eps != null);
@@ -538,16 +543,53 @@ const App = () => {
             }));
     }, [processedQuarterly, processedAnnual, viewMode, yearRange]);
 
-    // Close price chart data
+    // Close price chart data (with current price appended)
     const closePriceData = useMemo(() => {
         const data = viewMode === 'quarterly' ? processedQuarterly : processedAnnual;
-        return data
+        const historical = data
             .filter(entry => entry.close_price != null && entry.year >= yearRange[0] && entry.year <= yearRange[1])
             .map(entry => ({
                 displayLabel: entry.displayLabel,
                 close_price: entry.close_price,
                 year: entry.year,
+                isCurrent: false,
             }));
+
+        // Append current price as the last data point
+        if (currentCompanyRaw?.last_close_price != null) {
+            const lastHistorical = historical[historical.length - 1];
+            // Only add if different from last historical point
+            if (!lastHistorical || lastHistorical.close_price !== currentCompanyRaw.last_close_price) {
+                historical.push({
+                    displayLabel: t('analysis.currentPrice'),
+                    close_price: currentCompanyRaw.last_close_price,
+                    year: 9999,
+                    isCurrent: true,
+                });
+            }
+        }
+
+        return historical;
+    }, [processedQuarterly, processedAnnual, viewMode, yearRange, currentCompanyRaw, t]);
+
+    const bogleData = useMemo(() => {
+        const data = viewMode === 'quarterly' ? processedQuarterly : processedAnnual;
+        const valid = data
+            .filter(e => e.eps != null && e.close_price != null && e.year >= yearRange[0] && e.year <= yearRange[1]);
+
+        if (valid.length < 2) return [];
+
+        const baseEps = valid[0].eps;
+        const basePrice = valid[0].close_price;
+
+        if (!baseEps || !basePrice) return [];
+
+        return valid.map(e => ({
+            displayLabel: e.displayLabel,
+            epsIndex: parseFloat(((e.eps / baseEps) * 100).toFixed(1)),
+            priceIndex: parseFloat(((e.close_price / basePrice) * 100).toFixed(1)),
+            year: e.year,
+        }));
     }, [processedQuarterly, processedAnnual, viewMode, yearRange]);
 
     const peerCompanies = useMemo(() => {
@@ -864,7 +906,59 @@ const App = () => {
                     </header>
 
                     <div className="charts-container">
-                        {/* Summary Cards */}
+                        {/* Summary Cards — Row 1: Market Overview */}
+                        <div style={{ marginBottom: '6px' }}>
+                            <span style={{ fontSize: '11px', fontWeight: 600, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                {t('analysis.marketOverview')}
+                            </span>
+                        </div>
+                        <div className="summary-cards">
+                            <div className="summary-card">
+                                <span className="card-label">
+                                    {t('analysis.latestClosePrice')}
+                                    {currentCompanyRaw?.last_close_date && (
+                                        <span style={{ fontWeight: 400, fontSize: '10px', marginLeft: '6px', opacity: 0.7 }}>
+                                            ({currentCompanyRaw.last_close_date.replace(/(\d{4})(\d{2})(\d{2})/, '$1.$2.$3')})
+                                        </span>
+                                    )}
+                                </span>
+                                <span className="card-value">
+                                    {currentCompanyRaw?.last_close_price != null
+                                        ? `${currentCompanyRaw.last_close_price.toLocaleString()}${t('currency.won')}`
+                                        : '-'}
+                                </span>
+                            </div>
+                            <div className="summary-card">
+                                <span className="card-label">{t('analysis.latestMktcap')}</span>
+                                <span className="card-value">
+                                    {currentCompanyRaw?.last_mktcap != null
+                                        ? (() => {
+                                            const eok = currentCompanyRaw.last_mktcap / 100000000;
+                                            return formatCurrency(eok);
+                                        })()
+                                        : '-'}
+                                </span>
+                            </div>
+                            <div className="summary-card">
+                                <span className="card-label">{t('analysis.latestPer')}</span>
+                                <span className="card-value">
+                                    {currentCompanyRaw?.last_per != null ? `${currentCompanyRaw.last_per.toFixed(1)}x` : '-'}
+                                </span>
+                            </div>
+                            <div className="summary-card">
+                                <span className="card-label">{t('analysis.latestPbr')}</span>
+                                <span className="card-value">
+                                    {currentCompanyRaw?.last_pbr != null ? `${currentCompanyRaw.last_pbr.toFixed(2)}x` : '-'}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Summary Cards — Row 2: Financial Summary */}
+                        <div style={{ marginTop: '12px', marginBottom: '6px' }}>
+                            <span style={{ fontSize: '11px', fontWeight: 600, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                {t('analysis.financialSummary')}
+                            </span>
+                        </div>
                         <div className="summary-cards">
                             <div className="summary-card">
                                 <span className="card-label">{t('analysis.latestRevenue')}</span>
@@ -885,30 +979,12 @@ const App = () => {
                                 </span>
                             </div>
                             <div className="summary-card">
-                                <span className="card-label">
-                                    {t('analysis.latestClosePrice')}
-                                    {currentCompanyRaw?.last_close_date && (
-                                        <span style={{ fontWeight: 400, fontSize: '10px', marginLeft: '6px', opacity: 0.7 }}>
-                                            ({currentCompanyRaw.last_close_date.replace(/(\d{4})(\d{2})(\d{2})/, '$1.$2.$3')})
-                                        </span>
-                                    )}
-                                </span>
+                                <span className="card-label">{t('analysis.latestEps')}</span>
                                 <span className="card-value">
-                                    {currentCompanyRaw?.last_close_price != null
-                                        ? `${currentCompanyRaw.last_close_price.toLocaleString()}${t('currency.won')}`
-                                        : '-'}
-                                </span>
-                            </div>
-                            <div className="summary-card">
-                                <span className="card-label">{t('analysis.latestPer')}</span>
-                                <span className="card-value">
-                                    {currentCompanyRaw?.last_per != null ? `${currentCompanyRaw.last_per.toFixed(1)}x` : '-'}
-                                </span>
-                            </div>
-                            <div className="summary-card">
-                                <span className="card-label">{t('analysis.latestPbr')}</span>
-                                <span className="card-value">
-                                    {currentCompanyRaw?.last_pbr != null ? `${currentCompanyRaw.last_pbr.toFixed(2)}x` : '-'}
+                                    {(() => {
+                                        const lastWithEps = [...(processedQuarterly || [])].reverse().find(e => e.eps != null);
+                                        return lastWithEps ? `${lastWithEps.eps.toLocaleString()}${t('currency.won')}` : '-';
+                                    })()}
                                 </span>
                             </div>
                         </div>
@@ -1087,6 +1163,92 @@ const App = () => {
                             </div>
                         </div>
 
+                        {/* Net Income Bar Chart with YoY */}
+                        <div className="chart-section">
+                            <h3>
+                                {t('analysis.netIncomeYoy', { mode: viewMode === 'annual' ? t('analysis.annual') : t('analysis.quarterly') })}
+                                <InfoTooltip text={t('tooltips.netIncomeExplain')} colors={colors} />
+                            </h3>
+                            <div className="chart-legend">
+                                <span><span className="legend-bar" style={{ background: `${colors.netIncome}99` }}></span> {t('analysis.netIncomeLegend')}</span>
+                                <span><span className="legend-line-dual"><span style={{ background: colors.positive }}></span><span style={{ background: colors.negative }}></span></span> {t('analysis.yoyLegend')}</span>
+                            </div>
+                            <div className="chart-wrapper">
+                                <ResponsiveContainer width="100%" height={250}>
+                                    <BarChart data={chartData} margin={chartMargins}>
+                                        <defs>
+                                            <linearGradient id="barGradPurple" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="0%" stopColor={colors.netIncome} stopOpacity={colors.isLight ? 1 : 0.8} />
+                                                <stop offset="100%" stopColor={colors.netIncome} stopOpacity={colors.isLight ? 1 : 0.3} />
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
+                                        <XAxis dataKey="displayLabel" stroke={colors.textMuted} {...xAxisProps} />
+                                        <YAxis
+                                            stroke={colors.textMuted}
+                                            fontSize={11}
+                                            domain={isDefaultRange ? [0, 'auto'] : [dataMin => Math.min(dataMin, 0), 'auto']}
+                                            tickFormatter={(val) => {
+                                                const maxVal = Math.max(...chartData.map(d => Math.abs(d.net_income_eok)));
+                                                if (maxVal >= 10000) {
+                                                    return `${(val / 10000).toFixed(1)}${t('currency.jo')}`;
+                                                }
+                                                return `${val.toFixed(0)}${t('currency.eok')}`;
+                                            }}
+                                            padding={{ top: 20, bottom: 20 }}
+                                            width={isMobile ? 50 : 65}
+                                        />
+                                        <Tooltip
+                                            content={<CustomTooltip
+                                                colors={colors}
+                                                valueFormatter={(value) => {
+                                                    if (Math.abs(value) >= 10000) {
+                                                        return `${(value / 10000).toLocaleString(undefined, { maximumFractionDigits: 2 })} ${t('currency.joWon')}`;
+                                                    }
+                                                    return `${value.toLocaleString(undefined, { maximumFractionDigits: 1 })} ${t('currency.eokWon')}`;
+                                                }}
+                                                yoyKey="ni_change"
+                                            />}
+                                        />
+                                        <ReferenceLine y={0} stroke={colors.chartRef} />
+                                        <Bar dataKey="net_income_eok" name={t('analysis.netIncomeBarName')} fill="url(#barGradPurple)" radius={[4, 4, 0, 0]} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                                <ResponsiveContainer width="100%" height={isMobile ? 120 : 180}>
+                                    <ComposedChart data={chartData} margin={chartMargins}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
+                                        <XAxis dataKey="displayLabel" stroke={colors.textMuted} {...xAxisProps} />
+                                        <YAxis
+                                            stroke={colors.positive}
+                                            fontSize={9}
+                                            tickFormatter={(val) => `${val.toFixed(0)}%`}
+                                            domain={netIncomeYoyDomain.domain}
+                                            ticks={netIncomeYoyDomain.ticks}
+                                            width={isMobile ? 50 : 65}
+                                        />
+                                        <Tooltip
+                                            contentStyle={{ backgroundColor: colors.tooltipBg, border: `1px solid ${colors.tooltipBorder}`, borderRadius: '8px' }}
+                                            formatter={(value) => [`${value}%`, 'YoY']}
+                                        />
+                                        <ReferenceLine y={0} stroke={colors.chartRef} strokeDasharray="5 5" />
+                                        <Line
+                                            type="monotone"
+                                            dataKey="ni_change"
+                                            name="YoY"
+                                            stroke={colors.chartRef}
+                                            strokeWidth={1.5}
+                                            dot={(props) => {
+                                                const { cx, cy, payload } = props;
+                                                if (payload.ni_change === null) return null;
+                                                const color = payload.ni_change >= 0 ? colors.positive : colors.negative;
+                                                return <circle cx={cx} cy={cy} r={2.5} fill={color} stroke={color} strokeWidth={1} />;
+                                            }}
+                                        />
+                                    </ComposedChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+
                         {/* Profit Margin Chart (Full Width) */}
                         <div className="chart-section profit-margin-chart">
                             <h3>
@@ -1122,53 +1284,6 @@ const App = () => {
                                 </ResponsiveContainer>
                             </div>
                         </div>
-
-                        {/* PER / PBR Chart */}
-                        {perPbrData.length > 0 && (
-                            <div className="chart-section">
-                                <h3>
-                                    {t('analysis.perPbrChart', { mode: viewMode === 'annual' ? t('analysis.annual') : t('analysis.quarterly') })}
-                                    <InfoTooltip text={t('tooltips.perExplain')} colors={colors} />
-                                </h3>
-                                <div className="chart-legend">
-                                    <span><span className="legend-bar" style={{ background: colors.per }}></span> PER</span>
-                                    <span><span className="legend-bar" style={{ background: colors.pbr }}></span> PBR</span>
-                                </div>
-                                <div className="chart-wrapper">
-                                    <ResponsiveContainer width="100%" height={300}>
-                                        <ComposedChart data={perPbrData} margin={chartMargins}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
-                                            <XAxis dataKey="displayLabel" stroke={colors.textMuted} {...xAxisProps} />
-                                            <YAxis
-                                                yAxisId="per"
-                                                stroke={colors.per}
-                                                fontSize={11}
-                                                tickFormatter={(val) => `${val}x`}
-                                                domain={[0, 'auto']}
-                                                padding={{ top: 20 }}
-                                                width={isMobile ? 45 : 55}
-                                            />
-                                            <YAxis
-                                                yAxisId="pbr"
-                                                orientation="right"
-                                                stroke={colors.pbr}
-                                                fontSize={11}
-                                                tickFormatter={(val) => `${val}x`}
-                                                domain={[0, 'auto']}
-                                                padding={{ top: 20 }}
-                                                width={isMobile ? 45 : 55}
-                                            />
-                                            <Tooltip
-                                                contentStyle={{ backgroundColor: colors.tooltipBg, border: `1px solid ${colors.tooltipBorder}`, borderRadius: '8px' }}
-                                                formatter={(value, name) => [`${value}x`, name]}
-                                            />
-                                            <Bar yAxisId="per" dataKey="per" name="PER" fill={colors.per} radius={[4, 4, 0, 0]} fillOpacity={0.7} />
-                                            <Line yAxisId="pbr" type="monotone" dataKey="pbr" name="PBR" stroke={colors.pbr} strokeWidth={2.5} dot={{ r: 3, fill: colors.pbr }} />
-                                        </ComposedChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </div>
-                        )}
 
                         {/* EPS Bar Chart with YoY */}
                         {epsChartData.length > 0 && (
@@ -1278,7 +1393,10 @@ const App = () => {
                                             />
                                             <Tooltip
                                                 contentStyle={{ backgroundColor: colors.tooltipBg, border: `1px solid ${colors.tooltipBorder}`, borderRadius: '8px' }}
-                                                formatter={(value) => [`${value.toLocaleString()} ${t('currency.won')}`, t('analysis.closePrice')]}
+                                                formatter={(value, name, props) => {
+                                                    const label = props?.payload?.isCurrent ? t('analysis.currentPrice') : t('analysis.closePrice');
+                                                    return [`${value.toLocaleString()} ${t('currency.won')}`, label];
+                                                }}
                                             />
                                             <Area
                                                 type="monotone"
@@ -1288,10 +1406,107 @@ const App = () => {
                                                 strokeWidth={2}
                                                 fillOpacity={1}
                                                 fill="url(#closePriceGrad)"
-                                                dot={{ r: 2, fill: colors.closePrice, strokeWidth: 0 }}
+                                                dot={(dotProps) => {
+                                                    const { cx, cy, payload } = dotProps;
+                                                    if (payload.isCurrent) {
+                                                        return (
+                                                            <g key="current-dot">
+                                                                <circle cx={cx} cy={cy} r={6} fill={colors.accent} stroke={colors.bgCard} strokeWidth={2} />
+                                                                <circle cx={cx} cy={cy} r={3} fill="#fff" />
+                                                            </g>
+                                                        );
+                                                    }
+                                                    return <circle cx={cx} cy={cy} r={2} fill={colors.closePrice} strokeWidth={0} />;
+                                                }}
                                                 activeDot={{ r: 4, fill: colors.closePrice, strokeWidth: 2, stroke: colors.bgCard }}
                                             />
                                         </AreaChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* EPS vs Price Growth (Bogle) Chart */}
+                        {bogleData.length > 0 && (
+                            <div className="chart-section">
+                                <h3>
+                                    {t('analysis.bogleChart', { mode: viewMode === 'annual' ? t('analysis.annual') : t('analysis.quarterly') })}
+                                    <InfoTooltip text={t('tooltips.bogleExplain')} colors={colors} />
+                                </h3>
+                                <div className="chart-legend">
+                                    <span><span className="legend-bar" style={{ background: colors.revenue }}></span> {t('analysis.epsGrowthLegend')}</span>
+                                    <span><span className="legend-bar" style={{ background: colors.accent }}></span> {t('analysis.priceGrowthLegend')}</span>
+                                </div>
+                                <div className="chart-wrapper">
+                                    <ResponsiveContainer width="100%" height={300}>
+                                        <ComposedChart data={bogleData} margin={chartMargins}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
+                                            <XAxis dataKey="displayLabel" stroke={colors.textMuted} {...xAxisProps} />
+                                            <YAxis
+                                                stroke={colors.textMuted}
+                                                fontSize={11}
+                                                domain={['auto', 'auto']}
+                                                padding={{ top: 20, bottom: 20 }}
+                                                width={isMobile ? 45 : 55}
+                                            />
+                                            <ReferenceLine y={100} stroke={colors.chartRef} strokeDasharray="4 4" />
+                                            <Tooltip
+                                                contentStyle={{ backgroundColor: colors.tooltipBg, border: `1px solid ${colors.tooltipBorder}`, borderRadius: '8px' }}
+                                                formatter={(value, name) => {
+                                                    const label = name === 'epsIndex' ? t('analysis.epsGrowthLegend') : t('analysis.priceGrowthLegend');
+                                                    return [value, label];
+                                                }}
+                                            />
+                                            <Line type="monotone" dataKey="epsIndex" name="epsIndex" stroke={colors.revenue} strokeWidth={2.5} dot={{ r: 3, fill: colors.revenue }} />
+                                            <Line type="monotone" dataKey="priceIndex" name="priceIndex" stroke={colors.accent} strokeWidth={2.5} dot={{ r: 3, fill: colors.accent }} />
+                                        </ComposedChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* PER / PBR Chart */}
+                        {perPbrData.length > 0 && (
+                            <div className="chart-section">
+                                <h3>
+                                    {t('analysis.perPbrChart', { mode: viewMode === 'annual' ? t('analysis.annual') : t('analysis.quarterly') })}
+                                    <InfoTooltip text={t('tooltips.perExplain')} colors={colors} />
+                                </h3>
+                                <div className="chart-legend">
+                                    <span><span className="legend-bar" style={{ background: colors.per }}></span> PER</span>
+                                    <span><span className="legend-bar" style={{ background: colors.pbr }}></span> PBR</span>
+                                </div>
+                                <div className="chart-wrapper">
+                                    <ResponsiveContainer width="100%" height={300}>
+                                        <ComposedChart data={perPbrData} margin={chartMargins}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
+                                            <XAxis dataKey="displayLabel" stroke={colors.textMuted} {...xAxisProps} />
+                                            <YAxis
+                                                yAxisId="per"
+                                                stroke={colors.per}
+                                                fontSize={11}
+                                                tickFormatter={(val) => `${val}x`}
+                                                domain={[0, 'auto']}
+                                                padding={{ top: 20 }}
+                                                width={isMobile ? 45 : 55}
+                                            />
+                                            <YAxis
+                                                yAxisId="pbr"
+                                                orientation="right"
+                                                stroke={colors.pbr}
+                                                fontSize={11}
+                                                tickFormatter={(val) => `${val}x`}
+                                                domain={[0, 'auto']}
+                                                padding={{ top: 20 }}
+                                                width={isMobile ? 45 : 55}
+                                            />
+                                            <Tooltip
+                                                contentStyle={{ backgroundColor: colors.tooltipBg, border: `1px solid ${colors.tooltipBorder}`, borderRadius: '8px' }}
+                                                formatter={(value, name) => [`${value}x`, name]}
+                                            />
+                                            <Bar yAxisId="per" dataKey="per" name="PER" fill={colors.per} radius={[4, 4, 0, 0]} fillOpacity={0.7} />
+                                            <Line yAxisId="pbr" type="monotone" dataKey="pbr" name="PBR" stroke={colors.pbr} strokeWidth={2.5} dot={{ r: 3, fill: colors.pbr }} />
+                                        </ComposedChart>
                                     </ResponsiveContainer>
                                 </div>
                             </div>

@@ -38,11 +38,22 @@
         "opProfitBarName": "영업이익",
         "latestPer": "PER (TTM)",
         "latestPbr": "PBR",
+        "latestMktcap": "시가총액",
+        "latestEps": "최근 EPS",
+        "netIncomeYoy": "{{mode}} 순이익 & YoY 변동률",
+        "netIncomeLegend": "순이익 (억원)",
+        "netIncomeBarName": "순이익",
         "closePriceChart": "{{mode}} 주가 (종가)",
         "closePriceLegend": "종가 (원)",
         "closePrice": "종가",
+        "currentPrice": "현재",
         "latestClosePrice": "종가",
-        "perPbrChart": "{{mode}} PER & PBR"
+        "bogleChart": "{{mode}} EPS vs 주가 성장률 비교",
+        "epsGrowthLegend": "EPS 성장",
+        "priceGrowthLegend": "주가 성장",
+        "perPbrChart": "{{mode}} PER & PBR",
+        "marketOverview": "시장",
+        "financialSummary": "실적"
     },
     "currency": {
         "eok": "억",
@@ -60,7 +71,9 @@
         "yoyExplain": "YoY(Year on Year)는 전년 동기 대비 변동률입니다. 작년 같은 분기와 비교하여 얼마나 성장했는지를 나타내며, 계절적 요인을 배제하고 회사의 실질적인 성장 추세를 파악하는 데 필수적입니다.",
         "perExplain": "PER(Price Earnings Ratio, 주가수익비율)은 시가총액을 순이익으로 나눈 값입니다. 현재 주가가 기업의 수익력 대비 비싼지 싼지를 판단하는 대표적인 밸류에이션 지표입니다. PER이 낮을수록 이익 대비 저평가, 높을수록 고평가로 해석되지만, 성장주는 PER이 높은 것이 일반적입니다.",
         "pbrExplain": "PBR(Price Book-value Ratio, 주가순자산비율)은 시가총액을 자기자본(순자산)으로 나눈 값입니다. PBR 1배 미만이면 시장에서 기업의 장부가치보다 낮게 평가하고 있다는 뜻이며, 자산가치 대비 저평가 종목을 찾는 데 활용됩니다.",
-        "closePriceExplain": "종가는 해당 거래일의 마지막 체결 가격입니다. 분기별 차트에서는 각 분기 말 마지막 거래일의 종가를, 연간 차트에서는 해당 연도 마지막 거래일의 종가를 표시합니다."
+        "netIncomeExplain": "순이익(당기순이익)은 매출에서 모든 비용(원가, 판관비, 이자비용, 법인세 등)을 차감한 최종 이익입니다. 기업의 실질적인 수익력을 나타내며, 배당금 지급과 재투자의 원천이 됩니다.",
+        "closePriceExplain": "종가는 해당 거래일의 마지막 체결 가격입니다. 분기별 차트에서는 각 분기 말 마지막 거래일의 종가를, 연간 차트에서는 해당 연도 마지막 거래일의 종가를 표시합니다.",
+        "bogleExplain": "EPS(주당순이익)와 주가의 누적 성장률을 시작 시점 기준(=100)으로 비교합니다. 두 선이 함께 움직이면 주가가 실적을 반영하고 있다는 뜻이며, 주가 선이 EPS 선보다 위에 있으면 PER이 확장(고평가 가능성)되었음을, 아래에 있으면 PER이 수축(저평가 가능성)되었음을 나타냅니다."
     },
     "home": {
         "tagline": "한국 및 미국 상장 기업의 재무제표와 실적 데이터를",

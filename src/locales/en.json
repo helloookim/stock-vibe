@@ -38,11 +38,22 @@
         "opProfitBarName": "Op. Profit",
         "latestPer": "PER (TTM)",
         "latestPbr": "PBR",
+        "latestMktcap": "Market Cap",
+        "latestEps": "Latest EPS",
+        "netIncomeYoy": "{{mode}} Net Income & YoY Change",
+        "netIncomeLegend": "Net Income (B KRW)",
+        "netIncomeBarName": "Net Income",
         "closePriceChart": "{{mode}} Stock Price (Close)",
         "closePriceLegend": "Close Price (KRW)",
         "closePrice": "Close Price",
+        "currentPrice": "Current",
         "latestClosePrice": "Close",
-        "perPbrChart": "{{mode}} PER & PBR"
+        "bogleChart": "{{mode}} EPS vs Price Growth",
+        "epsGrowthLegend": "EPS Growth",
+        "priceGrowthLegend": "Price Growth",
+        "perPbrChart": "{{mode}} PER & PBR",
+        "marketOverview": "Market",
+        "financialSummary": "Financials"
     },
     "currency": {
         "eok": "B",
@@ -60,7 +71,9 @@
         "yoyExplain": "YoY (Year on Year) is the rate of change compared to the same period last year. By comparing with the same quarter of the previous year, it shows how much the company has grown, essential for understanding the company's true growth trend while excluding seasonal factors.",
         "perExplain": "PER (Price Earnings Ratio) is calculated by dividing the market capitalization by net income. It is a key valuation metric indicating whether a stock is cheap or expensive relative to its earnings. A lower PER suggests undervaluation, while a higher PER suggests overvaluation, though growth stocks typically have higher PERs.",
         "pbrExplain": "PBR (Price Book-value Ratio) is calculated by dividing the market capitalization by total equity (book value). A PBR below 1.0 means the market values the company below its book value, which can indicate an undervalued asset-rich stock.",
-        "closePriceExplain": "Close price is the last traded price on a given trading day. The quarterly chart shows the closing price on the last trading day of each quarter, while the annual chart shows the year-end closing price."
+        "netIncomeExplain": "Net Income is the final profit after deducting all expenses (cost of goods, SG&A, interest, taxes, etc.) from revenue. It represents a company's actual earning power and is the source of dividends and reinvestment.",
+        "closePriceExplain": "Close price is the last traded price on a given trading day. The quarterly chart shows the closing price on the last trading day of each quarter, while the annual chart shows the year-end closing price.",
+        "bogleExplain": "Compares the cumulative growth of EPS (Earnings Per Share) and stock price, indexed to 100 at the starting point. When both lines move together, the stock price is tracking earnings. If the price line is above the EPS line, PER has expanded (potential overvaluation). If below, PER has contracted (potential undervaluation)."
     },
     "home": {
         "tagline": "Visualize and analyze financial statements",
