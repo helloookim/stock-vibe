@@ -23,12 +23,25 @@ The build script runs `npm run generate-sitemap && vite build`. The sitemap gene
 ### Data Processing
 
 ```bash
-# Korean stock data — DART OpenAPI pipeline
+# Korean stock data — DART OpenAPI pipeline (financial statements)
 python scripts/fetch_kr_data_dart.py                    # Full fetch (all companies, 2015–2025)
-python scripts/fetch_kr_data_dart.py --year 2024        # Single year only
+python scripts/fetch_kr_data_dart.py --year 2025        # Incremental update for one year (merges into existing data)
 python scripts/fetch_kr_data_dart.py --test             # Test with 8 companies
 python scripts/fetch_kr_data_dart.py --eps-backfill 500 # Backfill EPS for top N companies
+python scripts/fetch_kr_data_dart.py --fix-revenue       # Fix missing revenue/op_profit/net_income via full API
 python scripts/fetch_kr_data_dart.py --index-only       # Regenerate index only
+
+# Korean stock data — Naver Finance scraper (quarterly data + EPS via Selenium)
+python scripts/fetch_naver_finance.py --test             # Test with 5 companies
+python scripts/fetch_naver_finance.py --top 100          # Top 100 by market cap (default)
+python scripts/fetch_naver_finance.py --all              # All companies
+python scripts/fetch_naver_finance.py --code 005930      # Single company
+python scripts/fetch_naver_finance.py --dry-run --top 10 # Parse only, don't save
+
+# Korean stock data — KRX price/PER/PBR pipeline (runs AFTER DART pipeline)
+python scripts/fetch_krx_data.py                        # Full fetch (latest + historical prices)
+python scripts/fetch_krx_data.py --latest-only           # Latest PER/PBR only (1 API call)
+python scripts/fetch_krx_data.py --start-year 2020       # Historical prices from 2020+
 
 # US stock data
 python scripts/process_us_data.py
@@ -82,6 +95,8 @@ public/
 
 scripts/
 ├── fetch_kr_data_dart.py     # DART OpenAPI pipeline — generates kr_stocks/ and kr_company_index.json
+├── fetch_krx_data.py         # KRX price pipeline — merges close_price, PER, PBR into kr_stocks/ JSONs
+├── fetch_naver_finance.py    # Naver Finance scraper — quarterly data + EPS via Selenium
 └── migrate_kr_data.js        # [LEGACY] Old chunked data migration
 
 data/
@@ -210,6 +225,12 @@ Per-company JSON files (`public/data/kr_stocks/{stockCode}.json`):
   "sector": "통신 및 방송장비 제조업",
   "market": "KOSPI",                // KOSPI or KOSDAQ
   "fy_end_month": 12,
+  // Top-level KRX market data (latest trading day)
+  "last_close_price": 55500,        // Latest close price (KRW)
+  "last_close_date": "20260311",    // Date of latest price
+  "last_mktcap": 3314085000000,     // Market capitalization (KRW)
+  "last_per": 9.6,                  // PER = mktcap / latest annual net_income
+  "last_pbr": 0.92,                 // PBR = mktcap / latest annual total_equity
   "annual": [{
     "year": 2024,
     "revenue": 300870903000000,     // All monetary values in KRW (원)
@@ -218,14 +239,20 @@ Per-company JSON files (`public/data/kr_stocks/{stockCode}.json`):
     "total_assets": 479518073000000,
     "total_equity": 361063324000000,
     "total_debt": 118454749000000,
-    "eps": null                     // EPS not available from key accounts API
+    "eps": null,                    // EPS not available from key accounts API
+    "close_price": 53000,           // KRX: year-end close price
+    "per": 9.2,                     // KRX: PER at year-end
+    "pbr": 0.88                     // KRX: PBR at year-end
   }],
   "quarterly": [{
     "year": 2024, "quarter": "1Q",  // 1Q, 2Q, 3Q, 4Q
     "revenue": 71915601000000,
     "op_profit": 6606009000000,
     "net_income": 6754708000000,
-    "eps": 975                      // EPS backfilled from legacy data
+    "eps": 975,                     // EPS backfilled from legacy data
+    "close_price": 80600,           // KRX: quarter-end close price
+    "per": 33.7,                    // KRX: PER = mktcap / trailing 4Q net_income
+    "pbr": 1.34                     // KRX: PBR = mktcap / latest annual total_equity
   }]
 }
 ```
@@ -293,17 +320,30 @@ Per-company JSON files from SEC EDGAR (2015q1–2025q4). See `us_fixed_company_j
 
 ### Pipeline Script: `scripts/fetch_kr_data_dart.py`
 1. Loads corp_code mapping from `data/dart_corp_codes.json` (cached) or downloads from DART
-2. Fetches key accounts (revenue, op_profit, net_income, total_assets, total_equity, total_debt) via batch API
+2. Fetches key accounts (revenue, op_profit, net_income, total_assets, total_equity, total_debt) via batch API (`fnlttMultiAcnt`)
 3. Consolidates CFS (consolidated) vs OFS (individual) — prefers CFS
 4. Derives Q4 = Annual − (Q1 + Q2 + Q3) using `safe_subtract_multi()`
-5. Merges EPS from legacy data files (when available)
-6. Generates per-company JSON files in `public/data/kr_stocks/`
-7. Generates sidebar index `public/data/kr_company_index.json`
+5. Detects Q4 anomalies and auto-fixes using `fnlttSinglAcnt` endpoint's 9-month cumulative data
+6. Fixes missing financials via `fnlttSinglAcntAll` fallback — the batch API sometimes omits accounts when companies use non-standard names (e.g., `영업수익` instead of `매출액` after holding company conversion). The `--fix-revenue` flag runs this step standalone.
+7. Merges EPS from legacy data files (when available)
+8. **Merge behavior:** `--year` mode merges into existing JSON files (preserves other years); full mode preserves KRX market data fields (close_price, per, pbr)
+9. Generates per-company JSON files in `public/data/kr_stocks/`
+10. Generates sidebar index `public/data/kr_company_index.json`
+
+### KRX Price Pipeline: `scripts/fetch_krx_data.py`
+- Runs **after** the DART pipeline
+- Fetches daily trading data from data.go.kr (금융위원회 주식시세정보)
+- Computes **PER** = market cap / net_income (trailing 4Q for quarterly, annual for annual entries)
+- Computes **PBR** = market cap / total_equity (latest annual)
+- Merges close_price, PER, PBR into existing per-company JSON files
+- `--latest-only` for quick daily update (1 API call)
 
 ### Known Data Quality Issues
-- **Q4 derivation errors (~666 company-years):** When a company changes consolidation scope mid-year (e.g., Naver 2020 LINE deconsolidation), Q1-Q3 reports use old scope while the annual report uses new scope. `Q4 = Annual − Q1 − Q2 − Q3` produces incorrect values (negative or anomalously small/large). Fix requires `fnlttSinglAcnt` endpoint's `thstrm_add_amount` (9-month cumulative) for accurate Q4 derivation.
+- **Q4 derivation:** `Q4 = Annual − Q1 − Q2 − Q3` can produce incorrect values when consolidation scope changes mid-year. The pipeline auto-detects anomalies and fixes them using `fnlttSinglAcnt` endpoint's `thstrm_add_amount` (9-month cumulative). Remaining negative Q4 entries are nullified.
+- **Missing financials from batch API:** ~140+ companies had missing revenue/op_profit/net_income because the batch API (`fnlttMultiAcnt`) only returns standard "주요계정" names. Companies using `영업수익` (e.g., POSCO홀딩스, 카카오 after holding company conversion) or `연결당기순이익` (e.g., 현대자동차) were missing data. Fixed by falling back to `fnlttSinglAcntAll` (full financial statement API). ~70 small companies still have missing revenue where DART has no revenue account at all (SPACs, pre-revenue biotech).
 - **EPS:** Not available from key accounts API. Backfilled from legacy chunked data for companies that existed in old dataset.
 - **Report period semantics:** For IS items, `fnlttMultiAcnt` returns `thstrm_amount` = single-quarter figure for Q1/H1/Q3 reports. H1 report's `thstrm_amount` = Q2 single (not 6-month cumulative).
+- **Data freshness:** DART only has historical filings. Q1 reports appear ~May, H1 ~August, Q3 ~November, annual ~March of next year. No forward/consensus estimates available.
 
 ## Important Notes for AI Assistants
 

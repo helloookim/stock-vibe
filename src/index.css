@@ -27,6 +27,9 @@
   --op-income: #00d084;
   --net-income: #A78BFA;
   --margin: #FF8C00;
+  --per: #6366f1;
+  --pbr: #ec4899;
+  --close-price: #14b8a6;
   --code-bg: #1c1c22;
   --box-shadow: rgba(255, 255, 255, 0.04);
   --scrollbar-thumb: rgba(255, 255, 255, 0.06);
@@ -60,6 +63,9 @@
   --op-income: #008C46;
   --net-income: #7C5CBF;
   --margin: #D97706;
+  --per: #4f46e5;
+  --pbr: #db2777;
+  --close-price: #0d9488;
   --code-bg: #F0EDE8;
   --box-shadow: rgba(0, 0, 0, 0.06);
   --scrollbar-thumb: rgba(0, 0, 0, 0.1);
@@ -592,7 +598,7 @@ html.page-scroll-enabled body {
 /* Summary Cards */
 .summary-cards {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
   margin-bottom: 30px;
 }
@@ -621,14 +627,21 @@ html.page-scroll-enabled body {
 }
 
 .summary-card:nth-child(4) {
-  border-left: 4px solid var(--gold);
+  border-left: 4px solid var(--close-price);
+}
+
+.summary-card:nth-child(5) {
+  border-left: 4px solid var(--per);
+}
+
+.summary-card:nth-child(6) {
+  border-left: 4px solid var(--pbr);
 }
 
 .card-label {
   font-size: 11px;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.02em;
   color: var(--text-faded);
 }
 
@@ -703,8 +716,7 @@ html.page-scroll-enabled body {
 .chart-section h3 {
   font-size: 14px;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.02em;
   color: var(--text-muted);
   margin-bottom: 15px;
   display: flex;
@@ -1048,8 +1060,7 @@ html.page-scroll-enabled body {
 .peers-section h3 {
   font-size: 14px;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.02em;
   color: var(--text-muted);
   margin-bottom: 20px;
   display: flex;

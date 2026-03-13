@@ -90,8 +90,9 @@ const InfoTooltip = ({ text, colors }) => {
                         maxHeight: '80vh',
                         overflow: 'auto',
                         zIndex: 1000,
-                        fontSize: '0.875rem',
-                        lineHeight: '1.7',
+                        fontFamily: "'Noto Serif KR', 'Noto Serif', Georgia, serif",
+                        fontSize: '0.85rem',
+                        lineHeight: '1.8',
                         color: c.textPrimary || '#f0f0f5',
                         boxShadow: `0 10px 25px -5px ${c.tooltipShadow || 'rgba(0, 0, 0, 0.5)'}`,
                         pointerEvents: 'none',
@@ -147,7 +148,7 @@ const App = () => {
     const [dataLoading, setDataLoading] = useState(true);
     const [selectedCode, setSelectedCode] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
-    const [sortBy, setSortBy] = useState('revenue');  // 초기값: 매출순
+    const [sortBy, setSortBy] = useState('market_cap');  // 초기값: 시가총액순
     const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
     const [yearRange, setYearRange] = useState([2015, 2025]);
     const [isDefaultRange, setIsDefaultRange] = useState(true);
@@ -433,7 +434,7 @@ const App = () => {
 
     // Update yearRange when company or viewMode changes to fit company's data range
     useEffect(() => {
-        setYearRange([Math.max(companyDataRange.min, 2020), companyDataRange.max]);
+        setYearRange([companyDataRange.min, companyDataRange.max]);
         setIsDefaultRange(true); // Reset to default when company changes
     }, [companyDataRange, viewMode]);
 
@@ -522,6 +523,31 @@ const App = () => {
         const changes = epsChartData.map(d => d.eps_change).filter(v => v !== null);
         return calculateYoyDomain(changes);
     }, [epsChartData]);
+
+    // PER/PBR chart data
+    const perPbrData = useMemo(() => {
+        const data = viewMode === 'quarterly' ? processedQuarterly : processedAnnual;
+        return data
+            .filter(entry => (entry.per != null || entry.pbr != null) && entry.year >= yearRange[0] && entry.year <= yearRange[1])
+            .map(entry => ({
+                displayLabel: entry.displayLabel,
+                per: entry.per,
+                pbr: entry.pbr,
+                year: entry.year,
+            }));
+    }, [processedQuarterly, processedAnnual, viewMode, yearRange]);
+
+    // Close price chart data
+    const closePriceData = useMemo(() => {
+        const data = viewMode === 'quarterly' ? processedQuarterly : processedAnnual;
+        return data
+            .filter(entry => entry.close_price != null && entry.year >= yearRange[0] && entry.year <= yearRange[1])
+            .map(entry => ({
+                displayLabel: entry.displayLabel,
+                close_price: entry.close_price,
+                year: entry.year,
+            }));
+    }, [processedQuarterly, processedAnnual, viewMode, yearRange]);
 
     const peerCompanies = useMemo(() => {
         if (!currentCompany?.sector) return [];
@@ -626,20 +652,20 @@ const App = () => {
                                 >
                                     <ArrowUpDown size={16} />
                                     <span>
-                                        {sortBy === 'revenue' ? t('sidebar.sortByRevenue') :
-                                            sortBy === 'op_profit' ? t('sidebar.sortByOpProfit') :
-                                                sortBy === 'market_cap' ? t('sidebar.sortByMarketCap') : t('sidebar.sortByCode')}
+                                        {sortBy === 'market_cap' ? t('sidebar.sortByMarketCap') :
+                                            sortBy === 'revenue' ? t('sidebar.sortByRevenue') :
+                                                sortBy === 'op_profit' ? t('sidebar.sortByOpProfit') : t('sidebar.sortByCode')}
                                     </span>
                                 </button>
                                 {sortDropdownOpen && (
                                     <div className="sort-dropdown-menu">
-                                        <button className={`sort-option ${sortBy === 'revenue' ? 'active' : ''}`}
-                                            onClick={() => { setSortBy('revenue'); setSortDropdownOpen(false); }}>
-                                            {t('sidebar.sortByRevenue')}
-                                        </button>
                                         <button className={`sort-option ${sortBy === 'market_cap' ? 'active' : ''}`}
                                             onClick={() => { setSortBy('market_cap'); setSortDropdownOpen(false); }}>
                                             {t('sidebar.sortByMarketCap')}
+                                        </button>
+                                        <button className={`sort-option ${sortBy === 'revenue' ? 'active' : ''}`}
+                                            onClick={() => { setSortBy('revenue'); setSortDropdownOpen(false); }}>
+                                            {t('sidebar.sortByRevenue')}
                                         </button>
                                         <button className={`sort-option ${sortBy === 'op_profit' ? 'active' : ''}`}
                                             onClick={() => { setSortBy('op_profit'); setSortDropdownOpen(false); }}>
@@ -857,6 +883,33 @@ const App = () => {
                                     {chartData.length > 0 ? chartData[chartData.length - 1].op_margin : 0}%
                                 </span>
                             </div>
+                            <div className="summary-card">
+                                <span className="card-label">
+                                    {t('analysis.latestClosePrice')}
+                                    {currentCompanyRaw?.last_close_date && (
+                                        <span style={{ fontWeight: 400, fontSize: '10px', marginLeft: '6px', opacity: 0.7 }}>
+                                            ({currentCompanyRaw.last_close_date.replace(/(\d{4})(\d{2})(\d{2})/, '$1.$2.$3')})
+                                        </span>
+                                    )}
+                                </span>
+                                <span className="card-value">
+                                    {currentCompanyRaw?.last_close_price != null
+                                        ? `${currentCompanyRaw.last_close_price.toLocaleString()}${t('currency.won')}`
+                                        : '-'}
+                                </span>
+                            </div>
+                            <div className="summary-card">
+                                <span className="card-label">{t('analysis.latestPer')}</span>
+                                <span className="card-value">
+                                    {currentCompanyRaw?.last_per != null ? `${currentCompanyRaw.last_per.toFixed(1)}x` : '-'}
+                                </span>
+                            </div>
+                            <div className="summary-card">
+                                <span className="card-label">{t('analysis.latestPbr')}</span>
+                                <span className="card-value">
+                                    {currentCompanyRaw?.last_pbr != null ? `${currentCompanyRaw.last_pbr.toFixed(2)}x` : '-'}
+                                </span>
+                            </div>
                         </div>
 
                         {/* Main Chart: Bar (Revenue) with YoY */}
@@ -1069,6 +1122,53 @@ const App = () => {
                             </div>
                         </div>
 
+                        {/* PER / PBR Chart */}
+                        {perPbrData.length > 0 && (
+                            <div className="chart-section">
+                                <h3>
+                                    {t('analysis.perPbrChart', { mode: viewMode === 'annual' ? t('analysis.annual') : t('analysis.quarterly') })}
+                                    <InfoTooltip text={t('tooltips.perExplain')} colors={colors} />
+                                </h3>
+                                <div className="chart-legend">
+                                    <span><span className="legend-bar" style={{ background: colors.per }}></span> PER</span>
+                                    <span><span className="legend-bar" style={{ background: colors.pbr }}></span> PBR</span>
+                                </div>
+                                <div className="chart-wrapper">
+                                    <ResponsiveContainer width="100%" height={300}>
+                                        <ComposedChart data={perPbrData} margin={chartMargins}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
+                                            <XAxis dataKey="displayLabel" stroke={colors.textMuted} {...xAxisProps} />
+                                            <YAxis
+                                                yAxisId="per"
+                                                stroke={colors.per}
+                                                fontSize={11}
+                                                tickFormatter={(val) => `${val}x`}
+                                                domain={[0, 'auto']}
+                                                padding={{ top: 20 }}
+                                                width={isMobile ? 45 : 55}
+                                            />
+                                            <YAxis
+                                                yAxisId="pbr"
+                                                orientation="right"
+                                                stroke={colors.pbr}
+                                                fontSize={11}
+                                                tickFormatter={(val) => `${val}x`}
+                                                domain={[0, 'auto']}
+                                                padding={{ top: 20 }}
+                                                width={isMobile ? 45 : 55}
+                                            />
+                                            <Tooltip
+                                                contentStyle={{ backgroundColor: colors.tooltipBg, border: `1px solid ${colors.tooltipBorder}`, borderRadius: '8px' }}
+                                                formatter={(value, name) => [`${value}x`, name]}
+                                            />
+                                            <Bar yAxisId="per" dataKey="per" name="PER" fill={colors.per} radius={[4, 4, 0, 0]} fillOpacity={0.7} />
+                                            <Line yAxisId="pbr" type="monotone" dataKey="pbr" name="PBR" stroke={colors.pbr} strokeWidth={2.5} dot={{ r: 3, fill: colors.pbr }} />
+                                        </ComposedChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+                        )}
+
                         {/* EPS Bar Chart with YoY */}
                         {epsChartData.length > 0 && (
                             <div className="chart-section">
@@ -1141,6 +1241,56 @@ const App = () => {
                                                 }}
                                             />
                                         </ComposedChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Close Price Chart */}
+                        {closePriceData.length > 0 && (
+                            <div className="chart-section">
+                                <h3>
+                                    {t('analysis.closePriceChart', { mode: viewMode === 'annual' ? t('analysis.annual') : t('analysis.quarterly') })}
+                                    <InfoTooltip text={t('tooltips.closePriceExplain')} colors={colors} />
+                                </h3>
+                                <div className="chart-legend">
+                                    <span><span className="legend-bar" style={{ background: colors.closePrice }}></span> {t('analysis.closePriceLegend')}</span>
+                                </div>
+                                <div className="chart-wrapper">
+                                    <ResponsiveContainer width="100%" height={250}>
+                                        <AreaChart data={closePriceData} margin={chartMargins}>
+                                            <defs>
+                                                <linearGradient id="closePriceGrad" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="0%" stopColor={colors.closePrice} stopOpacity={0.3} />
+                                                    <stop offset="100%" stopColor={colors.closePrice} stopOpacity={0.02} />
+                                                </linearGradient>
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
+                                            <XAxis dataKey="displayLabel" stroke={colors.textMuted} {...xAxisProps} />
+                                            <YAxis
+                                                stroke={colors.textMuted}
+                                                fontSize={11}
+                                                tickFormatter={(val) => `${val.toLocaleString()}`}
+                                                domain={['auto', 'auto']}
+                                                padding={{ top: 20, bottom: 20 }}
+                                                width={isMobile ? 55 : 70}
+                                            />
+                                            <Tooltip
+                                                contentStyle={{ backgroundColor: colors.tooltipBg, border: `1px solid ${colors.tooltipBorder}`, borderRadius: '8px' }}
+                                                formatter={(value) => [`${value.toLocaleString()} ${t('currency.won')}`, t('analysis.closePrice')]}
+                                            />
+                                            <Area
+                                                type="monotone"
+                                                dataKey="close_price"
+                                                name={t('analysis.closePrice')}
+                                                stroke={colors.closePrice}
+                                                strokeWidth={2}
+                                                fillOpacity={1}
+                                                fill="url(#closePriceGrad)"
+                                                dot={{ r: 2, fill: colors.closePrice, strokeWidth: 0 }}
+                                                activeDot={{ r: 4, fill: colors.closePrice, strokeWidth: 2, stroke: colors.bgCard }}
+                                            />
+                                        </AreaChart>
                                     </ResponsiveContainer>
                                 </div>
                             </div>

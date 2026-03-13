@@ -59,6 +59,11 @@ const darkColors = {
     gold: '#E2B93B',          // rich gold — EPS bars
     goldLight: '#F0CC5A',     // lighter gold
 
+    // Valuation metrics
+    per: '#6366f1',           // indigo — PER
+    pbr: '#ec4899',           // pink — PBR
+    closePrice: '#14b8a6',    // teal — Close Price chart
+
     // Semantic — universal YoY / up-down signals
     positive: '#00d084',
     positiveLight: '#33e888',
@@ -126,6 +131,11 @@ const lightColors = {
     margin: '#D97706',        // warm amber for margin area
     gold: '#B8960F',          // rich dark gold on white
     goldLight: '#D4AD20',
+
+    // Valuation metrics
+    per: '#4f46e5',           // deeper indigo — PER
+    pbr: '#db2777',           // deeper pink — PBR
+    closePrice: '#0d9488',    // deeper teal — Close Price chart
 
     // Semantic
     positive: '#008C46',

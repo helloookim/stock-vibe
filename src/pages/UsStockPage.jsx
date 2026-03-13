@@ -54,7 +54,7 @@ const InfoTooltip = ({ text, colors }) => {
                     position: 'fixed', left: '50%', top: '50%', transform: 'translate(-50%, -50%)',
                     backgroundColor: c.tooltipBg || '#1c1c22', border: `1px solid ${c.tooltipBorder || '#4a4a60'}`, borderRadius: '8px',
                     padding: '20px 24px', width: '360px', maxWidth: '90vw', maxHeight: '80vh',
-                    overflow: 'auto', zIndex: 1000, fontSize: '0.875rem', lineHeight: '1.7',
+                    overflow: 'auto', zIndex: 1000, fontFamily: "'Noto Serif KR', 'Noto Serif', Georgia, serif", fontSize: '0.85rem', lineHeight: '1.8',
                     color: c.textPrimary || '#f0f0f5', boxShadow: `0 10px 25px -5px ${c.tooltipShadow || 'rgba(0, 0, 0, 0.5)'}`,
                     pointerEvents: 'none', textAlign: 'left'
                 }}>

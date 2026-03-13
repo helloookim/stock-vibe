@@ -159,9 +159,6 @@ def fetch_key_accounts(corp_codes_mapping, years=None, test_mode=False):
     total_calls = 0
     for year in years:
         for period_name, reprt_code in REPORT_CODES.items():
-            # Skip future periods
-            if year == END_YEAR and period_name in ('Q3', 'annual'):
-                continue
 
             print(f'  Fetching {year} {period_name}...', end='', flush=True)
             period_count = 0
@@ -226,7 +223,7 @@ def parse_amount(s):
 # Known account name mappings for DART
 REVENUE_NAMES = {'매출액', '수익(매출액)', '영업수익', '보험료수익', '이자수익', '순영업수익'}
 OP_PROFIT_NAMES = {'영업이익', '영업이익(손실)'}
-NET_INCOME_NAMES = {'당기순이익', '당기순이익(손실)', '당기순이익(손실)의 귀속 지배기업의 소유주에게 귀속되는 당기순이익(손실)'}
+NET_INCOME_NAMES = {'당기순이익', '당기순이익(손실)', '연결당기순이익', '당기순이익(손실)의 귀속 지배기업의 소유주에게 귀속되는 당기순이익(손실)'}
 TOTAL_ASSETS_NAMES = {'자산총계'}
 TOTAL_EQUITY_NAMES = {'자본총계'}
 TOTAL_DEBT_NAMES = {'부채총계'}
@@ -418,15 +415,33 @@ def generate_index(corp_codes, market_info, output_dir):
         if not json_file.exists():
             continue
 
+        # Read company JSON for latest financials + KRX market data
+        with open(json_file, 'r', encoding='utf-8') as f:
+            company = json.load(f)
+
         mkt = market_info.get(stock_code, {})
-        index.append({
+        entry = {
             'stock_code': stock_code,
             'name': info.get('name', ''),
             'name_en': info.get('name_en', ''),
             'sector': mkt.get('sector', ''),
             'market': mkt.get('market', ''),
             'rank': mkt.get('rank', 9999),
-        })
+        }
+
+        # Add latest financials from annual data
+        annual = company.get('annual', [])
+        if annual:
+            latest = annual[-1]
+            entry['last_revenue'] = latest.get('revenue')
+            entry['last_op_profit'] = latest.get('op_profit')
+
+        # Preserve KRX market data if present in per-company JSON
+        for key in ('last_per', 'last_pbr'):
+            if key in company and company[key] is not None:
+                entry[key] = company[key]
+
+        index.append(entry)
 
     index.sort(key=lambda x: x['rank'])
 
@@ -446,6 +461,7 @@ def main():
     parser.add_argument('--refresh-codes', action='store_true', help='Force refresh corp codes')
     parser.add_argument('--index-only', action='store_true', help='Only regenerate index')
     parser.add_argument('--fix-q4', action='store_true', help='Detect and fix Q4 anomalies only (no full fetch)')
+    parser.add_argument('--fix-revenue', action='store_true', help='Fix missing revenue/op_profit/net_income using full financial statement API')
     args = parser.parse_args()
 
     print('=== DART OpenAPI Data Pipeline ===\n')
@@ -466,6 +482,14 @@ def main():
     if args.index_only:
         OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
         generate_index(corp_codes, market_info, OUTPUT_DIR)
+        return
+
+    # Fix missing revenue only (skip full fetch)
+    if args.fix_revenue:
+        print('Fixing missing revenue using single company API...')
+        fix_missing_financials(OUTPUT_DIR)
+        generate_index(corp_codes, market_info, OUTPUT_DIR)
+        print('\nDone!')
         return
 
     # Fix Q4 anomalies only (skip full fetch)
@@ -524,8 +548,42 @@ def main():
             skipped += 1
             continue
 
-        # Save
+        # Save (merge with existing file to preserve KRX market data)
         output_file = OUTPUT_DIR / f'{stock_code}.json'
+        if output_file.exists():
+            with open(output_file, 'r', encoding='utf-8') as f:
+                existing_json = json.load(f)
+            if args.year:
+                # --year mode: merge annual/quarterly for that year, keep others
+                existing_annual = {a['year']: a for a in existing_json.get('annual', [])}
+                for a in company_json['annual']:
+                    existing_annual[a['year']] = a
+                existing_json['annual'] = sorted(existing_annual.values(), key=lambda x: x['year'])
+                existing_quarterly = {(q['year'], q['quarter']): q for q in existing_json.get('quarterly', [])}
+                for q in company_json['quarterly']:
+                    existing_quarterly[(q['year'], q['quarter'])] = q
+                existing_json['quarterly'] = sorted(existing_quarterly.values(), key=lambda x: (x['year'], x['quarter']))
+                company_json = existing_json
+            else:
+                # Full mode: preserve KRX market data fields
+                for key in ('last_per', 'last_pbr', 'last_close_price', 'last_close_date', 'last_mktcap'):
+                    if key in existing_json:
+                        company_json[key] = existing_json[key]
+                # Preserve per-entry KRX fields (close_price, per, pbr)
+                old_q = {(q['year'], q['quarter']): q for q in existing_json.get('quarterly', [])}
+                for q in company_json['quarterly']:
+                    old = old_q.get((q['year'], q['quarter']))
+                    if old:
+                        for key in ('close_price', 'per', 'pbr'):
+                            if key in old and old[key] is not None:
+                                q[key] = old[key]
+                old_a = {a['year']: a for a in existing_json.get('annual', [])}
+                for a in company_json['annual']:
+                    old = old_a.get(a['year'])
+                    if old:
+                        for key in ('close_price', 'per', 'pbr'):
+                            if key in old and old[key] is not None:
+                                a[key] = old[key]
         with open(output_file, 'w', encoding='utf-8') as f:
             json.dump(company_json, f, ensure_ascii=False)
 
@@ -542,6 +600,10 @@ def main():
 
     # Step 4b: Nullify any remaining negative Q4 revenue (unfixable scope issues)
     nullify_negative_q4(OUTPUT_DIR)
+
+    # Step 4c: Fix missing revenue using single company API fallback
+    print('\nFixing missing revenue...')
+    fix_missing_financials(OUTPUT_DIR)
 
     # Step 5: Generate index
     print()
@@ -766,6 +828,183 @@ def nullify_negative_q4(output_dir):
     if nullified:
         print(f'  Nullified {nullified} negative Q4 entries')
     return nullified
+
+
+# ─── Missing Financials Fix ──────────────────────────────────────────────────
+
+QUARTER_TO_REPRT = {'1Q': '11013', '2Q': '11012', '3Q': '11014'}
+
+# Fields to fix and their corresponding account name sets
+FIXABLE_FIELDS = [
+    ('revenue', REVENUE_NAMES),
+    ('op_profit', OP_PROFIT_NAMES),
+    ('net_income', NET_INCOME_NAMES),
+]
+
+
+def fix_missing_financials(output_dir):
+    """
+    Fix missing revenue/op_profit/net_income by falling back to fnlttSinglAcntAll.
+    The batch API (fnlttMultiAcnt) sometimes omits accounts when companies use
+    non-standard account names. The full single-company API has all accounts.
+    Only patches null fields — never overwrites existing values.
+    """
+    # Step 1: Scan for missing fields
+    # Each entry: (stock_code, corp_code, year, period, json_file, missing_fields)
+    missing = []
+    for json_file in output_dir.glob('*.json'):
+        with open(json_file, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+
+        stock_code = data.get('stock_code', '')
+        corp_code = data.get('corp_code', '')
+        if not corp_code:
+            continue
+
+        # Check annual entries
+        for a in data.get('annual', []):
+            missing_fields = [f for f, _ in FIXABLE_FIELDS if a.get(f) is None]
+            # Only fix if entry has at least some data (not a completely empty row)
+            has_any = any(a.get(f) is not None for f, _ in FIXABLE_FIELDS)
+            if missing_fields and has_any:
+                missing.append((stock_code, corp_code, a['year'], 'annual', json_file, missing_fields))
+
+        # Check quarterly entries (skip Q4 — it's derived)
+        for q in data.get('quarterly', []):
+            if q['quarter'] == '4Q':
+                continue
+            missing_fields = [f for f, _ in FIXABLE_FIELDS if q.get(f) is None]
+            has_any = any(q.get(f) is not None for f, _ in FIXABLE_FIELDS)
+            if missing_fields and has_any:
+                missing.append((stock_code, corp_code, q['year'], q['quarter'], json_file, missing_fields))
+
+    total_missing = sum(len(mf) for *_, mf in missing)
+    print(f'Found {len(missing)} entries with {total_missing} missing fields')
+    if not missing:
+        return 0
+
+    # Step 2: Fetch from fnlttSinglAcntAll and collect patches
+    from collections import defaultdict
+    by_file = defaultdict(list)  # json_path -> [(year, period, {field: value})]
+    fixed_count = 0
+    failed = 0
+    # Deduplicate API calls: (corp_code, year, reprt_code) -> result
+    api_cache = {}
+
+    for i, (stock_code, corp_code, year, period, json_file, missing_fields) in enumerate(missing):
+        if (i + 1) % 100 == 0:
+            print(f'  Progress: {i+1}/{len(missing)}...')
+
+        reprt_code = '11011' if period == 'annual' else QUARTER_TO_REPRT.get(period)
+        if not reprt_code:
+            failed += 1
+            continue
+
+        cache_key = (corp_code, year, reprt_code)
+        if cache_key in api_cache:
+            items = api_cache[cache_key]
+        else:
+            items = None
+            for fs_div in ('CFS', 'OFS'):
+                data = api_get('fnlttSinglAcntAll.json', {
+                    'corp_code': corp_code,
+                    'bsns_year': str(year),
+                    'reprt_code': reprt_code,
+                    'fs_div': fs_div,
+                    'sj_div': 'IS',
+                })
+                time.sleep(RATE_LIMIT_DELAY)
+
+                if data and 'list' in data:
+                    items = data['list']
+                    break
+            api_cache[cache_key] = items
+
+        if not items:
+            failed += 1
+            continue
+
+        # Extract values for missing fields
+        patch = {}
+        for field, name_set in FIXABLE_FIELDS:
+            if field not in missing_fields:
+                continue
+            for item in items:
+                account_nm = item.get('account_nm', '')
+                if account_nm in name_set:
+                    amt = parse_amount(item.get('thstrm_amount', ''))
+                    if amt is not None:
+                        patch[field] = amt
+                        break
+
+        if patch:
+            by_file[str(json_file)].append((year, period, patch))
+            fixed_count += len(patch)
+        else:
+            failed += 1
+
+    # Step 3: Patch files
+    for json_path, patches in by_file.items():
+        with open(json_path, 'r', encoding='utf-8') as f:
+            company = json.load(f)
+
+        for year, period, patch in patches:
+            if period == 'annual':
+                entry = next((a for a in company['annual'] if a['year'] == year), None)
+            else:
+                entry = next((q for q in company['quarterly']
+                             if q['year'] == year and q['quarter'] == period), None)
+
+            if entry:
+                for field, value in patch.items():
+                    if entry.get(field) is None:
+                        entry[field] = value
+
+        with open(json_path, 'w', encoding='utf-8') as f:
+            json.dump(company, f, ensure_ascii=False)
+
+    print(f'  Fixed: {fixed_count} fields, Failed: {failed} entries')
+
+    # Step 4: Derive Q4 entries where annual + Q1-Q3 now all exist
+    q4_fixed = 0
+    for json_path, patches in by_file.items():
+        with open(json_path, 'r', encoding='utf-8') as f:
+            company = json.load(f)
+
+        changed = False
+        patched_years = set(year for year, period, _ in patches)
+        for year in patched_years:
+            annual_entry = next((a for a in company['annual'] if a['year'] == year), None)
+            if not annual_entry:
+                continue
+            q4 = next((q for q in company['quarterly']
+                       if q['year'] == year and q['quarter'] == '4Q'), None)
+            if not q4:
+                continue
+            q1 = next((q for q in company['quarterly'] if q['year'] == year and q['quarter'] == '1Q'), None)
+            q2 = next((q for q in company['quarterly'] if q['year'] == year and q['quarter'] == '2Q'), None)
+            q3 = next((q for q in company['quarterly'] if q['year'] == year and q['quarter'] == '3Q'), None)
+            if not (q1 and q2 and q3):
+                continue
+
+            for field, _ in FIXABLE_FIELDS:
+                if q4.get(field) is not None:
+                    continue
+                ann_val = annual_entry.get(field)
+                q1_val, q2_val, q3_val = q1.get(field), q2.get(field), q3.get(field)
+                if all(v is not None for v in (ann_val, q1_val, q2_val, q3_val)):
+                    q4[field] = ann_val - q1_val - q2_val - q3_val
+                    changed = True
+                    q4_fixed += 1
+
+        if changed:
+            with open(json_path, 'w', encoding='utf-8') as f:
+                json.dump(company, f, ensure_ascii=False)
+
+    if q4_fixed:
+        print(f'  Also derived {q4_fixed} Q4 fields')
+
+    return fixed_count
 
 
 if __name__ == '__main__':

@@ -39,6 +39,9 @@ export function processKrCompanyData(raw) {
             op_profit: q.op_profit,
             net_income: q.net_income,
             eps: q.eps,
+            close_price: q.close_price || null,
+            per: q.per != null ? q.per : null,
+            pbr: q.pbr != null ? q.pbr : null,
             op_margin: (q.revenue && q.op_profit != null)
                 ? parseFloat(((q.op_profit / q.revenue) * 100).toFixed(1))
                 : null,
@@ -72,6 +75,9 @@ export function processKrCompanyData(raw) {
             op_profit: a.op_profit,
             net_income: a.net_income,
             eps: a.eps,
+            close_price: a.close_price || null,
+            per: a.per != null ? a.per : null,
+            pbr: a.pbr != null ? a.pbr : null,
             total_assets: a.total_assets,
             total_equity: a.total_equity,
             total_debt: a.total_debt,
