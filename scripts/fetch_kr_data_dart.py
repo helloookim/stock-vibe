@@ -221,17 +221,41 @@ def parse_amount(s):
 # ─── Build Per-Company Data ──────────────────────────────────────────────────
 
 # Known account name mappings for DART
-REVENUE_NAMES = {'매출액', '수익(매출액)', '영업수익', '보험료수익', '이자수익', '순영업수익'}
-OP_PROFIT_NAMES = {'영업이익', '영업이익(손실)'}
-NET_INCOME_NAMES = {'당기순이익', '당기순이익(손실)', '연결당기순이익', '당기순이익(손실)의 귀속 지배기업의 소유주에게 귀속되는 당기순이익(손실)'}
-TOTAL_ASSETS_NAMES = {'자산총계'}
-TOTAL_EQUITY_NAMES = {'자본총계'}
-TOTAL_DEBT_NAMES = {'부채총계'}
+# IMPORTANT: These are TUPLES (ordered), not sets. Priority matters!
+# extract_value() returns the first match found, so put the most common/correct
+# account name first. e.g., '매출액' before '이자수익' to avoid picking up
+# interest income as revenue for non-financial companies like Naver.
+REVENUE_NAMES = ('매출액', '수익(매출액)', '영업수익', '순영업수익', '보험료수익', '이자수익')
+OP_PROFIT_NAMES = ('영업이익', '영업이익(손실)')
+NET_INCOME_NAMES = (
+    '당기순이익', '당기순이익(손실)',
+    '연결당기순이익', '연결당기순이익(손실)',
+    '분기순이익', '분기순이익(손실)',           # Q1/Q3 reports
+    '연결분기순이익', '연결분기순이익(손실)',     # Q1/Q3 consolidated
+    '반기순이익', '반기순이익(손실)',           # H1 reports
+    '연결반기순이익', '연결반기순이익(손실)',     # H1 consolidated
+    '당기순이익(손실)의 귀속 지배기업의 소유주에게 귀속되는 당기순이익(손실)',
+)
+TOTAL_ASSETS_NAMES = ('자산총계',)
+TOTAL_EQUITY_NAMES = ('자본총계',)
+TOTAL_DEBT_NAMES = ('부채총계',)
 
 
-def extract_value(period_data, name_set):
-    """Extract a financial value from period data, trying multiple account names."""
-    for name in name_set:
+def extract_value(period_data, name_seq, pick_max=False):
+    """Extract a financial value from period data, trying multiple account names.
+
+    When pick_max=True, returns the largest value among all matching accounts.
+    This is essential for revenue: DART batch API can return multiple revenue accounts
+    (e.g., 매출액 + 이자수익 for Naver, 매출액 + 영업수익 for holding companies),
+    and the total revenue is always the largest value.
+    """
+    if pick_max:
+        values = []
+        for name in name_seq:
+            if name in period_data and period_data[name] is not None:
+                values.append(period_data[name])
+        return max(values) if values else None
+    for name in name_seq:
         if name in period_data:
             return period_data[name]
     return None
@@ -248,7 +272,7 @@ def build_company_json(stock_code, raw_data, corp_info, market_info=None):
         period = parts[1]
         fs_div = parts[2] if len(parts) > 2 else ''
 
-        revenue = extract_value(accounts, REVENUE_NAMES)
+        revenue = extract_value(accounts, REVENUE_NAMES, pick_max=True)
         op_profit = extract_value(accounts, OP_PROFIT_NAMES)
         net_income = extract_value(accounts, NET_INCOME_NAMES)
         total_assets = extract_value(accounts, TOTAL_ASSETS_NAMES)
@@ -424,7 +448,7 @@ def generate_index(corp_codes, market_info, output_dir):
             'stock_code': stock_code,
             'name': info.get('name', ''),
             'name_en': info.get('name_en', ''),
-            'sector': mkt.get('sector', ''),
+            'sector': mkt.get('sector', '') or company.get('sector', ''),
             'market': mkt.get('market', ''),
             'rank': mkt.get('rank', 9999),
         }
@@ -740,8 +764,10 @@ def fix_q4_with_cumulative(anomalies, output_dir):
                 continue
 
             # Map account names to our field names
+            # For revenue, pick the max value (total revenue > sub-component)
             if account_nm in REVENUE_NAMES:
-                cum_9m['revenue'] = add_amount
+                if 'revenue' not in cum_9m or (add_amount is not None and add_amount > cum_9m.get('revenue', 0)):
+                    cum_9m['revenue'] = add_amount
             elif account_nm in OP_PROFIT_NAMES:
                 cum_9m['op_profit'] = add_amount
             elif account_nm in NET_INCOME_NAMES:
@@ -934,8 +960,13 @@ def fix_missing_financials(output_dir):
                 if account_nm in name_set:
                     amt = parse_amount(item.get('thstrm_amount', ''))
                     if amt is not None:
-                        patch[field] = amt
-                        break
+                        # For revenue, pick the max (total revenue > sub-component)
+                        if field == 'revenue':
+                            if field not in patch or amt > patch[field]:
+                                patch[field] = amt
+                        else:
+                            patch[field] = amt
+                            break
 
         if patch:
             by_file[str(json_file)].append((year, period, patch))
