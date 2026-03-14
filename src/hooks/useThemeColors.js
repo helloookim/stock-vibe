@@ -4,7 +4,7 @@ const THEME_KEY = 'theme';
 const THEME_EVENT = 'themechange';
 
 export function getTheme() {
-    return localStorage.getItem(THEME_KEY) || 'dark';
+    return localStorage.getItem(THEME_KEY) || 'light';
 }
 
 export function setTheme(theme) {
