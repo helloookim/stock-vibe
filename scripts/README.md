@@ -102,14 +102,23 @@ python scripts/fetch_kr_data_dart.py --refresh-codes
 
 ### Known Data Quality Issues
 
+- **Revenue account collision (CRITICAL):** DART batch API can return multiple revenue-related
+  accounts for the same company (e.g., `매출액` + `이자수익` for Naver, `매출액` + `영업수익`
+  for holding companies). `REVENUE_NAMES` must be a **tuple** (not set!) and `extract_value()`
+  must use `pick_max=True` for revenue — always pick the **largest** matching value. Using a
+  Python set caused non-deterministic iteration that sometimes picked `이자수익` (interest income,
+  ~100억) instead of `매출액` (total revenue, ~2조+) for Naver, 카카오, etc.
 - **Q4 derivation errors:** ~666 company-years had anomalous Q4 values. Root cause: consolidation
   scope changes mid-year (e.g., Naver 2020 LINE deconsolidation). Auto-fixed in step 5.
 - **Missing financials from batch API:** ~140+ companies had no revenue because the batch API only
   returns standard account names (`매출액`). Companies using `영업수익` (POSCO Holdings, Kakao
-  after holding company conversion) were missing data. Fixed via `--fix-revenue`.
+  after holding company conversion) were missing data. Fixed via `--fix-revenue`. The fallback
+  also uses `pick_max` for revenue extraction.
 - **EPS unavailable:** DART's key accounts API doesn't return EPS. Backfilled from legacy data
   and Naver Finance scraper.
 - **Report timing:** Q1 reports appear ~May, H1 ~August, Q3 ~November, annual ~March of next year.
+- **Insurance/holding companies:** `revenue < op_profit` is legitimate for these companies in
+  DART key accounts — different accounting structure, not a data extraction bug.
 
 ### Dependencies
 
