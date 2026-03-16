@@ -2296,3 +2296,38 @@ input[type="range"]::-moz-range-thumb {
     font-size: 2rem;
   }
 }
+
+/* Two-column chart layout for wide screens */
+@media (min-width: 1500px) {
+  .charts-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    align-content: start;
+  }
+
+  .charts-container > * {
+    max-width: none;
+  }
+
+  /* Full-width elements spanning both columns */
+  .charts-container > .summary-cards,
+  .charts-container > .section-label,
+  .charts-container > .peers-section,
+  .charts-container > .browse-stocks-mobile,
+  .charts-container > footer {
+    grid-column: 1 / -1;
+  }
+
+  .charts-container > .chart-section {
+    margin-bottom: 0;
+  }
+
+  .charts-container > .summary-cards {
+    margin-bottom: 4px;
+  }
+
+  .main-header-inner {
+    max-width: none;
+  }
+}

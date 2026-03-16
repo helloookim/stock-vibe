@@ -907,7 +907,7 @@ const App = () => {
 
                     <div className="charts-container">
                         {/* Summary Cards — Market Overview */}
-                        <div style={{ marginBottom: '4px' }}>
+                        <div className="section-label" style={{ marginBottom: '4px' }}>
                             <span style={{ fontSize: '10px', fontWeight: 600, color: colors.textFaded, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                                 {t('analysis.marketOverview')}
                             </span>
@@ -954,7 +954,7 @@ const App = () => {
                         </div>
 
                         {/* Summary Cards — Financial Summary */}
-                        <div style={{ marginBottom: '4px' }}>
+                        <div className="section-label" style={{ marginBottom: '4px' }}>
                             <span style={{ fontSize: '10px', fontWeight: 600, color: colors.textFaded, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                                 {t('analysis.financialSummary')}
                             </span>

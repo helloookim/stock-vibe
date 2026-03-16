@@ -390,11 +390,16 @@ def update_index(kr_stocks_dir, index_file):
 
         per = company.get('last_per')
         pbr = company.get('last_pbr')
+        sector = company.get('sector', '')
 
         if per is not None or pbr is not None:
             entry['last_per'] = per
             entry['last_pbr'] = pbr
             updated += 1
+
+        # Sync sector from per-company JSON if index entry is missing it
+        if sector and not entry.get('sector'):
+            entry['sector'] = sector
 
     with open(index_file, 'w', encoding='utf-8') as f:
         json.dump(index, f, ensure_ascii=False)
