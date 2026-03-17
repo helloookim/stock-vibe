@@ -1,0 +1,47 @@
+name: Daily KR Stock Price Update
+
+on:
+  schedule:
+    # Weekdays at 09:00 UTC = 18:00 KST (after market close at 15:30 KST)
+    - cron: '0 9 * * 1-5'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  update-prices:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Fetch latest KR stock prices
+        run: python scripts/fetch_krx_data.py --latest-only
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "No price changes detected (market holiday?)"
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "Price data updated"
+          fi
+
+      - name: Commit and push
+        if: steps.changes.outputs.has_changes == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/data/kr_stocks/ public/data/kr_company_index.json
+          git commit -m "data: daily KR stock price update $(date -u +%Y-%m-%d)"
+          git push
