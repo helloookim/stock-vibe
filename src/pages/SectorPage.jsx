@@ -17,6 +17,11 @@ const SectorPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
+        document.documentElement.classList.add('page-scroll-enabled');
+        return () => document.documentElement.classList.remove('page-scroll-enabled');
+    }, []);
+
+    useEffect(() => {
         fetch('/data/kr_sectors.json')
             .then(r => r.json())
             .then(d => { setSectors(d); setLoading(false); })
@@ -25,7 +30,9 @@ const SectorPage = () => {
 
     const currentSector = useMemo(() => {
         if (!sectorSlug) return null;
-        return sectors.find(s => s.slug === sectorSlug);
+        // React Router decodes the URL param, but slugs in JSON are URI-encoded
+        const encoded = encodeURIComponent(sectorSlug);
+        return sectors.find(s => s.slug === encoded || s.slug === sectorSlug);
     }, [sectorSlug, sectors]);
 
     const filteredSectors = useMemo(() => {

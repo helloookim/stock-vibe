@@ -26,6 +26,11 @@ const Rankings = () => {
     const isEn = i18n.language === 'en';
 
     useEffect(() => {
+        document.documentElement.classList.add('page-scroll-enabled');
+        return () => document.documentElement.classList.remove('page-scroll-enabled');
+    }, []);
+
+    useEffect(() => {
         fetch('/data/kr_rankings.json')
             .then(r => r.json())
             .then(d => { setData(d); setLoading(false); })
