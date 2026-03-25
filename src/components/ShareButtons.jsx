@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
-const ShareButtons = ({ companyName, stockCode, url }) => {
+const ShareButtons = ({ companyName, stockCode, url, ogImage }) => {
     const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [copied, setCopied] = useState(false);
@@ -38,7 +38,7 @@ const ShareButtons = ({ companyName, stockCode, url }) => {
                 content: {
                     title: shareTitle,
                     description: shareDescription,
-                    imageUrl: `${window.location.origin}/og-image.png`,
+                    imageUrl: ogImage || `${window.location.origin}/og-image.png`,
                     link: {
                         mobileWebUrl: shareUrl,
                         webUrl: shareUrl,
