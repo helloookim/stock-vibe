@@ -103,7 +103,7 @@ const rankings = {
     op_profit_top: topN(companies, 'last_op_profit'),
     per_lowest: topN(companies.filter(c => c.last_per > 0), 'last_per', true),
     pbr_lowest: topN(companies.filter(c => c.last_pbr > 0), 'last_pbr', true),
-    revenue_growth_top: topN(companies, 'revenue_yoy'),
+    revenue_growth_top: topN(companies.filter(c => c.revenue_yoy <= 500), 'revenue_yoy'),
     op_margin_top: topN(companies, 'op_margin'),
     debt_ratio_lowest: topN(companies.filter(c => c.debt_ratio >= 0), 'debt_ratio', true),
 };

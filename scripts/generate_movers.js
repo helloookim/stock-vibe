@@ -85,9 +85,9 @@ function pickTop(arr, key, ascending = false, filter = null) {
 
 const result = {
     updated_date: new Date().toISOString().split('T')[0],
-    revenue_growth_top: pickTop(movers, 'rev_yoy', false, c => c.rev_yoy > 0),
+    revenue_growth_top: pickTop(movers, 'rev_yoy', false, c => c.rev_yoy > 0 && c.rev_yoy <= 500),
     revenue_decline_top: pickTop(movers, 'rev_yoy', true, c => c.rev_yoy < 0),
-    op_profit_turnaround: pickTop(movers, 'op_yoy', false, c => c.op_yoy > 50),
+    op_profit_turnaround: pickTop(movers, 'op_yoy', false, c => c.op_yoy > 50 && c.op_yoy <= 5000),
     margin_expansion: pickTop(movers, 'margin_change', false, c => c.margin_change > 0),
 };
 

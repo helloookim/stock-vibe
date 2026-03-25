@@ -24,6 +24,11 @@ const Compare = () => {
     const [companyIndex, setCompanyIndex] = useState([]);
     const [viewMode, setViewMode] = useState('annual');
 
+    useEffect(() => {
+        document.documentElement.classList.add('page-scroll-enabled');
+        return () => document.documentElement.classList.remove('page-scroll-enabled');
+    }, []);
+
     const stockCodes = useMemo(() => {
         if (!codes) return [];
         return codes.split('-vs-').filter(Boolean).slice(0, 3);
