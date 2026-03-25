@@ -80,6 +80,73 @@ blogPages.forEach(slug => {
   </url>
 `});
 
+// Rankings pages
+const rankingCategories = [
+  'market_cap_top', 'revenue_top', 'op_profit_top', 'per_lowest',
+  'pbr_lowest', 'revenue_growth_top', 'op_margin_top', 'debt_ratio_lowest'
+];
+
+sitemap += `  <!-- Rankings Pages -->
+  <url>
+    <loc>${baseUrl}/rankings</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+`;
+rankingCategories.forEach(cat => {
+  sitemap += `  <url>
+    <loc>${baseUrl}/rankings/${cat}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+`;
+});
+
+// Sector pages
+sitemap += `  <!-- Sector Pages -->
+  <url>
+    <loc>${baseUrl}/sectors</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+`;
+const sectorsPath = path.join(__dirname, 'public', 'data', 'kr_sectors.json');
+let sectorCount = 0;
+if (fs.existsSync(sectorsPath)) {
+  const sectors = JSON.parse(fs.readFileSync(sectorsPath, 'utf-8'));
+  sectors.forEach(s => {
+    sitemap += `  <url>
+    <loc>${baseUrl}/sectors/${s.slug}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+`;
+  });
+  sectorCount = sectors.length;
+  console.log(`Added ${sectorCount} sector pages to sitemap`);
+}
+
+// Popular comparison pages
+const popularComparisons = [
+  '005930-vs-000660', '005380-vs-000270', '035420-vs-035720',
+  '373220-vs-006400', '207940-vs-068270', '005930-vs-000270',
+];
+sitemap += `  <!-- Compare Pages -->
+`;
+popularComparisons.forEach(codes => {
+  sitemap += `  <url>
+    <loc>${baseUrl}/compare/${codes}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+`;
+});
+
 sitemap += `  <!-- Stock Pages -->
 `;
 
@@ -122,4 +189,7 @@ fs.writeFileSync(sitemapPath, sitemap);
 
 console.log(`✅ Sitemap generated successfully!`);
 console.log(`📍 Location: ${sitemapPath}`);
-console.log(`📊 Total URLs: ${stockCodes.length + 5 + blogPages.length + usTickerCount} (1 homepage + 1 blogs + 3 static pages + ${blogPages.length} blog pages + ${stockCodes.length} KR stocks + ${usTickerCount} US stocks)`);
+const rankingsCount = 1 + rankingCategories.length;
+const comparisonCount = popularComparisons.length;
+const totalUrls = stockCodes.length + 5 + blogPages.length + usTickerCount + rankingsCount + (sectorCount + 1) + comparisonCount;
+console.log(`📊 Total URLs: ${totalUrls} (1 homepage + 1 blogs + 3 static + ${blogPages.length} blogs + ${rankingsCount} rankings + ${sectorCount + 1} sectors + ${comparisonCount} comparisons + ${stockCodes.length} KR + ${usTickerCount} US)`);

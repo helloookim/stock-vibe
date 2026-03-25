@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import SEOHead from '../components/SEOHead';
-import { Search, Menu, X, BarChart3, TrendingUp, PieChart, ArrowUpDown, ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
+import { Search, Menu, X, BarChart3, TrendingUp, PieChart, ArrowUpDown, ChevronLeft, ChevronRight, CheckCircle, Trophy, Layers, ArrowRightLeft } from 'lucide-react';
 import { loadUsCompanyIndex } from '../usDataLoader';
 import { loadKrCompanyIndex } from '../krDataLoader';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts';
@@ -30,6 +30,7 @@ const Home = () => {
     const [usSearchTerm, setUsSearchTerm] = useState('');
     const [spotlightData, setSpotlightData] = useState({ nvda: null, skHynix: null });
     const [spotlightLoading, setSpotlightLoading] = useState(true);
+    const [moversData, setMoversData] = useState(null);
 
     // Detect mobile screen size
     useEffect(() => {
@@ -96,6 +97,7 @@ const Home = () => {
             }
         }
         loadSpotlightData();
+        fetch('/data/kr_movers.json').then(r => r.json()).then(setMoversData).catch(() => {});
     }, []);
 
     const formatUsd = (val) => {
@@ -625,6 +627,160 @@ const Home = () => {
                                         )}
                                     </div>
                                 )}
+                            </section>
+
+                            {/* Market Movers Section */}
+                            {moversData && (
+                                <section style={{
+                                    maxWidth: '900px',
+                                    margin: '0 auto 3rem',
+                                    padding: '0 16px',
+                                }}>
+                                    <p style={{
+                                        textAlign: 'center',
+                                        fontSize: '0.75rem',
+                                        fontWeight: 700,
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.15em',
+                                        color: colors.textMuted,
+                                        marginBottom: '24px',
+                                    }}>
+                                        {t('movers.title')}
+                                    </p>
+                                    <div style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+                                        gap: '16px',
+                                    }}>
+                                        {[
+                                            { key: 'revenue_growth_top', label: t('movers.revenueGrowth'), icon: '🚀', color: colors.positive },
+                                            { key: 'op_profit_turnaround', label: t('movers.opTurnaround'), icon: '📈', color: colors.revenue },
+                                            { key: 'margin_expansion', label: t('movers.marginExpansion'), icon: '✨', color: colors.gold },
+                                            { key: 'revenue_decline_top', label: t('movers.revenueDecliner'), icon: '📉', color: colors.negative },
+                                        ].map(cat => {
+                                            const items = (moversData[cat.key] || []).slice(0, 3);
+                                            if (items.length === 0) return null;
+                                            return (
+                                                <div key={cat.key} style={{
+                                                    background: colors.bgCard,
+                                                    border: `1px solid ${colors.border}`,
+                                                    borderRadius: '10px',
+                                                    padding: '16px',
+                                                }}>
+                                                    <p style={{ fontSize: '0.85rem', fontWeight: 600, color: colors.textPrimary, margin: '0 0 10px' }}>
+                                                        {cat.icon} {cat.label}
+                                                    </p>
+                                                    {items.map((item, i) => (
+                                                        <Link
+                                                            key={item.stock_code}
+                                                            to={`/stocks/${item.stock_code}`}
+                                                            style={{ textDecoration: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderTop: i > 0 ? `1px solid ${colors.border}` : 'none' }}
+                                                        >
+                                                            <span style={{ fontSize: '0.8rem', color: colors.textPrimary }}>
+                                                                {isEn ? (item.name_en || item.name) : item.name}
+                                                            </span>
+                                                            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: cat.color, fontVariantNumeric: 'tabular-nums' }}>
+                                                                {item.value > 0 ? '+' : ''}{item.value.toFixed(1)}%
+                                                            </span>
+                                                        </Link>
+                                                    ))}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                    <p style={{ textAlign: 'center', fontSize: '0.7rem', color: colors.textFaded, marginTop: '12px' }}>
+                                        {t('movers.lastUpdated', { date: moversData.updated_date })}
+                                    </p>
+                                </section>
+                            )}
+
+                            {/* Quick Links: Rankings, Sectors, Compare */}
+                            <section style={{
+                                maxWidth: '900px',
+                                margin: '0 auto 3rem',
+                                padding: '0 16px',
+                            }}>
+                                <div style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+                                    gap: '12px',
+                                }}>
+                                    <Link to="/rankings" style={{ textDecoration: 'none' }}>
+                                        <div style={{
+                                            background: colors.bgCard,
+                                            border: `1px solid ${colors.border}`,
+                                            borderRadius: '10px',
+                                            padding: '16px 20px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s',
+                                        }} onMouseEnter={e => {
+                                            e.currentTarget.style.borderColor = colors.accent;
+                                            e.currentTarget.style.transform = 'translateY(-2px)';
+                                        }} onMouseLeave={e => {
+                                            e.currentTarget.style.borderColor = colors.border;
+                                            e.currentTarget.style.transform = 'translateY(0)';
+                                        }}>
+                                            <Trophy size={22} style={{ color: colors.accent }} />
+                                            <div>
+                                                <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: colors.textPrimary }}>{t('home.rankingsLink')}</p>
+                                                <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: colors.textMuted }}>{t('home.rankingsLinkDesc')}</p>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                    <Link to="/sectors" style={{ textDecoration: 'none' }}>
+                                        <div style={{
+                                            background: colors.bgCard,
+                                            border: `1px solid ${colors.border}`,
+                                            borderRadius: '10px',
+                                            padding: '16px 20px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s',
+                                        }} onMouseEnter={e => {
+                                            e.currentTarget.style.borderColor = colors.accent;
+                                            e.currentTarget.style.transform = 'translateY(-2px)';
+                                        }} onMouseLeave={e => {
+                                            e.currentTarget.style.borderColor = colors.border;
+                                            e.currentTarget.style.transform = 'translateY(0)';
+                                        }}>
+                                            <Layers size={22} style={{ color: colors.accent }} />
+                                            <div>
+                                                <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: colors.textPrimary }}>{t('home.sectorsLink')}</p>
+                                                <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: colors.textMuted }}>{t('home.sectorsLinkDesc')}</p>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                    <Link to="/compare/005930-vs-000660" style={{ textDecoration: 'none' }}>
+                                        <div style={{
+                                            background: colors.bgCard,
+                                            border: `1px solid ${colors.border}`,
+                                            borderRadius: '10px',
+                                            padding: '16px 20px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s',
+                                        }} onMouseEnter={e => {
+                                            e.currentTarget.style.borderColor = colors.accent;
+                                            e.currentTarget.style.transform = 'translateY(-2px)';
+                                        }} onMouseLeave={e => {
+                                            e.currentTarget.style.borderColor = colors.border;
+                                            e.currentTarget.style.transform = 'translateY(0)';
+                                        }}>
+                                            <ArrowRightLeft size={22} style={{ color: colors.accent }} />
+                                            <div>
+                                                <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: colors.textPrimary }}>{t('home.compareLink')}</p>
+                                                <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: colors.textMuted }}>{t('home.compareLinkDesc')}</p>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                </div>
                             </section>
 
                             {/* Feature Cards */}

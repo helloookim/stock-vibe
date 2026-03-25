@@ -643,6 +643,7 @@ const App = () => {
                 title={displayName ? t('helmet.appTitle', { name: displayName, code: selectedCode }) : t('helmet.appTitleDefault')}
                 description={displayName ? t('helmet.appDesc', { name: displayName, code: selectedCode }) : t('helmet.appDescDefault')}
                 canonical={`https://kstockview.com/stocks/${selectedCode || ''}`}
+                ogImage={selectedCode ? `https://kstockview.com/og/${selectedCode}` : undefined}
                 jsonLd={currentCompany ? [{
                     '@type': 'BreadcrumbList',
                     itemListElement: [
@@ -825,7 +826,37 @@ const App = () => {
                                     companyName={displayName || currentCompany?.name || ''}
                                     stockCode={selectedCode}
                                     url={`https://kstockview.com/stocks/${selectedCode}`}
+                                    ogImage={selectedCode ? `https://kstockview.com/og/${selectedCode}` : undefined}
                                 />
+                            </div>
+                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '8px', flexWrap: 'wrap' }}>
+                                <button
+                                    onClick={() => navigate(`/compare/${selectedCode}`)}
+                                    style={{
+                                        padding: '5px 12px', fontSize: '0.75rem',
+                                        background: 'transparent', border: `1px solid ${colors.border}`,
+                                        borderRadius: '6px', color: colors.textMuted, cursor: 'pointer',
+                                    }}
+                                    onMouseEnter={e => { e.currentTarget.style.borderColor = colors.accent; e.currentTarget.style.color = colors.accent; }}
+                                    onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.textMuted; }}
+                                >
+                                    {t('compare.addStock', '비교하기')}
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        const code = `<iframe src="https://kstockview.com/embed/${selectedCode}?theme=dark" width="320" height="240" frameborder="0"></iframe>`;
+                                        navigator.clipboard.writeText(code).then(() => alert(t('share.copied', 'Copied!'))).catch(() => {});
+                                    }}
+                                    style={{
+                                        padding: '5px 12px', fontSize: '0.75rem',
+                                        background: 'transparent', border: `1px solid ${colors.border}`,
+                                        borderRadius: '6px', color: colors.textMuted, cursor: 'pointer',
+                                    }}
+                                    onMouseEnter={e => { e.currentTarget.style.borderColor = colors.accent; e.currentTarget.style.color = colors.accent; }}
+                                    onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.textMuted; }}
+                                >
+                                    Embed
+                                </button>
                             </div>
 
                             <div className="view-mode-toggle" style={{

@@ -18,6 +18,10 @@ const Terms = React.lazy(() => import('./pages/Terms.jsx'))
 const Contact = React.lazy(() => import('./pages/Contact.jsx'))
 const BlogList = React.lazy(() => import('./pages/BlogList.jsx'))
 const NotFound = React.lazy(() => import('./pages/NotFound.jsx'))
+const Rankings = React.lazy(() => import('./pages/Rankings.jsx'))
+const Compare = React.lazy(() => import('./pages/Compare.jsx'))
+const SectorPage = React.lazy(() => import('./pages/SectorPage.jsx'))
+const Embed = React.lazy(() => import('./pages/Embed.jsx'))
 const SamsungElectronics = React.lazy(() => import('./pages/blog/SamsungElectronics.jsx'))
 const SKHynix = React.lazy(() => import('./pages/blog/SKHynix.jsx'))
 const HyundaiMotor = React.lazy(() => import('./pages/blog/HyundaiMotor.jsx'))
@@ -57,6 +61,12 @@ ReactDOM.createRoot(document.getElementById('root')).render(
                         <Route path="/blog/naver" element={<Naver />} />
                         <Route path="/blog/kakao" element={<Kakao />} />
                         <Route path="/blogs" element={<BlogList />} />
+                        <Route path="/rankings" element={<Rankings />} />
+                        <Route path="/rankings/:metric" element={<Rankings />} />
+                        <Route path="/compare/:codes" element={<Compare />} />
+                        <Route path="/sectors" element={<SectorPage />} />
+                        <Route path="/sectors/:sectorSlug" element={<SectorPage />} />
+                        <Route path="/embed/:stockCode" element={<Embed />} />
                         <Route path="/stocks/:stockCode" element={<App />} />
                         <Route path="/us-stocks/:ticker" element={<UsStockPage />} />
                         <Route path="*" element={<NotFound />} />
