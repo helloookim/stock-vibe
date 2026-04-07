@@ -389,32 +389,6 @@ const Home = () => {
                                 </button>
                             </section>
 
-                            {/* Data Update Notice */}
-                            <section style={{
-                                maxWidth: '640px',
-                                margin: '0 auto 2rem',
-                                padding: '14px 20px',
-                                background: 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(139,92,246,0.08))',
-                                border: '1px solid rgba(96,165,250,0.2)',
-                                borderRadius: '12px',
-                                textAlign: 'center',
-                            }}>
-                                <p style={{
-                                    margin: 0,
-                                    color: colors.accentLight,
-                                    fontSize: '0.85rem',
-                                    lineHeight: '1.5',
-                                }}>
-                                    <span style={{ color: colors.accent, fontWeight: 600 }}>
-                                        {t('home.updateNoticeTitle')}
-                                    </span>
-                                    <br />
-                                    <span style={{ color: colors.textMuted, fontSize: '0.8rem' }}>
-                                        {t('home.updateNoticeDesc')}
-                                    </span>
-                                </p>
-                            </section>
-
                             {/* Revenue Spotlight Section */}
                             <section style={{
                                 maxWidth: '900px',
@@ -531,8 +505,42 @@ const Home = () => {
                                 )}
                             </section>
 
-                            {/* Market Movers Section */}
-                            {moversData && (
+                            {/* Popular Stocks - Korean */}
+                            <section className="home-popular-section">
+                                <p className="home-popular-label">🇰🇷 {t('home.popularStocks')}</p>
+                                <div className="home-popular-grid">
+                                    {popularStocks.map((stock) => (
+                                        <Link
+                                            key={stock.code}
+                                            to={`/stocks/${stock.code}`}
+                                            className="home-popular-chip"
+                                        >
+                                            <span className="home-popular-chip-code">{stock.code}</span>
+                                            <span className="home-popular-chip-name">{isEn ? stock.name_en : stock.name}</span>
+                                        </Link>
+                                    ))}
+                                </div>
+                            </section>
+
+                            {/* Popular Stocks - US */}
+                            <section className="home-popular-section" style={{ marginTop: '0' }}>
+                                <p className="home-popular-label">🇺🇸 {t('home.usPopularStocks')}</p>
+                                <div className="home-popular-grid">
+                                    {usPopularStocks.map((stock) => (
+                                        <Link
+                                            key={stock.ticker}
+                                            to={`/us-stocks/${stock.ticker}`}
+                                            className="home-popular-chip"
+                                        >
+                                            <span className="home-popular-chip-code">{stock.ticker}</span>
+                                            <span className="home-popular-chip-name">{stock.name}</span>
+                                        </Link>
+                                    ))}
+                                </div>
+                            </section>
+
+                            {/* Market Movers Section — temporarily hidden pending data review */}
+                            {false && moversData && (
                                 <section style={{
                                     maxWidth: '900px',
                                     margin: '0 auto 3rem',
@@ -756,40 +764,6 @@ const Home = () => {
                                             </div>
                                         )}
                                     </div>
-                                </div>
-                            </section>
-
-                            {/* Popular Stocks - Korean */}
-                            <section className="home-popular-section">
-                                <p className="home-popular-label">🇰🇷 {t('home.popularStocks')}</p>
-                                <div className="home-popular-grid">
-                                    {popularStocks.map((stock) => (
-                                        <Link
-                                            key={stock.code}
-                                            to={`/stocks/${stock.code}`}
-                                            className="home-popular-chip"
-                                        >
-                                            <span className="home-popular-chip-code">{stock.code}</span>
-                                            <span className="home-popular-chip-name">{isEn ? stock.name_en : stock.name}</span>
-                                        </Link>
-                                    ))}
-                                </div>
-                            </section>
-
-                            {/* Popular Stocks - US */}
-                            <section className="home-popular-section" style={{ marginTop: '0' }}>
-                                <p className="home-popular-label">🇺🇸 {t('home.usPopularStocks')}</p>
-                                <div className="home-popular-grid">
-                                    {usPopularStocks.map((stock) => (
-                                        <Link
-                                            key={stock.ticker}
-                                            to={`/us-stocks/${stock.ticker}`}
-                                            className="home-popular-chip"
-                                        >
-                                            <span className="home-popular-chip-code">{stock.ticker}</span>
-                                            <span className="home-popular-chip-name">{stock.name}</span>
-                                        </Link>
-                                    ))}
                                 </div>
                             </section>
 
