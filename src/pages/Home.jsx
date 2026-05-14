@@ -28,7 +28,7 @@ const Home = () => {
     const [usIndexLoading, setUsIndexLoading] = useState(false);
     const [usSortBy, setUsSortBy] = useState('rank');
     const [usSearchTerm, setUsSearchTerm] = useState('');
-    const [spotlightData, setSpotlightData] = useState({ samsung: null });
+    const [spotlightData, setSpotlightData] = useState({ samsung: null, skhynix: null });
     const [spotlightLoading, setSpotlightLoading] = useState(true);
     const [moversData, setMoversData] = useState(null);
 
@@ -64,9 +64,12 @@ const Home = () => {
     useEffect(() => {
         async function loadSpotlightData() {
             try {
-                const samsungRaw = await fetch('/data/kr_stocks/005930.json').then(r => r.json());
+                const [samsungRaw, hynixRaw] = await Promise.all([
+                    fetch('/data/kr_stocks/005930.json').then(r => r.json()),
+                    fetch('/data/kr_stocks/000660.json').then(r => r.json()),
+                ]);
 
-                const samsungQuarters = (samsungRaw?.quarterly || [])
+                const toQuarters = raw => (raw?.quarterly || [])
                     .sort((a, b) => a.year - b.year || a.quarter.localeCompare(b.quarter))
                     .slice(-8)
                     .map(e => ({
@@ -75,7 +78,7 @@ const Home = () => {
                         op_profit: e.op_profit,
                     }));
 
-                setSpotlightData({ samsung: samsungQuarters });
+                setSpotlightData({ samsung: toQuarters(samsungRaw), skhynix: toQuarters(hynixRaw) });
             } catch (err) {
                 console.error('Error loading spotlight data:', err);
             } finally {
@@ -415,7 +418,11 @@ const Home = () => {
                                         animation: 'homeHeroFadeIn 1.5s ease-in-out infinite alternate',
                                     }} />
                                 ) : (
-                                    <div>
+                                    <div style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+                                        gap: '16px',
+                                    }}>
                                         {/* Samsung Electronics Card */}
                                         {spotlightData.samsung && (
                                             <Link to="/stocks/005930" style={{ textDecoration: 'none' }}>
@@ -495,6 +502,92 @@ const Home = () => {
                                                         fontSize: '0.82rem',
                                                         fontWeight: 600,
                                                         color: '#409cff',
+                                                    }}>
+                                                        {t('home.spotlightViewAnalysis')}
+                                                    </p>
+                                                </div>
+                                            </Link>
+                                        )}
+
+                                        {/* SK Hynix Card */}
+                                        {spotlightData.skhynix && (
+                                            <Link to="/stocks/000660" style={{ textDecoration: 'none' }}>
+                                                <div style={{
+                                                    background: colors.bgCard,
+                                                    border: '1px solid rgba(168, 85, 247, 0.25)',
+                                                    borderRadius: '8px',
+                                                    padding: isMobile ? '22px' : '28px',
+                                                    transition: 'all 0.3s ease',
+                                                    cursor: 'pointer',
+                                                }} onMouseEnter={e => {
+                                                    e.currentTarget.style.transform = 'translateY(-4px)';
+                                                    e.currentTarget.style.borderColor = 'rgba(168, 85, 247, 0.5)';
+                                                    e.currentTarget.style.boxShadow = '0 8px 30px rgba(168, 85, 247, 0.15)';
+                                                }} onMouseLeave={e => {
+                                                    e.currentTarget.style.transform = 'translateY(0)';
+                                                    e.currentTarget.style.borderColor = 'rgba(168, 85, 247, 0.25)';
+                                                    e.currentTarget.style.boxShadow = 'none';
+                                                }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
+                                                        <div>
+                                                            <p style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700, color: colors.textPrimary, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                <span style={{ fontSize: '1.15rem' }}>&#127472;&#127479;</span> {i18n.language === 'ko' ? 'SK하이닉스' : 'SK hynix'}
+                                                                <span style={{ fontSize: '0.75rem', color: colors.textMuted, fontWeight: 400 }}>000660</span>
+                                                            </p>
+                                                            <p style={{ margin: '6px 0 0 0', fontSize: '0.8rem', color: colors.textMuted, fontWeight: 500 }}>
+                                                                {i18n.language === 'ko' ? '2026년 1분기 실적' : '2026 Q1 Earnings'}
+                                                            </p>
+                                                        </div>
+                                                        <div style={{ textAlign: 'right' }}>
+                                                            <p style={{
+                                                                margin: 0,
+                                                                fontSize: isMobile ? '1.4rem' : '1.7rem',
+                                                                fontWeight: 800,
+                                                                color: '#a855f7',
+                                                                textShadow: '0 0 18px rgba(168, 85, 247, 0.35)',
+                                                            }}>
+                                                                {formatKrw(spotlightData.skhynix[spotlightData.skhynix.length - 1]?.revenue, i18n.language)}
+                                                            </p>
+                                                            <p style={{ margin: '4px 0 0 0', fontSize: '0.82rem', color: colors.textMuted }}>
+                                                                {i18n.language === 'ko' ? '영업이익 ' : 'Op. Profit '}
+                                                                <span style={{ color: colors.positive, fontWeight: 700 }}>
+                                                                    {formatKrw(spotlightData.skhynix[spotlightData.skhynix.length - 1]?.op_profit, i18n.language)}
+                                                                </span>
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <p style={{ fontSize: '0.82rem', color: colors.textMuted, lineHeight: 1.5, margin: '12px 0 16px 0' }}>
+                                                        {t('home.spotlightSkHynixHook')}
+                                                    </p>
+                                                    <ResponsiveContainer width="100%" height={isMobile ? 150 : 180}>
+                                                        <BarChart data={spotlightData.skhynix} margin={{ top: 5, right: 5, left: 5, bottom: 0 }}>
+                                                            <defs>
+                                                                <linearGradient id="spotHynixNormal" x1="0" y1="0" x2="0" y2="1">
+                                                                    <stop offset="0%" stopColor="#a855f7" stopOpacity={0.35} />
+                                                                    <stop offset="100%" stopColor="#a855f7" stopOpacity={0.05} />
+                                                                </linearGradient>
+                                                                <linearGradient id="spotHynixLatest" x1="0" y1="0" x2="0" y2="1">
+                                                                    <stop offset="0%" stopColor="#c084fc" stopOpacity={1} />
+                                                                    <stop offset="100%" stopColor="#a855f7" stopOpacity={0.75} />
+                                                                </linearGradient>
+                                                            </defs>
+                                                            <XAxis dataKey="label" stroke={colors.textFaded} fontSize={10} tickLine={false} axisLine={false} />
+                                                            <YAxis hide />
+                                                            <Bar dataKey="revenue" radius={[2, 2, 0, 0]} animationDuration={1200}>
+                                                                {spotlightData.skhynix.map((_, index) => (
+                                                                    <Cell
+                                                                        key={index}
+                                                                        fill={index === spotlightData.skhynix.length - 1 ? 'url(#spotHynixLatest)' : 'url(#spotHynixNormal)'}
+                                                                    />
+                                                                ))}
+                                                            </Bar>
+                                                        </BarChart>
+                                                    </ResponsiveContainer>
+                                                    <p style={{
+                                                        margin: '14px 0 0 0',
+                                                        fontSize: '0.82rem',
+                                                        fontWeight: 600,
+                                                        color: '#a855f7',
                                                     }}>
                                                         {t('home.spotlightViewAnalysis')}
                                                     </p>
