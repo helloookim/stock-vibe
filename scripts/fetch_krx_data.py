@@ -46,7 +46,7 @@ KR_STOCKS_DIR = ROOT_DIR / 'public' / 'data' / 'kr_stocks'
 INDEX_FILE = ROOT_DIR / 'public' / 'data' / 'kr_company_index.json'
 
 START_YEAR = 2015
-END_YEAR = 2025
+END_YEAR = 2026
 
 
 # ─── API ─────────────────────────────────────────────────────────────────────
