@@ -3,7 +3,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import SEOHead from './components/SEOHead';
 import {
-    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+    BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     ComposedChart, Line, ReferenceLine, AreaChart, Area
 } from 'recharts';
 import { Search, ArrowUpDown, ChevronLeft, ChevronRight, Menu, X, Info } from 'lucide-react';
@@ -533,15 +533,29 @@ const App = () => {
     // PER/PBR chart data
     const perPbrData = useMemo(() => {
         const data = viewMode === 'quarterly' ? processedQuarterly : processedAnnual;
-        return data
+        const historical = data
             .filter(entry => (entry.per != null || entry.pbr != null) && entry.year >= yearRange[0] && entry.year <= yearRange[1])
             .map(entry => ({
                 displayLabel: entry.displayLabel,
                 per: entry.per,
                 pbr: entry.pbr,
                 year: entry.year,
+                isCurrent: false,
             }));
-    }, [processedQuarterly, processedAnnual, viewMode, yearRange]);
+        if (viewMode === 'quarterly' && currentCompanyRaw?.last_per != null) {
+            const last = historical[historical.length - 1];
+            if (!last || last.per !== currentCompanyRaw.last_per) {
+                historical.push({
+                    displayLabel: t('analysis.currentPrice'),
+                    per: currentCompanyRaw.last_per,
+                    pbr: currentCompanyRaw.last_pbr ?? null,
+                    year: 9999,
+                    isCurrent: true,
+                });
+            }
+        }
+        return historical;
+    }, [processedQuarterly, processedAnnual, viewMode, yearRange, currentCompanyRaw, t]);
 
     // Close price chart data (with current price appended)
     const closePriceData = useMemo(() => {
@@ -828,35 +842,6 @@ const App = () => {
                                     url={`https://kstockview.com/stocks/${selectedCode}`}
                                     ogImage={selectedCode ? `https://kstockview.com/og/${selectedCode}` : undefined}
                                 />
-                            </div>
-                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '8px', flexWrap: 'wrap' }}>
-                                <button
-                                    onClick={() => navigate(`/compare/${selectedCode}`)}
-                                    style={{
-                                        padding: '5px 12px', fontSize: '0.75rem',
-                                        background: 'transparent', border: `1px solid ${colors.border}`,
-                                        borderRadius: '6px', color: colors.textMuted, cursor: 'pointer',
-                                    }}
-                                    onMouseEnter={e => { e.currentTarget.style.borderColor = colors.accent; e.currentTarget.style.color = colors.accent; }}
-                                    onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.textMuted; }}
-                                >
-                                    {t('compare.addStock', '비교하기')}
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        const code = `<iframe src="https://kstockview.com/embed/${selectedCode}?theme=dark" width="320" height="240" frameborder="0"></iframe>`;
-                                        navigator.clipboard.writeText(code).then(() => alert(t('share.copied', 'Copied!'))).catch(() => {});
-                                    }}
-                                    style={{
-                                        padding: '5px 12px', fontSize: '0.75rem',
-                                        background: 'transparent', border: `1px solid ${colors.border}`,
-                                        borderRadius: '6px', color: colors.textMuted, cursor: 'pointer',
-                                    }}
-                                    onMouseEnter={e => { e.currentTarget.style.borderColor = colors.accent; e.currentTarget.style.color = colors.accent; }}
-                                    onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.textMuted; }}
-                                >
-                                    Embed
-                                </button>
                             </div>
 
                             <div className="view-mode-toggle" style={{
@@ -1506,6 +1491,7 @@ const App = () => {
                                 <div className="chart-legend">
                                     <span><span className="legend-bar" style={{ background: colors.per }}></span> PER</span>
                                     <span><span className="legend-bar" style={{ background: colors.pbr }}></span> PBR</span>
+                                    {viewMode === 'quarterly' && <span><span className="legend-bar" style={{ background: colors.accent, borderRadius: '50%', width: '10px', height: '10px' }}></span> {t('analysis.currentPrice')} TTM</span>}
                                 </div>
                                 <div className="chart-wrapper">
                                     <ResponsiveContainer width="100%" height={300}>
@@ -1533,10 +1519,25 @@ const App = () => {
                                             />
                                             <Tooltip
                                                 contentStyle={{ backgroundColor: colors.tooltipBg, border: `1px solid ${colors.tooltipBorder}`, borderRadius: '8px' }}
-                                                formatter={(value, name) => [`${value}x`, name]}
+                                                formatter={(value, name, props) => {
+                                                    const label = props?.payload?.isCurrent ? `${name} (TTM)` : name;
+                                                    return [`${value}x`, label];
+                                                }}
                                             />
-                                            <Bar yAxisId="per" dataKey="per" name="PER" fill={colors.per} radius={[4, 4, 0, 0]} fillOpacity={0.7} />
-                                            <Line yAxisId="pbr" type="monotone" dataKey="pbr" name="PBR" stroke={colors.pbr} strokeWidth={2.5} dot={{ r: 3, fill: colors.pbr }} />
+                                            <Bar yAxisId="per" dataKey="per" name="PER" fill={colors.per} radius={[4, 4, 0, 0]} fillOpacity={0.7}>
+                                                {perPbrData.map((entry, i) => (
+                                                    <Cell key={i} fill={entry.isCurrent ? colors.accent : colors.per} fillOpacity={entry.isCurrent ? 1.0 : 0.7} />
+                                                ))}
+                                            </Bar>
+                                            <Line yAxisId="pbr" type="monotone" dataKey="pbr" name="PBR" stroke={colors.pbr} strokeWidth={2.5}
+                                                dot={(props) => {
+                                                    const { cx, cy, payload } = props;
+                                                    if (payload.isCurrent) {
+                                                        return <g key="cur-pbr"><circle cx={cx} cy={cy} r={6} fill={colors.accent} stroke={colors.bgCard} strokeWidth={2}/><circle cx={cx} cy={cy} r={3} fill="#fff"/></g>;
+                                                    }
+                                                    return <circle key={`pbr-${cx}-${cy}`} cx={cx} cy={cy} r={3} fill={colors.pbr}/>;
+                                                }}
+                                            />
                                         </ComposedChart>
                                     </ResponsiveContainer>
                                 </div>
@@ -1586,6 +1587,26 @@ const App = () => {
                                     </button>
                                 ))}
                                 {peerCompanies.length === 0 && <span className="no-peers">{t('analysis.noPeers')}</span>}
+                            </div>
+                        </div>
+
+                        {/* Compare Card */}
+                        <div className="compare-card" onClick={() => navigate(`/compare/${selectedCode}`)}>
+                            <div className="compare-card-icon-wrap">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <rect x="3" y="8" width="4" height="13" rx="1"/>
+                                    <rect x="10" y="4" width="4" height="17" rx="1"/>
+                                    <rect x="17" y="11" width="4" height="10" rx="1"/>
+                                </svg>
+                            </div>
+                            <div className="compare-card-text">
+                                <span className="compare-card-title">{t('home.compareLink')}</span>
+                                <span className="compare-card-desc">{t('compare.cardDesc')}</span>
+                            </div>
+                            <div className="compare-card-arrow">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="9 18 15 12 9 6"/>
+                                </svg>
                             </div>
                         </div>
 
