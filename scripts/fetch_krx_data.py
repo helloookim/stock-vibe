@@ -370,7 +370,7 @@ def _latest_equity_at(annual, year):
 
 
 def update_index(kr_stocks_dir, index_file):
-    """Update kr_company_index.json with last_per and last_pbr."""
+    """Update kr_company_index.json with last_per, last_pbr, and last_mktcap."""
     if not index_file.exists():
         print('Index file not found, skipping.')
         return
@@ -390,12 +390,16 @@ def update_index(kr_stocks_dir, index_file):
 
         per = company.get('last_per')
         pbr = company.get('last_pbr')
+        mktcap = company.get('last_mktcap')
         sector = company.get('sector', '')
 
         if per is not None or pbr is not None:
             entry['last_per'] = per
             entry['last_pbr'] = pbr
             updated += 1
+
+        if mktcap is not None:
+            entry['last_mktcap'] = mktcap
 
         # Sync sector from per-company JSON if index entry is missing it
         if sector and not entry.get('sector'):
@@ -404,7 +408,7 @@ def update_index(kr_stocks_dir, index_file):
     with open(index_file, 'w', encoding='utf-8') as f:
         json.dump(index, f, ensure_ascii=False)
 
-    print(f'Updated index: {updated} companies with PER/PBR')
+    print(f'Updated index: {updated} companies with PER/PBR/mktcap')
 
 
 # ─── Main ────────────────────────────────────────────────────────────────────

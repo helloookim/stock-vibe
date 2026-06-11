@@ -236,14 +236,14 @@ const UsStockPage = () => {
             nameEn: c.name_en || '',
             latestRevenue: c.last_revenue || 0,
             latestOpProfit: c.last_op_profit || 0,
-            rank: c.rank || 99999
+            mktcap: c.last_mktcap || 0,
         })).filter(c => {
             const term = krSearchTerm.toLowerCase();
             return c.name.toLowerCase().includes(term) || c.code.includes(krSearchTerm) || c.nameKo.toLowerCase().includes(term) || c.nameEn.toLowerCase().includes(term);
         });
         if (krSortBy === 'revenue') list.sort((a, b) => b.latestRevenue - a.latestRevenue);
         else if (krSortBy === 'op_profit') list.sort((a, b) => b.latestOpProfit - a.latestOpProfit);
-        else if (krSortBy === 'market_cap') list.sort((a, b) => a.rank - b.rank);
+        else if (krSortBy === 'market_cap') list.sort((a, b) => b.mktcap - a.mktcap);
         else list.sort((a, b) => a.code.localeCompare(b.code));
         return list;
     }, [krCompanyIndex, krSearchTerm, krSortBy, isEn]);

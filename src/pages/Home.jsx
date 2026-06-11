@@ -123,7 +123,7 @@ const Home = () => {
         let list = krCompanyIndex.map(c => ({
             code: c.stock_code,
             name: isEn ? (c.name_en || c.name) : c.name,
-            rank: c.rank || 9999
+            mktcap: c.last_mktcap || 0,
         }))
         .filter(c => {
             const term = searchTerm.toLowerCase();
@@ -132,7 +132,7 @@ const Home = () => {
         });
 
         if (sortBy === 'market_cap') {
-            list.sort((a, b) => a.rank - b.rank);
+            list.sort((a, b) => b.mktcap - a.mktcap);
         } else {
             list.sort((a, b) => a.code.localeCompare(b.code));
         }

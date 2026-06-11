@@ -285,7 +285,7 @@ const App = () => {
             sector: c.sector,
             latestRevenue: c.last_revenue || 0,
             latestOpProfit: c.last_op_profit || 0,
-            rank: c.rank || 9999,
+            mktcap: c.last_mktcap || 0,
         }))
             .filter(c => {
                 const term = searchTerm.toLowerCase();
@@ -300,8 +300,7 @@ const App = () => {
             // Sort by operating profit descending
             list.sort((a, b) => b.latestOpProfit - a.latestOpProfit);
         } else if (sortBy === 'market_cap') {
-            // Sort by market cap rank ascending (rank 1 = largest)
-            list.sort((a, b) => a.rank - b.rank);
+            list.sort((a, b) => b.mktcap - a.mktcap);
         } else {
             // Sort by code ascending
             list.sort((a, b) => a.code.localeCompare(b.code));
