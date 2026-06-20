@@ -182,7 +182,7 @@ def main():
         api_calls += 1
 
         if not day_data:
-            print('(no data — holiday?)')
+            print('(no data - holiday?)')
             continue
 
         found = 0
