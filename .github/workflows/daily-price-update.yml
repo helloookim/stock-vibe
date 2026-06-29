@@ -26,13 +26,16 @@ jobs:
           python-version: '3.12'
 
       - name: Install dependencies
-        run: pip install requests
+        run: pip install requests yfinance
 
       - name: Fetch latest KR stock prices
         run: python scripts/fetch_krx_data.py --latest-only
 
-      - name: Append daily price history (top 200)
+      - name: Append daily price history - KR top 200
         run: python scripts/fetch_kr_daily_prices.py --append-latest
+
+      - name: Append daily price history - US top 497
+        run: python scripts/fetch_us_daily_prices.py --days 7
 
       - name: Check for changes
         id: changes
@@ -50,6 +53,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add public/data/kr_stocks/ public/data/kr_company_index.json public/data/kr_daily_prices/
+          git add public/data/kr_stocks/ public/data/kr_company_index.json public/data/kr_daily_prices/ public/data/us_daily_prices/
           git commit -m "data: daily KR stock price update $(date -u +%Y-%m-%d)"
           git push
