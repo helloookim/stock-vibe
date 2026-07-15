@@ -1,7 +1,7 @@
 {
     "ticker": "DEFI",
     "cik": 1985840,
-    "name": "TIDAL COMMODITIES TRUST I",
+    "name": "HASHDEX COMMODITIES TRUST",
     "fy_end_month": 12,
     "annual": [
         {
@@ -11,6 +11,14 @@
             "operating_income": 10717016.0,
             "source": "2025q1",
             "fiscal_year": "FY2024"
+        },
+        {
+            "date": 20251231,
+            "net_income": -474450.0,
+            "operating_cash_flow": 2489611.0,
+            "operating_income": null,
+            "source": "2026q1",
+            "fiscal_year": "FY2025"
         }
     ],
     "quarterly": [
@@ -136,13 +144,13 @@
         },
         {
             "date": 20240930,
-            "qtrs": 1,
-            "net_income": 314110.0,
-            "operating_cash_flow": null,
-            "operating_income": 336948.0,
+            "qtrs": 3,
+            "net_income": 6228827.0,
+            "operating_cash_flow": -2481993.0,
+            "operating_income": 6336079.0,
             "source": "2024q4",
             "fiscal_quarter": "FY2024Q3",
-            "type": "single",
+            "type": "cumulative_9m",
             "is_calculated": null,
             "revenue": null,
             "eps": null,
@@ -151,13 +159,13 @@
         },
         {
             "date": 20240930,
-            "qtrs": 3,
-            "net_income": 6228827.0,
-            "operating_cash_flow": -2481993.0,
-            "operating_income": 6336079.0,
+            "qtrs": 1,
+            "net_income": 314110.0,
+            "operating_cash_flow": null,
+            "operating_income": 336948.0,
             "source": "2024q4",
             "fiscal_quarter": "FY2024Q3",
-            "type": "cumulative_9m",
+            "type": "single",
             "is_calculated": null,
             "revenue": null,
             "eps": null,
@@ -249,6 +257,21 @@
             "fiscal_quarter": "FY2025Q3",
             "type": "cumulative_9m",
             "is_calculated": null,
+            "revenue": null,
+            "eps": null,
+            "eps_basic": null,
+            "pretax_income": null
+        },
+        {
+            "date": 20251231,
+            "qtrs": 1,
+            "net_income": -3635184.0,
+            "operating_cash_flow": -8559.0,
+            "operating_income": null,
+            "source": "2026q1",
+            "fiscal_quarter": "FY2025Q4",
+            "type": "single",
+            "is_calculated": true,
             "revenue": null,
             "eps": null,
             "eps_basic": null,

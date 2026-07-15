@@ -5,11 +5,25 @@
     "fy_end_month": 12,
     "annual": [
         {
+            "date": 20231231,
+            "net_income": 0.0,
+            "operating_cash_flow": 0.0,
+            "source": "2026q1",
+            "fiscal_year": "FY2023"
+        },
+        {
             "date": 20241231,
             "net_income": 6942927000.0,
             "operating_cash_flow": -11705251000.0,
             "source": "2025q1",
             "fiscal_year": "FY2024"
+        },
+        {
+            "date": 20251231,
+            "net_income": -1585851000.0,
+            "operating_cash_flow": -127755000.0,
+            "source": "2026q1",
+            "fiscal_year": "FY2025"
         }
     ],
     "quarterly": [
@@ -172,6 +186,21 @@
             "fiscal_quarter": "FY2025Q3",
             "type": "cumulative_9m",
             "is_calculated": null,
+            "revenue": null,
+            "operating_income": null,
+            "eps": null,
+            "eps_basic": null,
+            "pretax_income": null
+        },
+        {
+            "date": 20251231,
+            "qtrs": 1,
+            "net_income": -5475548000.0,
+            "operating_cash_flow": 418410000.0,
+            "source": "2026q1",
+            "fiscal_quarter": "FY2025Q4",
+            "type": "single",
+            "is_calculated": true,
             "revenue": null,
             "operating_income": null,
             "eps": null,

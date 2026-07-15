@@ -22,24 +22,30 @@ export async function loadUsCompanyData(ticker) {
     return processed;
 }
 
-function parseFiscalYear(fiscalYear) {
-    // "FY2024" → 2024
-    return parseInt(fiscalYear.replace('FY', ''));
+const CAL_Q_END_MONTH = { Q1: 3, Q2: 6, Q3: 9, Q4: 12 };
+
+function dateToCalendar(dateInt) {
+    const year = Math.floor(dateInt / 10000);
+    const month = Math.floor((dateInt % 10000) / 100);
+    const calQ = month <= 3 ? 'Q1' : month <= 6 ? 'Q2' : month <= 9 ? 'Q3' : 'Q4';
+    return { calYear: year, calQ };
 }
 
-function parseFiscalQuarter(fiscalQuarter) {
-    // "FY2024Q3" → { year: 2024, quarter: "Q3" }
-    const match = fiscalQuarter.match(/FY(\d+)Q(\d)/);
-    return { year: parseInt(match[1]), quarter: `Q${match[2]}` };
+// Distance (in months) from a period-end date to its calendar quarter's canonical
+// end month. Used to pick the better match when two fiscal quarters land in the
+// same calendar-quarter bucket (common with 4-4-5 week retail fiscal calendars).
+function monthsFromQuarterEnd(dateInt, calQ) {
+    const month = Math.floor((dateInt % 10000) / 100);
+    return Math.abs(month - CAL_Q_END_MONTH[calQ]);
 }
 
 function processUsCompanyData(raw) {
-    const { ticker, name, cik, fy_end_month, annual: annualRaw, quarterly: quarterlyRaw } = raw;
+    const { ticker, name, cik, annual: annualRaw, quarterly: quarterlyRaw } = raw;
 
     // --- Annual data ---
     const annualData = (annualRaw || [])
         .map(entry => {
-            const year = parseFiscalYear(entry.fiscal_year);
+            const year = Math.floor(entry.date / 10000);
             return {
                 year,
                 displayLabel: `${year}`,
@@ -71,20 +77,25 @@ function processUsCompanyData(raw) {
     });
 
     // --- Quarterly data ---
-    // New data format includes pre-derived Q4 entries (is_calculated: true)
-    // so we only need to filter for type === "single"
+    // Filter for single-quarter entries only (pre-derived Q4 included)
     const singleQuarters = (quarterlyRaw || []).filter(e => e.type === 'single');
     const quarterMap = new Map();
 
     singleQuarters.forEach(entry => {
-        const { year, quarter } = parseFiscalQuarter(entry.fiscal_quarter);
-        const key = `${year}-${quarter}`;
-        // Keep the latest source if duplicates
-        if (!quarterMap.has(key) || entry.date > quarterMap.get(key).date) {
+        const { calYear, calQ } = dateToCalendar(entry.date);
+        const key = `${calYear}-${calQ}`;
+        const existing = quarterMap.get(key);
+        // When two fiscal quarters land in the same calendar bucket, keep whichever
+        // period-end date is closer to that quarter's canonical end month; only
+        // fall back to "latest date" on an exact tie.
+        const shouldReplace = !existing
+            || monthsFromQuarterEnd(entry.date, calQ) < monthsFromQuarterEnd(existing.date, calQ)
+            || (monthsFromQuarterEnd(entry.date, calQ) === monthsFromQuarterEnd(existing.date, calQ) && entry.date > existing.date);
+        if (shouldReplace) {
             quarterMap.set(key, {
                 date: entry.date,
-                year,
-                quarter,
+                year: calYear,
+                calQ,
                 revenue: entry.revenue,
                 operating_income: entry.operating_income,
                 net_income: entry.net_income,
@@ -98,16 +109,16 @@ function processUsCompanyData(raw) {
         .sort((a, b) => a.date - b.date)
         .map(entry => ({
             ...entry,
-            displayLabel: `${entry.year} ${entry.quarter}`,
+            displayLabel: `${entry.year} ${entry.calQ}`,
             op_margin: (entry.revenue && entry.operating_income != null)
                 ? parseFloat(((entry.operating_income / entry.revenue) * 100).toFixed(1))
                 : null,
         }));
 
-    // Calculate quarterly YoY (same fiscal quarter previous year)
+    // Calculate quarterly YoY (same calendar quarter previous year)
     quarterlyData.forEach((entry) => {
         const prevYear = quarterlyData.find(
-            e => e.year === entry.year - 1 && e.quarter === entry.quarter
+            e => e.year === entry.year - 1 && e.calQ === entry.calQ
         );
         if (prevYear) {
             entry.rev_change = calcYoy(entry.revenue, prevYear.revenue);
