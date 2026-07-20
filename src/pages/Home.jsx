@@ -362,35 +362,10 @@ const Home = () => {
                     <div className="charts-container">
                         <div className="home-page">
 
-                            {/* Hero Section */}
-                            <section className="home-hero">
+                            {/* Logo */}
+                            <div className="home-logo-header">
                                 <h1 className="home-hero-logo">KSTOCKVIEW</h1>
-                                <p className="home-hero-tagline">
-                                    {t('home.tagline')}<br />
-                                    {t('home.tagline2')}
-                                </p>
-                                <div className="home-hero-badge">
-                                    <CheckCircle size={18} className="home-hero-badge-icon" />
-                                    <span className="home-hero-badge-text">{t('home.freeService')}</span>
-                                </div>
-                                <button
-                                    className="home-cta-primary"
-                                    onClick={() => {
-                                        if (isMobile) {
-                                            setIsMobileMenuOpen(true);
-                                        } else {
-                                            setSidebarCollapsed(false);
-                                            setTimeout(() => {
-                                                const searchInput = document.querySelector('.search-box input');
-                                                if (searchInput) searchInput.focus();
-                                            }, 100);
-                                        }
-                                    }}
-                                >
-                                    <Search size={20} />
-                                    {t('home.ctaButton')}
-                                </button>
-                            </section>
+                            </div>
 
                             {/* Revenue Spotlight Section */}
                             <section style={{
@@ -598,6 +573,35 @@ const Home = () => {
                                 )}
                             </section>
 
+                            {/* Intro / Tagline */}
+                            <section className="home-intro">
+                                <p className="home-hero-tagline">
+                                    {t('home.tagline')}<br />
+                                    {t('home.tagline2')}
+                                </p>
+                                <div className="home-hero-badge">
+                                    <CheckCircle size={18} className="home-hero-badge-icon" />
+                                    <span className="home-hero-badge-text">{t('home.freeService')}</span>
+                                </div>
+                                <button
+                                    className="home-cta-primary"
+                                    onClick={() => {
+                                        if (isMobile) {
+                                            setIsMobileMenuOpen(true);
+                                        } else {
+                                            setSidebarCollapsed(false);
+                                            setTimeout(() => {
+                                                const searchInput = document.querySelector('.search-box input');
+                                                if (searchInput) searchInput.focus();
+                                            }, 100);
+                                        }
+                                    }}
+                                >
+                                    <Search size={20} />
+                                    {t('home.ctaButton')}
+                                </button>
+                            </section>
+
                             {/* Popular Stocks - Korean */}
                             <section className="home-popular-section">
                                 <p className="home-popular-label">🇰🇷 {t('home.popularStocks')}</p>
@@ -696,6 +700,51 @@ const Home = () => {
                                     </p>
                                 </section>
                             )}
+
+                            {/* Global Compare promo banner */}
+                            <section style={{
+                                maxWidth: '900px',
+                                margin: '0 auto 2rem',
+                                padding: '0 16px',
+                            }}>
+                                <Link to="/global-compare" style={{ textDecoration: 'none' }}>
+                                    <div style={{
+                                        background: 'linear-gradient(135deg, rgba(0,71,160,0.12), rgba(200,16,44,0.12))',
+                                        border: `1px solid ${colors.border}`,
+                                        borderRadius: '14px',
+                                        padding: isMobile ? '20px' : '24px 28px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        flexWrap: 'wrap',
+                                        gap: '12px',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s',
+                                    }} onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                                       onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; }}>
+                                        <div>
+                                            <p style={{ margin: 0, fontSize: isMobile ? '1rem' : '1.1rem', fontWeight: 700, color: colors.textPrimary }}>
+                                                {t('home.globalCompareTitle')}
+                                            </p>
+                                            <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: colors.textMuted }}>
+                                                {t('home.globalCompareDesc')}
+                                            </p>
+                                        </div>
+                                        <span style={{
+                                            flexShrink: 0,
+                                            padding: '8px 18px',
+                                            borderRadius: '20px',
+                                            background: colors.accent,
+                                            color: '#fff',
+                                            fontSize: '0.82rem',
+                                            fontWeight: 600,
+                                            whiteSpace: 'nowrap',
+                                        }}>
+                                            {t('home.globalCompareCta')} →
+                                        </span>
+                                    </div>
+                                </Link>
+                            </section>
 
                             {/* Quick Links: Rankings, Sectors, Compare */}
                             <section style={{

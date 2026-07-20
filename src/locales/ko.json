@@ -107,7 +107,10 @@
         "sectorsLink": "섹터별 분석",
         "sectorsLinkDesc": "업종별 기업 현황과 매출 비교",
         "compareLink": "종목 비교",
-        "compareLinkDesc": "삼성전자 vs SK하이닉스 등 비교 분석"
+        "compareLinkDesc": "삼성전자 vs SK하이닉스 등 비교 분석",
+        "globalCompareTitle": "🌏 한국 vs 미국, 글로벌 라이벌 비교",
+        "globalCompareDesc": "SK하이닉스 vs Micron, 현대차 vs GM — 환율까지 반영해서 실적을 나란히 비교해보세요",
+        "globalCompareCta": "글로벌 라이벌 비교 시작"
     },
     "footer": {
         "serviceDesc": "한국 및 미국 상장 기업 재무 정보 조회 서비스",
@@ -453,6 +456,26 @@
         "latestOpProfit": "최근 영업이익",
         "opMargin": "영업이익률",
         "unitBillion": "억"
+    },
+    "globalCompare": {
+        "defaultTitle": "글로벌 라이벌 비교 | KStockView",
+        "heroTitle": "글로벌 라이벌 비교",
+        "heroSubtitle": "한국 기업과 미국 기업의 매출·영업이익을 환율로 환산해 나란히 비교합니다",
+        "pickerDescription": "SK하이닉스 vs Micron, 현대차 vs GM처럼 한국과 미국 기업의 실적을 USD 기준으로 비교해보세요.",
+        "pickKr": "한국 기업",
+        "pickUs": "미국 기업",
+        "popularPairs": "인기 라이벌 비교",
+        "fxBadge": "분기별 평균 환율 자동 반영",
+        "title": "{{kr}} vs {{us}} 실적 비교 (USD) | KStockView",
+        "description": "{{kr}}와 {{us}}의 매출액, 영업이익을 분기별 평균 환율로 USD 환산하여 비교합니다.",
+        "fxNote": "한국 기업 실적은 분기별 평균 KRW/USD 환율(FRED 기준)로 환산되었습니다. 툴팁에서 원화 금액과 적용 환율을 함께 확인할 수 있습니다.",
+        "revenueChart": "매출액 비교 (USD)",
+        "opIncomeChart": "영업이익 비교 (USD)",
+        "marketCapChart": "시가총액 비교 (USD)",
+        "marketCapNote": "시가총액은 (순이익 ÷ EPS)로 역산한 발행주식수 × 분기말 종가로 계산한 근사치입니다. 적자 분기 등 EPS가 0에 가까운 구간은 표시되지 않을 수 있습니다.",
+        "marketCapUnavailable": "이 조합은 주가 데이터가 없어 시가총액을 계산할 수 없습니다.",
+        "latestRevenueUsd": "최근 연간 매출액 (USD)",
+        "latestOpIncomeUsd": "최근 연간 영업이익 (USD)"
     },
     "sectors": {
         "hubTitle": "섹터별 분석 - 한국 주식 업종 분류 | KStockView",

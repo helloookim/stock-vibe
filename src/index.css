@@ -1597,6 +1597,41 @@ input[type="range"]::-moz-range-thumb {
   min-height: 100%;
 }
 
+/* ---- Logo Header (compact, sits above the Spotlight section) ---- */
+.home-logo-header {
+  text-align: center;
+  padding: 40px 24px 4px;
+}
+
+/* ---- Intro Section (tagline/badge/CTA, now sits below the Spotlight section) ---- */
+.home-intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 8px 24px 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.home-intro::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 800px;
+  height: 800px;
+  background: radial-gradient(circle, rgba(255, 140, 0, 0.06) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.home-intro > * {
+  position: relative;
+  z-index: 1;
+}
+
 /* ---- Hero Section ---- */
 .home-hero {
   display: flex;
@@ -1700,6 +1735,105 @@ input[type="range"]::-moz-range-thumb {
 
 .home-cta-primary:active {
   transform: translateY(0) scale(0.98);
+}
+
+/* ---- Global Compare (KR vs US rivals) ---- */
+.gc-hero {
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  padding: 56px 24px 8px;
+}
+
+.gc-hero::before {
+  content: '';
+  position: absolute;
+  top: -35%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 900px;
+  height: 700px;
+  background: radial-gradient(circle, rgba(0, 71, 160, 0.10) 0%, rgba(200, 16, 44, 0.08) 45%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.gc-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.gc-logo {
+  font-size: clamp(2rem, 6vw, 3rem);
+  font-weight: 800;
+  background: linear-gradient(135deg, #0047A0 0%, #7B5EA7 50%, #C8102E 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 14px 0;
+  letter-spacing: -0.02em;
+  animation: homeHeroFadeIn 0.8s ease-out, homeGradientShift 6s ease infinite;
+}
+
+.gc-tagline {
+  font-size: clamp(0.92rem, 2.4vw, 1.05rem);
+  color: var(--text-muted);
+  margin: 0 auto 22px;
+  max-width: 540px;
+  line-height: 1.7;
+  animation: homeHeroFadeIn 0.8s ease-out 0.15s both;
+}
+
+.gc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 208, 132, 0.08);
+  border: 1px solid rgba(0, 208, 132, 0.25);
+  border-radius: 100px;
+  padding: 8px 18px;
+  margin-bottom: 36px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--positive);
+  animation: homeHeroFadeIn 0.8s ease-out 0.3s both, homeFloatBadge 3s ease-in-out infinite 1s;
+}
+
+.gc-section-label {
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--text-muted);
+  margin-bottom: 18px;
+}
+
+.gc-pair-grid {
+  display: grid;
+  gap: 14px;
+  animation: homeHeroFadeIn 0.8s ease-out 0.4s both;
+}
+
+.gc-pair-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--bg-card);
+  border: 1px solid rgba(123, 94, 167, 0.22);
+  border-radius: 10px;
+  padding: 16px 20px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.gc-pair-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(123, 94, 167, 0.5);
+  box-shadow: 0 8px 26px rgba(123, 94, 167, 0.18);
 }
 
 /* ---- Feature Cards Section ---- */
@@ -2040,9 +2174,12 @@ input[type="range"]::-moz-range-thumb {
 
 /* ---- Homepage Mobile Responsive ---- */
 @media (max-width: 768px) {
-  .home-hero {
-    min-height: auto;
-    padding: 48px 20px 40px;
+  .home-logo-header {
+    padding: 32px 20px 4px;
+  }
+
+  .home-intro {
+    padding: 8px 20px 40px;
   }
 
   .home-hero-logo {

@@ -20,6 +20,7 @@ const BlogList = React.lazy(() => import('./pages/BlogList.jsx'))
 const NotFound = React.lazy(() => import('./pages/NotFound.jsx'))
 const Rankings = React.lazy(() => import('./pages/Rankings.jsx'))
 const Compare = React.lazy(() => import('./pages/Compare.jsx'))
+const GlobalCompare = React.lazy(() => import('./pages/GlobalCompare.jsx'))
 const SectorPage = React.lazy(() => import('./pages/SectorPage.jsx'))
 const Embed = React.lazy(() => import('./pages/Embed.jsx'))
 const SamsungElectronics = React.lazy(() => import('./pages/blog/SamsungElectronics.jsx'))
@@ -64,6 +65,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
                         <Route path="/rankings" element={<Rankings />} />
                         <Route path="/rankings/:metric" element={<Rankings />} />
                         <Route path="/compare/:codes" element={<Compare />} />
+                        <Route path="/global-compare" element={<GlobalCompare />} />
+                        <Route path="/global-compare/:codes" element={<GlobalCompare />} />
                         <Route path="/sectors" element={<SectorPage />} />
                         <Route path="/sectors/:sectorSlug" element={<SectorPage />} />
                         <Route path="/embed/:stockCode" element={<Embed />} />
