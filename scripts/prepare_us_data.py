@@ -7,6 +7,7 @@ Prepare US stock data for deployment.
 
 import json
 import os
+import re
 import shutil
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -14,6 +15,11 @@ TICKERS_FILE = os.path.join(ROOT, "us_company_tickers.json")
 SOURCE_DIR = os.path.join(ROOT, "us_fixed_company_jsons")
 OUTPUT_INDEX = os.path.join(ROOT, "public", "data", "us_company_index.json")
 OUTPUT_DIR = os.path.join(ROOT, "public", "data", "us_stocks")
+
+# Windows reserves these device names (any extension) — a file literally named
+# CON.json can't be created/opened via the normal Win32 path API, so a ticker
+# matching one of these can never be shipped as {ticker}.json on this OS.
+WINDOWS_RESERVED_NAMES = re.compile(r'^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$', re.IGNORECASE)
 
 
 def main():
@@ -33,6 +39,8 @@ def main():
     for key in sorted(tickers_raw.keys(), key=lambda k: int(k)):
         entry = tickers_raw[key]
         ticker = entry["ticker"]
+        if WINDOWS_RESERVED_NAMES.match(ticker):
+            continue
         if ticker in data_files:
             index.append({
                 "ticker": ticker,
