@@ -578,13 +578,19 @@ def main():
             with open(output_file, 'r', encoding='utf-8') as f:
                 existing_json = json.load(f)
             if args.year:
-                # --year mode: merge annual/quarterly for that year, keep others
+                # --year mode: merge annual/quarterly for that year, keep others.
+                # DART only supplies revenue/op_profit/net_income/total_*; fields it
+                # never returns (close_price, per, pbr from KRX; eps from Naver/legacy)
+                # must survive the merge, so carry over any existing non-null value the
+                # freshly built entry does not provide.
                 existing_annual = {a['year']: a for a in existing_json.get('annual', [])}
                 for a in company_json['annual']:
+                    carry_over_fields(a, existing_annual.get(a['year']))
                     existing_annual[a['year']] = a
                 existing_json['annual'] = sorted(existing_annual.values(), key=lambda x: x['year'])
                 existing_quarterly = {(q['year'], q['quarter']): q for q in existing_json.get('quarterly', [])}
                 for q in company_json['quarterly']:
+                    carry_over_fields(q, existing_quarterly.get((q['year'], q['quarter'])))
                     existing_quarterly[(q['year'], q['quarter'])] = q
                 existing_json['quarterly'] = sorted(existing_quarterly.values(), key=lambda x: (x['year'], x['quarter']))
                 company_json = existing_json
@@ -634,6 +640,21 @@ def main():
     generate_index(corp_codes, market_info, OUTPUT_DIR)
 
     print(f'\nDone! Files saved to {OUTPUT_DIR}')
+
+
+def carry_over_fields(new_entry, old_entry):
+    """
+    Fill fields on a freshly built entry from the entry it replaces.
+
+    Only fields the new entry lacks (absent or None) are copied, so refreshed DART
+    financials always win while KRX market data (close_price, per, pbr) and EPS —
+    which the DART key-accounts API never returns — are not silently dropped.
+    """
+    if not old_entry:
+        return
+    for key, value in old_entry.items():
+        if value is not None and new_entry.get(key) is None:
+            new_entry[key] = value
 
 
 def merge_existing_eps(company_json, existing):
