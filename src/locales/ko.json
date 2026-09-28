@@ -55,6 +55,49 @@
         "marketOverview": "시장",
         "financialSummary": "실적"
     },
+    "metricTabs": {
+        "tabs": {
+            "revenue": "매출",
+            "op": "영업이익",
+            "ni": "순이익",
+            "margin": "영업이익률",
+            "eps": "EPS",
+            "valuation": "주가·밸류에이션"
+        },
+        "nouns": {
+            "revenue": "매출액",
+            "op": "영업이익",
+            "ni": "순이익",
+            "margin": "영업이익률",
+            "eps": "EPS"
+        },
+        "latestQuarterly": "최근 분기 {{noun}}",
+        "latestAnnual": "최근 연간 {{noun}}",
+        "currentPrice": "현재 주가",
+        "yoyQuarterly": "전년 동기",
+        "yoyAnnual": "전년 대비",
+        "cagr": "연평균 성장률 (CAGR)",
+        "cagrSub": "{{years}}년 기준",
+        "best": "최고 기록",
+        "opMargin": "영업이익률",
+        "avgMargin": "평균 영업이익률",
+        "profitableQuarters": "흑자 분기",
+        "profitableYears": "흑자 연도",
+        "ttmEps": "최근 4분기 EPS 합",
+        "legendDown": "감소 · 적자",
+        "noData": "표시할 데이터가 없습니다",
+        "range": {
+            "3y": "3년",
+            "5y": "5년",
+            "10y": "10년",
+            "all": "전체"
+        },
+        "times": "{{n}}배",
+        "turnProfit": "흑자 전환",
+        "turnLoss": "적자 전환",
+        "lossContinued": "적자 지속",
+        "peersMetric": "최근 분기 매출 · 전년 동기 대비"
+    },
     "currency": {
         "eok": "억",
         "jo": "조",
@@ -101,6 +144,7 @@
         "spotlightNvdaHook": "AI 반도체 슈퍼사이클, NVIDIA의 매출 성장을 확인하세요",
         "spotlightSkHynixHook": "HBM 수요 폭발! SK하이닉스의 역대급 실적을 확인하세요",
         "spotlightSamsungHook": "역대 분기 최대 매출·영업이익! 삼성전자의 2026년 2분기 실적을 확인하세요",
+        "spotlightPeriod": "{{year}}년 {{quarter}}분기 실적",
         "spotlightViewAnalysis": "상세 분석 보기 →",
         "rankingsLink": "종목 랭킹",
         "rankingsLinkDesc": "PER, 매출, 영업이익률 TOP 50",
@@ -455,7 +499,27 @@
         "latestRevenue": "최근 매출액",
         "latestOpProfit": "최근 영업이익",
         "opMargin": "영업이익률",
-        "unitBillion": "억"
+        "unitBillion": "억",
+        "tabValuation": "PER · PBR",
+        "mode": {
+            "amount": "금액",
+            "growth": "성장률 (YoY)",
+            "index": "지수 (시작=100)"
+        },
+        "indexNote": "기간 첫 값을 100으로 맞춰 기업 규모와 상관없이 추세를 비교합니다",
+        "growthNote": "전년 동기 대비 증감률 · 축은 −100% ~ +200%로 제한됩니다",
+        "suggested": "같은 업종 추천",
+        "maxHint": "최대 3개 종목까지 비교할 수 있어요 ({{n}}/3)",
+        "addPrompt": "비교할 종목을 추가해보세요",
+        "period": "기준 기간",
+        "netIncome": "순이익",
+        "revenueGrowth": "매출 성장률 (YoY)",
+        "marketCap": "시가총액",
+        "perChart": "PER 추이",
+        "pbrChart": "PBR 추이",
+        "tableTitle": "핵심 지표 비교",
+        "bestNote": "● 항목별 최고값 (PER·PBR은 가장 낮은 값)",
+        "noData": "표시할 데이터가 없습니다"
     },
     "globalCompare": {
         "defaultTitle": "글로벌 라이벌 비교 | KStockView",
@@ -475,7 +539,26 @@
         "marketCapNote": "시가총액은 (순이익 ÷ EPS)로 역산한 발행주식수 × 분기말 종가로 계산한 근사치입니다. 적자 분기 등 EPS가 0에 가까운 구간은 표시되지 않을 수 있습니다.",
         "marketCapUnavailable": "이 조합은 주가 데이터가 없어 시가총액을 계산할 수 없습니다.",
         "latestRevenueUsd": "최근 연간 매출액 (USD)",
-        "latestOpIncomeUsd": "최근 연간 영업이익 (USD)"
+        "latestOpIncomeUsd": "최근 연간 영업이익 (USD)",
+        "change": "변경",
+        "pickBoth": "두 기업을 모두 고르면 비교 화면으로 이동합니다",
+        "industries": {
+            "semis": "반도체",
+            "electronics": "전자·IT",
+            "autos": "자동차",
+            "battery": "2차전지·EV",
+            "internet": "인터넷·플랫폼",
+            "bio": "바이오",
+            "defense": "방산"
+        },
+        "revenueUsd": "매출액 (USD)",
+        "opIncomeUsd": "영업이익 (USD)",
+        "netIncomeUsd": "순이익 (USD)",
+        "marketCapLatest": "시가총액 (최근 분기말)",
+        "perTtm": "PER (TTM)",
+        "growthNote": "성장률은 각 기업의 자국 통화 기준입니다 (환율 영향 제외)",
+        "bestNote": "● 항목별 최고값 (PER은 가장 낮은 값)",
+        "netMargin": "순이익률"
     },
     "sectors": {
         "hubTitle": "섹터별 분석 - 한국 주식 업종 분류 | KStockView",

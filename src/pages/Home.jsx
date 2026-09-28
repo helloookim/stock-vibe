@@ -60,6 +60,12 @@ const Home = () => {
         { ticker: 'META', name: 'Meta Platforms, Inc.' },
     ];
 
+    // Period label for a spotlight card, derived from its latest quarter (e.g. "2026년 2분기 실적")
+    const spotlightPeriod = quarters => {
+        const latest = quarters?.[quarters.length - 1];
+        return latest ? t('home.spotlightPeriod', { year: latest.year, quarter: latest.quarter[0] }) : '';
+    };
+
     // Load spotlight data for Samsung Electronics
     useEffect(() => {
         async function loadSpotlightData() {
@@ -74,6 +80,8 @@ const Home = () => {
                     .slice(-8)
                     .map(e => ({
                         label: `${String(e.year).slice(-2)}.${e.quarter}`,
+                        year: e.year,
+                        quarter: e.quarter,
                         revenue: e.revenue,
                         op_profit: e.op_profit,
                     }));
@@ -424,7 +432,7 @@ const Home = () => {
                                                                 <span style={{ fontSize: '0.75rem', color: colors.textMuted, fontWeight: 400 }}>005930</span>
                                                             </p>
                                                             <p style={{ margin: '6px 0 0 0', fontSize: '0.8rem', color: colors.textMuted, fontWeight: 500 }}>
-                                                                {i18n.language === 'ko' ? '2026년 1분기 잠정실적' : '2026 Q1 Preliminary Earnings'}
+                                                                {spotlightPeriod(spotlightData.samsung)}
                                                             </p>
                                                         </div>
                                                         <div style={{ textAlign: 'right' }}>
@@ -510,7 +518,7 @@ const Home = () => {
                                                                 <span style={{ fontSize: '0.75rem', color: colors.textMuted, fontWeight: 400 }}>000660</span>
                                                             </p>
                                                             <p style={{ margin: '6px 0 0 0', fontSize: '0.8rem', color: colors.textMuted, fontWeight: 500 }}>
-                                                                {i18n.language === 'ko' ? '2026년 1분기 실적' : '2026 Q1 Earnings'}
+                                                                {spotlightPeriod(spotlightData.skhynix)}
                                                             </p>
                                                         </div>
                                                         <div style={{ textAlign: 'right' }}>

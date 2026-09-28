@@ -55,6 +55,49 @@
         "marketOverview": "Market",
         "financialSummary": "Financials"
     },
+    "metricTabs": {
+        "tabs": {
+            "revenue": "Revenue",
+            "op": "Operating Income",
+            "ni": "Net Income",
+            "margin": "Op. Margin",
+            "eps": "EPS",
+            "valuation": "Price & Valuation"
+        },
+        "nouns": {
+            "revenue": "revenue",
+            "op": "operating income",
+            "ni": "net income",
+            "margin": "operating margin",
+            "eps": "EPS"
+        },
+        "latestQuarterly": "Latest quarterly {{noun}}",
+        "latestAnnual": "Latest annual {{noun}}",
+        "currentPrice": "Current price",
+        "yoyQuarterly": "YoY",
+        "yoyAnnual": "YoY",
+        "cagr": "CAGR",
+        "cagrSub": "over {{years}} yrs",
+        "best": "Record high",
+        "opMargin": "Operating margin",
+        "avgMargin": "Average margin",
+        "profitableQuarters": "Profitable quarters",
+        "profitableYears": "Profitable years",
+        "ttmEps": "Trailing 4Q EPS",
+        "legendDown": "Down YoY · loss",
+        "noData": "No data to display",
+        "range": {
+            "3y": "3Y",
+            "5y": "5Y",
+            "10y": "10Y",
+            "all": "All"
+        },
+        "times": "{{n}}×",
+        "turnProfit": "Turned profitable",
+        "turnLoss": "Turned to loss",
+        "lossContinued": "Loss continued",
+        "peersMetric": "Latest quarterly revenue · YoY"
+    },
     "currency": {
         "eok": "B",
         "jo": "T",
@@ -101,6 +144,7 @@
         "spotlightNvdaHook": "AI chip supercycle — see NVIDIA's explosive revenue growth",
         "spotlightSkHynixHook": "HBM demand boom! See SK Hynix's record-breaking revenue",
         "spotlightSamsungHook": "Record-high quarterly revenue and operating profit! See Samsung Electronics' 2026 Q2 earnings",
+        "spotlightPeriod": "{{year}} Q{{quarter}} Earnings",
         "spotlightViewAnalysis": "View Full Analysis →",
         "rankingsLink": "Stock Rankings",
         "rankingsLinkDesc": "PER, Revenue, Margin TOP 50",
@@ -465,7 +509,27 @@
         "latestRevenue": "Latest Revenue",
         "latestOpProfit": "Latest Op. Profit",
         "opMargin": "Op. Margin",
-        "unitBillion": "B"
+        "unitBillion": "B",
+        "tabValuation": "PER · PBR",
+        "mode": {
+            "amount": "Amount",
+            "growth": "Growth (YoY)",
+            "index": "Index (start=100)"
+        },
+        "indexNote": "Each company's first value in the period is set to 100, so trends compare regardless of size",
+        "growthNote": "Year-over-year change · axis capped at −100% to +200%",
+        "suggested": "Same industry",
+        "maxHint": "Compare up to 3 stocks ({{n}}/3)",
+        "addPrompt": "Add a company to compare",
+        "period": "Period",
+        "netIncome": "Net income",
+        "revenueGrowth": "Revenue growth (YoY)",
+        "marketCap": "Market cap",
+        "perChart": "PER trend",
+        "pbrChart": "PBR trend",
+        "tableTitle": "Key metrics",
+        "bestNote": "● Best value per row (lowest for PER/PBR)",
+        "noData": "No data to display"
     },
     "globalCompare": {
         "defaultTitle": "Global Rivals Comparison | KStockView",
@@ -485,7 +549,26 @@
         "marketCapNote": "Market cap is approximated as (net income ÷ EPS) implied shares × quarter-end close price. Periods with near-zero EPS (e.g. loss quarters) may be omitted.",
         "marketCapUnavailable": "Stock price data isn't available for this pairing, so market cap can't be calculated.",
         "latestRevenueUsd": "Latest Annual Revenue (USD)",
-        "latestOpIncomeUsd": "Latest Annual Operating Income (USD)"
+        "latestOpIncomeUsd": "Latest Annual Operating Income (USD)",
+        "change": "Change",
+        "pickBoth": "Pick both companies to open the comparison",
+        "industries": {
+            "semis": "Semiconductors",
+            "electronics": "Electronics",
+            "autos": "Autos",
+            "battery": "Batteries & EV",
+            "internet": "Internet",
+            "bio": "Biotech",
+            "defense": "Defense"
+        },
+        "revenueUsd": "Revenue (USD)",
+        "opIncomeUsd": "Operating income (USD)",
+        "netIncomeUsd": "Net income (USD)",
+        "marketCapLatest": "Market cap (latest quarter-end)",
+        "perTtm": "PER (TTM)",
+        "growthNote": "Growth uses each company's own currency (no FX effect)",
+        "bestNote": "● Best value per row (lowest for PER)",
+        "netMargin": "Net margin"
     },
     "sectors": {
         "hubTitle": "Sector Analysis - Korean Stock Industry Breakdown | KStockView",

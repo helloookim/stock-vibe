@@ -15,6 +15,33 @@ import LanguageToggle from './components/LanguageToggle';
 import MarketToggle from './components/MarketToggle';
 import ThemeToggle from './components/ThemeToggle';
 import useThemeColors from './hooks/useThemeColors';
+import { chartHeight } from './chartHeights';
+import useMetricTab from './hooks/useMetricTab';
+import { MetricTabs, MetricHeadline, ChartControls, summaryCardProps } from './components/MetricTabs';
+import YoyChart from './components/YoyChart';
+import Sparkline from './components/Sparkline';
+import { yearAxisProps, defaultRangePreset, rangeFromPreset, latestBarOpacity } from './chartAxis';
+import { summarizeMetric, formatSignedChange, isDecline } from './metricSummary';
+
+// Metric tabs on the KR stock page; the first one is the default
+const KR_TABS = ['revenue', 'op', 'ni', 'margin', 'eps', 'valuation'];
+
+// Explanation shown next to each tab's headline (valuation charts keep their own titles)
+const TAB_INFO = {
+    revenue: 'tooltips.revenueExplain',
+    op: 'tooltips.opProfitExplain',
+    ni: 'tooltips.netIncomeExplain',
+    margin: 'tooltips.opMarginExplain',
+    eps: 'tooltips.epsExplain',
+};
+
+// Last 8 quarters of revenue + latest YoY, for a peer company's sparkline row
+function peerTrend(raw) {
+    const rows = processKrCompanyData(raw).quarterlyData.filter(e => e.revenue != null);
+    if (rows.length === 0) return null;
+    const last = rows[rows.length - 1];
+    return { values: rows.slice(-8).map(e => e.revenue), revenue: last.revenue, yoy: last.rev_change };
+}
 
 // Info Tooltip Component
 const InfoTooltip = ({ text, colors }) => {
@@ -150,8 +177,7 @@ const App = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [sortBy, setSortBy] = useState('market_cap');  // 초기값: 시가총액순
     const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
-    const [yearRange, setYearRange] = useState([2015, 2025]);
-    const [isDefaultRange, setIsDefaultRange] = useState(true);
+    const [rangePreset, setRangePreset] = useState(defaultRangePreset('quarterly'));
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
@@ -161,6 +187,7 @@ const App = () => {
     const [usIndexLoading, setUsIndexLoading] = useState(false);
     const [usSortBy, setUsSortBy] = useState('rank');
     const [usSearchTerm, setUsSearchTerm] = useState('');
+    const [activeTab, setActiveTab] = useMetricTab(KR_TABS);
     // Track the source of selectedCode changes to prevent loops
     const isUrlChangeRef = useRef(false);
 
@@ -178,11 +205,10 @@ const App = () => {
     const chartMargins = isMobile
         ? { top: 10, right: 0, left: 5, bottom: 20 }
         : { top: 20, right: 5, left: 35, bottom: 20 };
-
-    // Dynamic X-axis label properties
-    const xAxisProps = isMobile
-        ? { fontSize: 8, angle: -45, textAnchor: 'end', height: 60 }
-        : { fontSize: 10, angle: -45, textAnchor: 'end', height: 70 };
+    // Bar chart sits directly above its YoY chart: no X axis on the bars, the YoY chart carries the years
+    const mainChartMargins = { ...chartMargins, bottom: 4 };
+    const yoyChartMargins = { ...chartMargins, top: 8, bottom: 0 };
+    const yAxisWidth = isMobile ? 50 : 65;
 
     // Phase 1: Load quarterly data + market cap (essential for initial render)
     // Load lightweight company index for sidebar (~666KB)
@@ -271,9 +297,9 @@ const App = () => {
                 return;
             }
 
-            // User clicked a stock - update URL if different
+            // User clicked a stock - update URL if different (keeps ?tab= so the same metric stays open)
             if (pathCode !== selectedCode) {
-                navigate(`/stocks/${selectedCode}`, { replace: true });
+                navigate(`/stocks/${selectedCode}${location.search}`, { replace: true });
             }
         }
     }, [selectedCode, dataLoading, navigate, location.pathname, isInvalidCode, krCompanyIndex]);
@@ -409,12 +435,14 @@ const App = () => {
         return { min: Math.min(...validYears), max: Math.max(...validYears) };
     }, [processedQuarterly, processedAnnual, viewMode]);
 
-    // Update yearRange when company or viewMode changes to fit company's data range
-    useEffect(() => {
-        const defaultMin = Math.max(companyDataRange.min, 2020);
-        setYearRange([defaultMin, companyDataRange.max]);
-        setIsDefaultRange(true); // Reset to default when company changes
-    }, [companyDataRange, viewMode]);
+    // Visible years from the period preset (3y / 5y / 10y / all)
+    const yearRange = useMemo(() => rangeFromPreset(rangePreset, companyDataRange), [rangePreset, companyDataRange]);
+
+    // Switching quarterly/annual resets the period to that mode's default
+    const handleViewModeChange = (mode) => {
+        setViewMode(mode);
+        setRangePreset(defaultRangePreset(mode));
+    };
 
     const chartData = useMemo(() => {
         if (!currentCompany) return [];
@@ -431,60 +459,6 @@ const App = () => {
         return withEok.filter(entry => entry.year >= yearRange[0] && entry.year <= yearRange[1]);
     }, [currentCompany, yearRange]);
 
-    // Calculate YoY change domain with smart ticks (must include 0)
-    const calculateYoyDomain = (changes) => {
-        if (changes.length === 0) return { domain: [-10, 10], ticks: [-10, 0, 10] };
-
-        const min = Math.min(...changes);
-        const max = Math.max(...changes);
-
-        // Calculate appropriate bounds
-        const maxAbs = Math.max(Math.abs(min), Math.abs(max));
-
-        // Determine tick interval based on magnitude
-        let tickInterval;
-        if (maxAbs < 100) {
-            // Under 100: use 10s
-            tickInterval = 10;
-        } else {
-            // 100 or more: use 100s
-            tickInterval = 100;
-        }
-
-        // Round bounds to tick intervals (not necessarily symmetric)
-        const lowerBound = Math.floor(min / tickInterval) * tickInterval;
-        const upperBound = Math.ceil(max / tickInterval) * tickInterval;
-
-        // Generate ticks from lower to upper, ensuring 0 is included
-        const ticks = [];
-        for (let i = lowerBound; i <= upperBound; i += tickInterval) {
-            ticks.push(i);
-        }
-
-        // Ensure 0 is in ticks
-        if (!ticks.includes(0)) {
-            ticks.push(0);
-            ticks.sort((a, b) => a - b);
-        }
-
-        return { domain: [lowerBound, upperBound], ticks };
-    };
-
-    const revenueYoyDomain = useMemo(() => {
-        const changes = chartData.map(d => d.rev_change).filter(v => v !== null);
-        return calculateYoyDomain(changes);
-    }, [chartData]);
-
-    const opProfitYoyDomain = useMemo(() => {
-        const changes = chartData.map(d => d.op_change).filter(v => v !== null);
-        return calculateYoyDomain(changes);
-    }, [chartData]);
-
-    const netIncomeYoyDomain = useMemo(() => {
-        const changes = chartData.map(d => d.ni_change).filter(v => v !== null);
-        return calculateYoyDomain(changes);
-    }, [chartData]);
-
     // EPS chart data from processed quarterly data
     const epsChartData = useMemo(() => {
         const epsEntries = processedQuarterly.filter(e => e.eps != null);
@@ -500,12 +474,6 @@ const App = () => {
             }))
             .filter(entry => entry.year >= yearRange[0] && entry.year <= yearRange[1]);
     }, [processedQuarterly, yearRange]);
-
-    // Calculate EPS YoY change domain
-    const epsYoyDomain = useMemo(() => {
-        const changes = epsChartData.map(d => d.eps_change).filter(v => v !== null);
-        return calculateYoyDomain(changes);
-    }, [epsChartData]);
 
     // PER/PBR chart data
     const perPbrData = useMemo(() => {
@@ -591,6 +559,25 @@ const App = () => {
             .slice(0, 15);
     }, [currentCompany, selectedCode, krCompanyIndex, isEn]);
 
+    const peersRef = useRef(null);
+    const [peerTrends, setPeerTrends] = useState({});
+    useEffect(() => {
+        const el = peersRef.current;
+        if (!el || peerCompanies.length === 0) return;
+        let cancelled = false;
+        const observer = new IntersectionObserver((entries) => {
+            if (!entries[0].isIntersecting) return;
+            observer.disconnect();
+            Promise.all(peerCompanies.map(p =>
+                loadKrCompanyData(p.code).then(raw => [p.code, peerTrend(raw)]).catch(() => [p.code, null])
+            )).then(results => {
+                if (!cancelled) setPeerTrends(prev => ({ ...prev, ...Object.fromEntries(results) }));
+            });
+        }, { root: document.querySelector('.charts-container'), rootMargin: '400px' });
+        observer.observe(el);
+        return () => { cancelled = true; observer.disconnect(); };
+    }, [peerCompanies]);
+
     const formatCurrency = (val) => {
         if (!val && val !== 0) return t('currency.zeroEok');
         const absoluteVal = Math.abs(val);
@@ -610,6 +597,100 @@ const App = () => {
         }
         return `${val.toLocaleString(undefined, { maximumFractionDigits: 1 })}억`;
     };
+
+    // Y-axis ticks in 조 when the series reaches 1조, else 억
+    const eokTickFormatter = (val, key) => {
+        const maxVal = Math.max(...chartData.map(d => Math.abs(d[key])));
+        if (maxVal >= 10000) return `${(val / 10000).toFixed(1)}${t('currency.jo')}`;
+        return `${val.toFixed(0)}${t('currency.eok')}`;
+    };
+    const eokTooltipFormatter = (value) => {
+        if (Math.abs(value) >= 10000) {
+            return `${(value / 10000).toLocaleString(undefined, { maximumFractionDigits: 2 })} ${t('currency.joWon')}`;
+        }
+        return `${value.toLocaleString(undefined, { maximumFractionDigits: 1 })} ${t('currency.eokWon')}`;
+    };
+
+    // Headline (latest value, YoY badge, two stats) for the active metric tab
+    const metricHeadline = (() => {
+        const isQuarterly = viewMode === 'quarterly';
+        const money = (v) => formatCurrency(v / 100000000);
+        const won = (v) => `${Math.round(v).toLocaleString()}${t('currency.won')}`;
+        const pct = (v) => `${v}%`;
+        const latestLabel = (key, quarterly = isQuarterly) => t(
+            quarterly ? 'metricTabs.latestQuarterly' : 'metricTabs.latestAnnual',
+            { noun: t(`metricTabs.nouns.${key}`) }
+        );
+        const yoyPrefix = (quarterly = isQuarterly) => t(quarterly ? 'metricTabs.yoyQuarterly' : 'metricTabs.yoyAnnual');
+        const profitable = (s) => ({
+            label: t(isQuarterly ? 'metricTabs.profitableQuarters' : 'metricTabs.profitableYears'),
+            value: `${s.positive} / ${s.total}`,
+            tone: s.positive === s.total ? 'up' : '',
+        });
+        const best = (s, fmt) => ({ label: t('metricTabs.best'), value: fmt(s.bestValue), sub: s.best.displayLabel });
+        const build = (key, s, fmt, stats, quarterly = isQuarterly) => s && ({
+            label: latestLabel(key, quarterly),
+            period: s.latest.displayLabel,
+            value: fmt(s.value),
+            change: s.change,
+            changeUnit: s.changeUnit,
+            changeKind: s.changeKind,
+            multiple: s.multiple,
+            changePrefix: yoyPrefix(quarterly),
+            stats: stats(s),
+        });
+
+        if (activeTab === 'revenue') {
+            const s = summarizeMetric(chartData, 'revenue', { changeKey: 'rev_change', isQuarterly });
+            return build('revenue', s, money, (s) => [
+                {
+                    label: t('metricTabs.cagr'),
+                    value: s.cagr != null ? formatSignedChange(s.cagr) : '-',
+                    tone: s.cagr == null ? '' : s.cagr >= 0 ? 'up' : 'down',
+                    sub: s.cagr != null ? t('metricTabs.cagrSub', { years: +s.cagrYears.toFixed(1) }) : undefined,
+                },
+                best(s, money),
+            ]);
+        }
+        if (activeTab === 'op') {
+            const s = summarizeMetric(chartData, 'op_profit', { changeKey: 'op_change', isQuarterly });
+            const margin = summarizeMetric(chartData, 'op_margin', { isQuarterly });
+            return build('op', s, money, (s) => [
+                { label: t('metricTabs.opMargin'), value: margin ? pct(margin.value) : '-' },
+                profitable(s),
+            ]);
+        }
+        if (activeTab === 'ni') {
+            const s = summarizeMetric(chartData, 'net_income', { changeKey: 'ni_change', isQuarterly });
+            return build('ni', s, money, (s) => [profitable(s), best(s, money)]);
+        }
+        if (activeTab === 'margin') {
+            const s = summarizeMetric(chartData, 'op_margin', { isQuarterly });
+            return build('margin', s, pct, (s) => [
+                { label: t('metricTabs.avgMargin'), value: pct(s.average) },
+                best(s, pct),
+            ]);
+        }
+        if (activeTab === 'eps') {
+            // EPS chart is always quarterly (see epsChartData)
+            const s = summarizeMetric(epsChartData, 'eps', { changeKey: 'eps_change', isQuarterly: true });
+            return build('eps', s, won, (s) => [
+                ...(s.ttm != null ? [{ label: t('metricTabs.ttmEps'), value: won(s.ttm) }] : []),
+                best(s, won),
+            ], true);
+        }
+        // valuation
+        if (currentCompanyRaw?.last_close_price == null) return null;
+        return {
+            label: t('metricTabs.currentPrice'),
+            period: currentCompanyRaw.last_close_date?.replace(/(\d{4})(\d{2})(\d{2})/, '$1.$2.$3'),
+            value: won(currentCompanyRaw.last_close_price),
+            stats: [
+                { label: t('analysis.latestPer'), value: currentCompanyRaw.last_per != null ? `${currentCompanyRaw.last_per.toFixed(1)}x` : '-' },
+                { label: t('analysis.latestPbr'), value: currentCompanyRaw.last_pbr != null ? `${currentCompanyRaw.last_pbr.toFixed(2)}x` : '-' },
+            ],
+        };
+    })();
 
     // Show loading screen while data is loading
     if (dataLoading) {
@@ -820,80 +901,6 @@ const App = () => {
                                     ogImage={selectedCode ? `https://kstockview.com/og/${selectedCode}` : undefined}
                                 />
                             </div>
-
-                            <div className="view-mode-toggle" style={{
-                                display: 'flex',
-                                gap: '6px',
-                                marginBottom: '8px',
-                                justifyContent: 'center'
-                            }}>
-                                <button
-                                    onClick={() => setViewMode('quarterly')}
-                                    style={{
-                                        padding: '6px 16px',
-                                        borderRadius: '6px',
-                                        border: viewMode === 'quarterly' ? `2px solid ${colors.accent}` : `1px solid ${colors.textVeryFaded}`,
-                                        backgroundColor: viewMode === 'quarterly' ? colors.accentBg : colors.bgCard,
-                                        color: viewMode === 'quarterly' ? colors.accent : colors.textMuted,
-                                        cursor: 'pointer',
-                                        fontSize: '0.85rem',
-                                        fontWeight: viewMode === 'quarterly' ? '600' : '400',
-                                        transition: 'all 0.2s'
-                                    }}
-                                >
-                                    {t('analysis.quarterly')}
-                                </button>
-                                <button
-                                    onClick={() => setViewMode('annual')}
-                                    style={{
-                                        padding: '6px 16px',
-                                        borderRadius: '6px',
-                                        border: viewMode === 'annual' ? `2px solid ${colors.accent}` : `1px solid ${colors.textVeryFaded}`,
-                                        backgroundColor: viewMode === 'annual' ? colors.accentBg : colors.bgCard,
-                                        color: viewMode === 'annual' ? colors.accent : colors.textMuted,
-                                        cursor: 'pointer',
-                                        fontSize: '0.85rem',
-                                        fontWeight: viewMode === 'annual' ? '600' : '400',
-                                        transition: 'all 0.2s'
-                                    }}
-                                >
-                                    {t('analysis.annual')}
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="year-slider">
-                            <label>{t('common.period')}: {yearRange[0]} - {yearRange[1]}</label>
-                            <div className="dual-slider-container">
-                                <input
-                                    type="range"
-                                    className="slider-track slider-min"
-                                    min={companyDataRange.min}
-                                    max={companyDataRange.max}
-                                    value={yearRange[0]}
-                                    onChange={e => {
-                                        const val = parseInt(e.target.value);
-                                        if (val <= yearRange[1]) {
-                                            setYearRange([val, yearRange[1]]);
-                                            setIsDefaultRange(false);
-                                        }
-                                    }}
-                                />
-                                <input
-                                    type="range"
-                                    className="slider-track slider-max"
-                                    min={companyDataRange.min}
-                                    max={companyDataRange.max}
-                                    value={yearRange[1]}
-                                    onChange={e => {
-                                        const val = parseInt(e.target.value);
-                                        if (val >= yearRange[0]) {
-                                            setYearRange([yearRange[0], val]);
-                                            setIsDefaultRange(false);
-                                        }
-                                    }}
-                                />
-                            </div>
                         </div>
                       </div>
                     </header>
@@ -906,7 +913,7 @@ const App = () => {
                             </span>
                         </div>
                         <div className="summary-cards">
-                            <div className="summary-card">
+                            <div {...summaryCardProps('valuation', activeTab, setActiveTab)}>
                                 <span className="card-label">
                                     {t('analysis.latestClosePrice')}
                                     {currentCompanyRaw?.last_close_date && (
@@ -921,7 +928,7 @@ const App = () => {
                                         : '-'}
                                 </span>
                             </div>
-                            <div className="summary-card">
+                            <div {...summaryCardProps('valuation', activeTab, setActiveTab)}>
                                 <span className="card-label">{t('analysis.latestMktcap')}</span>
                                 <span className="card-value">
                                     {currentCompanyRaw?.last_mktcap != null
@@ -932,13 +939,13 @@ const App = () => {
                                         : '-'}
                                 </span>
                             </div>
-                            <div className="summary-card">
+                            <div {...summaryCardProps('valuation', activeTab, setActiveTab)}>
                                 <span className="card-label">{t('analysis.latestPer')}</span>
                                 <span className="card-value">
                                     {currentCompanyRaw?.last_per != null ? `${currentCompanyRaw.last_per.toFixed(1)}x` : '-'}
                                 </span>
                             </div>
-                            <div className="summary-card">
+                            <div {...summaryCardProps('valuation', activeTab, setActiveTab)}>
                                 <span className="card-label">{t('analysis.latestPbr')}</span>
                                 <span className="card-value">
                                     {currentCompanyRaw?.last_pbr != null ? `${currentCompanyRaw.last_pbr.toFixed(2)}x` : '-'}
@@ -953,25 +960,25 @@ const App = () => {
                             </span>
                         </div>
                         <div className="summary-cards">
-                            <div className="summary-card">
+                            <div {...summaryCardProps('revenue', activeTab, setActiveTab)}>
                                 <span className="card-label">{t('analysis.latestRevenue')}</span>
                                 <span className="card-value">
                                     {chartData.length > 0 ? formatCurrency(chartData[chartData.length - 1].revenue_eok) : t('currency.zeroEok')}
                                 </span>
                             </div>
-                            <div className="summary-card">
+                            <div {...summaryCardProps('op', activeTab, setActiveTab)}>
                                 <span className="card-label">{t('analysis.latestOpProfit')}</span>
                                 <span className="card-value">
                                     {chartData.length > 0 ? formatCurrency(chartData[chartData.length - 1].op_profit_eok) : t('currency.zeroEok')}
                                 </span>
                             </div>
-                            <div className="summary-card">
+                            <div {...summaryCardProps('margin', activeTab, setActiveTab)}>
                                 <span className="card-label">{t('analysis.opMarginLabel')}</span>
                                 <span className="card-value">
                                     {chartData.length > 0 ? chartData[chartData.length - 1].op_margin : 0}%
                                 </span>
                             </div>
-                            <div className="summary-card">
+                            <div {...summaryCardProps('eps', activeTab, setActiveTab)}>
                                 <span className="card-label">{t('analysis.latestEps')}</span>
                                 <span className="card-value">
                                     {(() => {
@@ -982,381 +989,240 @@ const App = () => {
                             </div>
                         </div>
 
-                        {/* Main Chart: Bar (Revenue) with YoY */}
-                        <div className="chart-section">
-                            <h3>
-                                {t('analysis.revenueYoy', { mode: viewMode === 'annual' ? t('analysis.annual') : t('analysis.quarterly') })}
-                                <InfoTooltip text={t('tooltips.revenueExplain')} colors={colors} />
-                            </h3>
-                            <div className="chart-legend">
-                                <span><span className="legend-bar"></span> {t('analysis.revenueLegend')}</span>
-                                <span>
-                                    <span className="legend-line-dual"><span style={{ background: colors.positive }}></span><span style={{ background: colors.negative }}></span></span> {t('analysis.yoyLegend')}
-                                    <InfoTooltip text={t('tooltips.yoyExplain')} colors={colors} />
-                                </span>
-                            </div>
-                            <div className="chart-wrapper">
-                                <ResponsiveContainer width="100%" height={250}>
-                                    <BarChart data={chartData} margin={chartMargins}>
-                                        <defs>
-                                            <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="0%" stopColor={colors.revenue} stopOpacity={colors.isLight ? 1 : 0.8} />
-                                                <stop offset="100%" stopColor={colors.revenue} stopOpacity={colors.isLight ? 1 : 0.3} />
-                                            </linearGradient>
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
-                                        <XAxis dataKey="displayLabel" stroke={colors.textMuted} {...xAxisProps} />
-                                        <YAxis
-                                            stroke={colors.textMuted}
-                                            fontSize={11}
-                                            tickFormatter={(val) => {
-                                                const maxVal = Math.max(...chartData.map(d => d.revenue_eok));
-                                                if (maxVal >= 10000) {
-                                                    return `${(val / 10000).toFixed(1)}${t('currency.jo')}`;
-                                                }
-                                                return `${val.toFixed(0)}${t('currency.eok')}`;
-                                            }}
-                                            domain={[0, 'dataMax']}
-                                            padding={{ top: 20, bottom: 0 }}
-                                            width={isMobile ? 50 : 65}
-                                        />
-                                        <Tooltip
-                                            content={<CustomTooltip
-                                                colors={colors}
-                                                valueFormatter={(value) => {
-                                                    if (Math.abs(value) >= 10000) {
-                                                        return `${(value / 10000).toLocaleString(undefined, { maximumFractionDigits: 2 })} ${t('currency.joWon')}`;
-                                                    }
-                                                    return `${value.toLocaleString(undefined, { maximumFractionDigits: 1 })} ${t('currency.eokWon')}`;
-                                                }}
-                                                yoyKey="rev_change"
-                                            />}
-                                        />
-                                        <Bar dataKey="revenue_eok" name={t('analysis.revenueBarName')} fill="url(#barGrad)" radius={[4, 4, 0, 0]} />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                                <ResponsiveContainer width="100%" height={isMobile ? 120 : 180}>
-                                    <ComposedChart data={chartData} margin={chartMargins}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
-                                        <XAxis dataKey="displayLabel" stroke={colors.textMuted} {...xAxisProps} />
-                                        <YAxis
-                                            stroke={colors.positive}
-                                            fontSize={9}
-                                            tickFormatter={(val) => `${val.toFixed(0)}%`}
-                                            domain={revenueYoyDomain.domain}
-                                            ticks={revenueYoyDomain.ticks}
-                                            width={isMobile ? 50 : 65}
-                                        />
-                                        <Tooltip
-                                            contentStyle={{ backgroundColor: colors.tooltipBg, border: `1px solid ${colors.tooltipBorder}`, borderRadius: '8px' }}
-                                            formatter={(value) => [`${value}%`, 'YoY']}
-                                        />
-                                        <ReferenceLine y={0} stroke={colors.chartRef} strokeDasharray="5 5" />
-                                        <Line
-                                            type="monotone"
-                                            dataKey="rev_change"
-                                            name="YoY"
-                                            stroke={colors.chartRef}
-                                            strokeWidth={1.5}
-                                            dot={(props) => {
-                                                const { cx, cy, payload } = props;
-                                                if (payload.rev_change === null) return null;
-                                                const color = payload.rev_change >= 0 ? colors.positive : colors.negative;
-                                                return <circle cx={cx} cy={cy} r={2.5} fill={color} stroke={color} strokeWidth={1} />;
-                                            }}
-                                        />
-                                    </ComposedChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </div>
+                        {/* Metric Tabs — one financial chart at a time */}
+                        <MetricTabs
+                            tabs={KR_TABS.map(key => ({ key, label: t(`metricTabs.tabs.${key}`) }))}
+                            activeTab={activeTab}
+                            onChange={setActiveTab}
+                        />
+                        <ChartControls
+                            viewMode={viewMode}
+                            onViewModeChange={handleViewModeChange}
+                            rangePreset={rangePreset}
+                            onRangePresetChange={setRangePreset}
+                            rangeText={`${yearRange[0]} – ${yearRange[1]}`}
+                        />
+                        {metricHeadline
+                            ? <MetricHeadline
+                                {...metricHeadline}
+                                info={TAB_INFO[activeTab] && <InfoTooltip text={t(TAB_INFO[activeTab])} colors={colors} />}
+                              />
+                            : <div className="metric-empty">{t('metricTabs.noData')}</div>}
 
-                        {/* Operating Profit Bar Chart with YoY */}
-                        <div className="chart-section">
-                            <h3>
-                                {t('analysis.opProfitYoy', { mode: viewMode === 'annual' ? t('analysis.annual') : t('analysis.quarterly') })}
-                                <InfoTooltip text={t('tooltips.opProfitExplain')} colors={colors} />
-                            </h3>
-                            <div className="chart-legend">
-                                <span><span className="legend-bar" style={{ background: 'rgba(0, 208, 132, 0.6)' }}></span> {t('analysis.opProfitLegend')}</span>
-                                <span><span className="legend-line-dual"><span style={{ background: colors.positive }}></span><span style={{ background: colors.negative }}></span></span> {t('analysis.yoyLegend')}</span>
-                            </div>
-                            <div className="chart-wrapper">
-                                <ResponsiveContainer width="100%" height={250}>
-                                    <BarChart data={chartData} margin={chartMargins}>
-                                        <defs>
-                                            <linearGradient id="barGradGreen" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="0%" stopColor={colors.opIncome} stopOpacity={colors.isLight ? 1 : 0.8} />
-                                                <stop offset="100%" stopColor={colors.opIncome} stopOpacity={colors.isLight ? 1 : 0.3} />
-                                            </linearGradient>
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
-                                        <XAxis dataKey="displayLabel" stroke={colors.textMuted} {...xAxisProps} />
-                                        <YAxis
-                                            stroke={colors.textMuted}
-                                            fontSize={11}
-                                            domain={isDefaultRange ? [0, 'auto'] : [dataMin => Math.min(dataMin, 0), 'auto']}
-                                            tickFormatter={(val) => {
-                                                const maxVal = Math.max(...chartData.map(d => Math.abs(d.op_profit_eok)));
-                                                if (maxVal >= 10000) {
-                                                    return `${(val / 10000).toFixed(1)}${t('currency.jo')}`;
-                                                }
-                                                return `${val.toFixed(0)}${t('currency.eok')}`;
-                                            }}
-                                            padding={{ top: 20, bottom: 20 }}
-                                            width={isMobile ? 50 : 65}
-                                        />
-                                        <Tooltip
-                                            content={<CustomTooltip
-                                                colors={colors}
-                                                valueFormatter={(value) => {
-                                                    if (Math.abs(value) >= 10000) {
-                                                        return `${(value / 10000).toLocaleString(undefined, { maximumFractionDigits: 2 })} ${t('currency.joWon')}`;
-                                                    }
-                                                    return `${value.toLocaleString(undefined, { maximumFractionDigits: 1 })} ${t('currency.eokWon')}`;
-                                                }}
-                                                yoyKey="op_change"
-                                            />}
-                                        />
-                                        <ReferenceLine y={0} stroke={colors.chartRef} />
-                                        <Bar dataKey="op_profit_eok" name={t('analysis.opProfitBarName')} fill="url(#barGradGreen)" radius={[4, 4, 0, 0]} />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                                <ResponsiveContainer width="100%" height={isMobile ? 120 : 180}>
-                                    <ComposedChart data={chartData} margin={chartMargins}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
-                                        <XAxis dataKey="displayLabel" stroke={colors.textMuted} {...xAxisProps} />
-                                        <YAxis
-                                            stroke={colors.positive}
-                                            fontSize={9}
-                                            tickFormatter={(val) => `${val.toFixed(0)}%`}
-                                            domain={opProfitYoyDomain.domain}
-                                            ticks={opProfitYoyDomain.ticks}
-                                            width={isMobile ? 50 : 65}
-                                        />
-                                        <Tooltip
-                                            contentStyle={{ backgroundColor: colors.tooltipBg, border: `1px solid ${colors.tooltipBorder}`, borderRadius: '8px' }}
-                                            formatter={(value) => [`${value}%`, 'YoY']}
-                                        />
-                                        <ReferenceLine y={0} stroke={colors.chartRef} strokeDasharray="5 5" />
-                                        <Line
-                                            type="monotone"
-                                            dataKey="op_change"
-                                            name="YoY"
-                                            stroke={colors.chartRef}
-                                            strokeWidth={1.5}
-                                            dot={(props) => {
-                                                const { cx, cy, payload } = props;
-                                                if (payload.op_change === null) return null;
-                                                const color = payload.op_change >= 0 ? colors.positive : colors.negative;
-                                                return <circle cx={cx} cy={cy} r={2.5} fill={color} stroke={color} strokeWidth={1} />;
-                                            }}
-                                        />
-                                    </ComposedChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </div>
-
-                        {/* Net Income Bar Chart with YoY */}
-                        <div className="chart-section">
-                            <h3>
-                                {t('analysis.netIncomeYoy', { mode: viewMode === 'annual' ? t('analysis.annual') : t('analysis.quarterly') })}
-                                <InfoTooltip text={t('tooltips.netIncomeExplain')} colors={colors} />
-                            </h3>
-                            <div className="chart-legend">
-                                <span><span className="legend-bar" style={{ background: `${colors.netIncome}99` }}></span> {t('analysis.netIncomeLegend')}</span>
-                                <span><span className="legend-line-dual"><span style={{ background: colors.positive }}></span><span style={{ background: colors.negative }}></span></span> {t('analysis.yoyLegend')}</span>
-                            </div>
-                            <div className="chart-wrapper">
-                                <ResponsiveContainer width="100%" height={250}>
-                                    <BarChart data={chartData} margin={chartMargins}>
-                                        <defs>
-                                            <linearGradient id="barGradPurple" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="0%" stopColor={colors.netIncome} stopOpacity={colors.isLight ? 1 : 0.8} />
-                                                <stop offset="100%" stopColor={colors.netIncome} stopOpacity={colors.isLight ? 1 : 0.3} />
-                                            </linearGradient>
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
-                                        <XAxis dataKey="displayLabel" stroke={colors.textMuted} {...xAxisProps} />
-                                        <YAxis
-                                            stroke={colors.textMuted}
-                                            fontSize={11}
-                                            domain={isDefaultRange ? [0, 'auto'] : [dataMin => Math.min(dataMin, 0), 'auto']}
-                                            tickFormatter={(val) => {
-                                                const maxVal = Math.max(...chartData.map(d => Math.abs(d.net_income_eok)));
-                                                if (maxVal >= 10000) {
-                                                    return `${(val / 10000).toFixed(1)}${t('currency.jo')}`;
-                                                }
-                                                return `${val.toFixed(0)}${t('currency.eok')}`;
-                                            }}
-                                            padding={{ top: 20, bottom: 20 }}
-                                            width={isMobile ? 50 : 65}
-                                        />
-                                        <Tooltip
-                                            content={<CustomTooltip
-                                                colors={colors}
-                                                valueFormatter={(value) => {
-                                                    if (Math.abs(value) >= 10000) {
-                                                        return `${(value / 10000).toLocaleString(undefined, { maximumFractionDigits: 2 })} ${t('currency.joWon')}`;
-                                                    }
-                                                    return `${value.toLocaleString(undefined, { maximumFractionDigits: 1 })} ${t('currency.eokWon')}`;
-                                                }}
-                                                yoyKey="ni_change"
-                                            />}
-                                        />
-                                        <ReferenceLine y={0} stroke={colors.chartRef} />
-                                        <Bar dataKey="net_income_eok" name={t('analysis.netIncomeBarName')} fill="url(#barGradPurple)" radius={[4, 4, 0, 0]} />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                                <ResponsiveContainer width="100%" height={isMobile ? 120 : 180}>
-                                    <ComposedChart data={chartData} margin={chartMargins}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
-                                        <XAxis dataKey="displayLabel" stroke={colors.textMuted} {...xAxisProps} />
-                                        <YAxis
-                                            stroke={colors.positive}
-                                            fontSize={9}
-                                            tickFormatter={(val) => `${val.toFixed(0)}%`}
-                                            domain={netIncomeYoyDomain.domain}
-                                            ticks={netIncomeYoyDomain.ticks}
-                                            width={isMobile ? 50 : 65}
-                                        />
-                                        <Tooltip
-                                            contentStyle={{ backgroundColor: colors.tooltipBg, border: `1px solid ${colors.tooltipBorder}`, borderRadius: '8px' }}
-                                            formatter={(value) => [`${value}%`, 'YoY']}
-                                        />
-                                        <ReferenceLine y={0} stroke={colors.chartRef} strokeDasharray="5 5" />
-                                        <Line
-                                            type="monotone"
-                                            dataKey="ni_change"
-                                            name="YoY"
-                                            stroke={colors.chartRef}
-                                            strokeWidth={1.5}
-                                            dot={(props) => {
-                                                const { cx, cy, payload } = props;
-                                                if (payload.ni_change === null) return null;
-                                                const color = payload.ni_change >= 0 ? colors.positive : colors.negative;
-                                                return <circle cx={cx} cy={cy} r={2.5} fill={color} stroke={color} strokeWidth={1} />;
-                                            }}
-                                        />
-                                    </ComposedChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </div>
-
-                        {/* Profit Margin Chart (Full Width) */}
-                        <div className="chart-section profit-margin-chart">
-                            <h3>
-                                {t('analysis.opMarginChart', { mode: viewMode === 'annual' ? t('analysis.annual') : t('analysis.quarterly') })}
-                                <InfoTooltip text={t('tooltips.opMarginExplain')} colors={colors} />
-                            </h3>
-                            <div className="chart-wrapper">
-                                <ResponsiveContainer width="100%" height={300}>
-                                    <AreaChart data={chartData} margin={isMobile ? { top: 10, right: 5, left: -10, bottom: 50 } : { top: 20, right: 10, left: 0, bottom: 60 }}>
-                                        <defs>
-                                            <linearGradient id="marginGrad" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor={colors.margin} stopOpacity={0.8} />
-                                                <stop offset="95%" stopColor={colors.margin} stopOpacity={0} />
-                                            </linearGradient>
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
-                                        <XAxis dataKey="displayLabel" stroke={colors.textMuted} {...xAxisProps} />
-                                        <YAxis
-                                            stroke={colors.textMuted}
-                                            fontSize={10}
-                                            tickFormatter={(val) => `${Math.round(val)}%`}
-                                            domain={[dataMin => Math.min(dataMin, 0), 'auto']}
-                                            allowDecimals={false}
-                                            scale="linear"
-                                        />
-                                        <Tooltip
-                                            contentStyle={{ backgroundColor: colors.tooltipBg, border: `1px solid ${colors.tooltipBorder}`, borderRadius: '8px' }}
-                                            formatter={(value) => [`${value}%`, t('analysis.opMarginTooltip')]}
-                                        />
-                                        <ReferenceLine y={0} stroke={colors.chartRef} />
-                                        <Area type="monotone" dataKey="op_margin" name={t('analysis.opMarginTooltip')} stroke={colors.margin} fillOpacity={1} fill="url(#marginGrad)" />
-                                    </AreaChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </div>
-
-                        {/* EPS Bar Chart with YoY */}
-                        {epsChartData.length > 0 && (
+                        {/* Revenue: bars + YoY line */}
+                        {activeTab === 'revenue' && metricHeadline && (
                             <div className="chart-section">
-                                <h3>
-                                    {t('analysis.epsYoy')}
-                                    <InfoTooltip text={t('tooltips.epsExplain')} colors={colors} />
-                                </h3>
                                 <div className="chart-legend">
-                                    <span><span className="legend-bar" style={{ background: 'rgba(255, 140, 0, 0.6)' }}></span> {t('analysis.epsLegend')}</span>
-                                    <span><span className="legend-line-dual"><span style={{ background: colors.positive }}></span><span style={{ background: colors.negative }}></span></span> {t('analysis.yoyLegend')}</span>
+                                    <span><span className="legend-bar"></span> {t('analysis.revenueLegend')}</span>
+                                    <span>
+                                        <span className="legend-line-dual"><span style={{ background: colors.positive }}></span><span style={{ background: colors.negative }}></span></span> {t('analysis.yoyLegend')}
+                                        <InfoTooltip text={t('tooltips.yoyExplain')} colors={colors} />
+                                    </span>
                                 </div>
                                 <div className="chart-wrapper">
-                                    <ResponsiveContainer width="100%" height={250}>
-                                        <BarChart data={epsChartData} margin={chartMargins}>
+                                    <ResponsiveContainer width="100%" height={chartHeight('main', isMobile)}>
+                                        <BarChart data={chartData} margin={mainChartMargins}>
                                             <defs>
-                                                <linearGradient id="barGradOrange" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="0%" stopColor={colors.gold} stopOpacity={colors.isLight ? 1 : 0.8} />
-                                                    <stop offset="100%" stopColor={colors.gold} stopOpacity={colors.isLight ? 1 : 0.3} />
+                                                <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="0%" stopColor={colors.revenue} stopOpacity={colors.isLight ? 1 : 0.8} />
+                                                    <stop offset="100%" stopColor={colors.revenue} stopOpacity={colors.isLight ? 1 : 0.3} />
                                                 </linearGradient>
                                             </defs>
-                                            <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
-                                            <XAxis dataKey="displayLabel" stroke={colors.textMuted} {...xAxisProps} />
+                                            <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} vertical={false} />
+                                            <XAxis dataKey="displayLabel" hide />
                                             <YAxis
                                                 stroke={colors.textMuted}
                                                 fontSize={11}
-                                                tickFormatter={(val) => `${val.toLocaleString()} ${t('currency.won')}`}
-                                                domain={isDefaultRange ? [0, 'auto'] : ['auto', 'auto']}
-                                                padding={{ top: 20, bottom: 20 }}
-                                                width={isMobile ? 50 : 65}
+                                                tickFormatter={(val) => eokTickFormatter(val, 'revenue_eok')}
+                                                domain={[0, 'dataMax']}
+                                                padding={{ top: 20, bottom: 0 }}
+                                                width={yAxisWidth}
                                             />
-                                            <Tooltip
-                                                content={<CustomTooltip
-                                                    colors={colors}
-                                                    valueFormatter={(value) => `${value.toLocaleString()} ${t('currency.won')}`}
-                                                    yoyKey="eps_change"
-                                                />}
-                                            />
-                                            <ReferenceLine y={0} stroke={colors.chartRef} />
-                                            <Bar dataKey="eps" name="EPS" fill="url(#barGradOrange)" radius={[4, 4, 0, 0]} />
+                                            <Tooltip content={<CustomTooltip colors={colors} valueFormatter={eokTooltipFormatter} yoyKey="rev_change" />} />
+                                            <Bar dataKey="revenue_eok" name={t('analysis.revenueBarName')} fill="url(#barGrad)" radius={[4, 4, 0, 0]}>
+                                                {chartData.map((d, i) => (
+                                                    <Cell key={i} fill="url(#barGrad)" fillOpacity={latestBarOpacity(i, chartData.length)} />
+                                                ))}
+                                            </Bar>
                                         </BarChart>
                                     </ResponsiveContainer>
-                                    <ResponsiveContainer width="100%" height={isMobile ? 120 : 180}>
-                                        <ComposedChart data={epsChartData} margin={chartMargins}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
-                                            <XAxis dataKey="displayLabel" stroke={colors.textMuted} {...xAxisProps} />
+                                    <YoyChart data={chartData} yoyKey="rev_change" height={chartHeight('yoy', isMobile)} margin={yoyChartMargins} yAxisWidth={yAxisWidth} isMobile={isMobile} colors={colors} />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Operating profit: bars (red = YoY decline / loss) + YoY line */}
+                        {activeTab === 'op' && metricHeadline && (
+                            <div className="chart-section">
+                                <div className="chart-legend">
+                                    <span><span className="legend-bar" style={{ background: 'rgba(0, 208, 132, 0.6)' }}></span> {t('analysis.opProfitLegend')}</span>
+                                    <span><span className="legend-bar" style={{ background: colors.negative }}></span> {t('metricTabs.legendDown')}</span>
+                                    <span><span className="legend-line-dual"><span style={{ background: colors.positive }}></span><span style={{ background: colors.negative }}></span></span> {t('analysis.yoyLegend')}</span>
+                                </div>
+                                <div className="chart-wrapper">
+                                    <ResponsiveContainer width="100%" height={chartHeight('main', isMobile)}>
+                                        <BarChart data={chartData} margin={mainChartMargins}>
+                                            <defs>
+                                                <linearGradient id="barGradGreen" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="0%" stopColor={colors.opIncome} stopOpacity={colors.isLight ? 1 : 0.8} />
+                                                    <stop offset="100%" stopColor={colors.opIncome} stopOpacity={colors.isLight ? 1 : 0.3} />
+                                                </linearGradient>
+                                                <linearGradient id="barGradOpDown" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="0%" stopColor={colors.negative} stopOpacity={colors.isLight ? 1 : 0.8} />
+                                                    <stop offset="100%" stopColor={colors.negative} stopOpacity={colors.isLight ? 1 : 0.3} />
+                                                </linearGradient>
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} vertical={false} />
+                                            <XAxis dataKey="displayLabel" hide />
                                             <YAxis
-                                                stroke={colors.positive}
-                                                fontSize={9}
-                                                tickFormatter={(val) => `${val.toFixed(0)}%`}
-                                                domain={epsYoyDomain.domain}
-                                                ticks={epsYoyDomain.ticks}
-                                                width={isMobile ? 50 : 65}
+                                                stroke={colors.textMuted}
+                                                fontSize={11}
+                                                domain={[dataMin => Math.min(dataMin, 0), 'auto']}
+                                                tickFormatter={(val) => eokTickFormatter(val, 'op_profit_eok')}
+                                                padding={{ top: 20, bottom: 20 }}
+                                                width={yAxisWidth}
+                                            />
+                                            <Tooltip content={<CustomTooltip colors={colors} valueFormatter={eokTooltipFormatter} yoyKey="op_change" />} />
+                                            <ReferenceLine y={0} stroke={colors.chartRef} />
+                                            <Bar dataKey="op_profit_eok" name={t('analysis.opProfitBarName')} fill="url(#barGradGreen)" radius={[4, 4, 0, 0]}>
+                                                {chartData.map((d, i) => (
+                                                    <Cell key={i} fill={isDecline(d.op_profit, d.op_change) ? 'url(#barGradOpDown)' : 'url(#barGradGreen)'} fillOpacity={latestBarOpacity(i, chartData.length)} />
+                                                ))}
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                    <YoyChart data={chartData} yoyKey="op_change" height={chartHeight('yoy', isMobile)} margin={yoyChartMargins} yAxisWidth={yAxisWidth} isMobile={isMobile} colors={colors} />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Net income: bars (red = YoY decline / loss) + YoY line */}
+                        {activeTab === 'ni' && metricHeadline && (
+                            <div className="chart-section">
+                                <div className="chart-legend">
+                                    <span><span className="legend-bar" style={{ background: `${colors.netIncome}99` }}></span> {t('analysis.netIncomeLegend')}</span>
+                                    <span><span className="legend-bar" style={{ background: colors.negative }}></span> {t('metricTabs.legendDown')}</span>
+                                    <span><span className="legend-line-dual"><span style={{ background: colors.positive }}></span><span style={{ background: colors.negative }}></span></span> {t('analysis.yoyLegend')}</span>
+                                </div>
+                                <div className="chart-wrapper">
+                                    <ResponsiveContainer width="100%" height={chartHeight('main', isMobile)}>
+                                        <BarChart data={chartData} margin={mainChartMargins}>
+                                            <defs>
+                                                <linearGradient id="barGradPurple" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="0%" stopColor={colors.netIncome} stopOpacity={colors.isLight ? 1 : 0.8} />
+                                                    <stop offset="100%" stopColor={colors.netIncome} stopOpacity={colors.isLight ? 1 : 0.3} />
+                                                </linearGradient>
+                                                <linearGradient id="barGradNiDown" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="0%" stopColor={colors.negative} stopOpacity={colors.isLight ? 1 : 0.8} />
+                                                    <stop offset="100%" stopColor={colors.negative} stopOpacity={colors.isLight ? 1 : 0.3} />
+                                                </linearGradient>
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} vertical={false} />
+                                            <XAxis dataKey="displayLabel" hide />
+                                            <YAxis
+                                                stroke={colors.textMuted}
+                                                fontSize={11}
+                                                domain={[dataMin => Math.min(dataMin, 0), 'auto']}
+                                                tickFormatter={(val) => eokTickFormatter(val, 'net_income_eok')}
+                                                padding={{ top: 20, bottom: 20 }}
+                                                width={yAxisWidth}
+                                            />
+                                            <Tooltip content={<CustomTooltip colors={colors} valueFormatter={eokTooltipFormatter} yoyKey="ni_change" />} />
+                                            <ReferenceLine y={0} stroke={colors.chartRef} />
+                                            <Bar dataKey="net_income_eok" name={t('analysis.netIncomeBarName')} fill="url(#barGradPurple)" radius={[4, 4, 0, 0]}>
+                                                {chartData.map((d, i) => (
+                                                    <Cell key={i} fill={isDecline(d.net_income, d.ni_change) ? 'url(#barGradNiDown)' : 'url(#barGradPurple)'} fillOpacity={latestBarOpacity(i, chartData.length)} />
+                                                ))}
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                    <YoyChart data={chartData} yoyKey="ni_change" height={chartHeight('yoy', isMobile)} margin={yoyChartMargins} yAxisWidth={yAxisWidth} isMobile={isMobile} colors={colors} />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Operating margin */}
+                        {activeTab === 'margin' && metricHeadline && (
+                            <div className="chart-section profit-margin-chart">
+                                <div className="chart-wrapper">
+                                    <ResponsiveContainer width="100%" height={chartHeight('bare', isMobile)}>
+                                        <AreaChart data={chartData} margin={chartMargins}>
+                                            <defs>
+                                                <linearGradient id="marginGrad" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor={colors.margin} stopOpacity={0.8} />
+                                                    <stop offset="95%" stopColor={colors.margin} stopOpacity={0} />
+                                                </linearGradient>
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} vertical={false} />
+                                            <XAxis {...yearAxisProps(chartData, isMobile)} stroke={colors.textMuted} />
+                                            <YAxis
+                                                stroke={colors.textMuted}
+                                                fontSize={10}
+                                                tickFormatter={(val) => `${Math.round(val)}%`}
+                                                domain={[dataMin => Math.min(dataMin, 0), 'auto']}
+                                                allowDecimals={false}
+                                                scale="linear"
+                                                width={yAxisWidth}
                                             />
                                             <Tooltip
                                                 contentStyle={{ backgroundColor: colors.tooltipBg, border: `1px solid ${colors.tooltipBorder}`, borderRadius: '8px' }}
-                                                formatter={(value) => [`${value}%`, 'YoY']}
+                                                formatter={(value) => [`${value}%`, t('analysis.opMarginTooltip')]}
                                             />
-                                            <ReferenceLine y={0} stroke={colors.chartRef} strokeDasharray="5 5" />
-                                            <Line
-                                                type="monotone"
-                                                dataKey="eps_change"
-                                                name="YoY"
-                                                stroke={colors.chartRef}
-                                                strokeWidth={1.5}
-                                                dot={(props) => {
-                                                    const { cx, cy, payload } = props;
-                                                    if (payload.eps_change === null) return null;
-                                                    const color = payload.eps_change >= 0 ? colors.positive : colors.negative;
-                                                    return <circle cx={cx} cy={cy} r={2.5} fill={color} stroke={color} strokeWidth={1} />;
-                                                }}
-                                            />
-                                        </ComposedChart>
+                                            <ReferenceLine y={0} stroke={colors.chartRef} />
+                                            <Area type="monotone" dataKey="op_margin" name={t('analysis.opMarginTooltip')} stroke={colors.margin} fillOpacity={1} fill="url(#marginGrad)" />
+                                        </AreaChart>
                                     </ResponsiveContainer>
                                 </div>
                             </div>
                         )}
 
+                        {/* EPS: bars (red = YoY decline / loss) + YoY line — always quarterly */}
+                        {activeTab === 'eps' && epsChartData.length > 0 && (
+                            <div className="chart-section">
+                                <div className="chart-legend">
+                                    <span><span className="legend-bar" style={{ background: 'rgba(255, 140, 0, 0.6)' }}></span> {t('analysis.epsLegend')}</span>
+                                    <span><span className="legend-bar" style={{ background: colors.negative }}></span> {t('metricTabs.legendDown')}</span>
+                                    <span><span className="legend-line-dual"><span style={{ background: colors.positive }}></span><span style={{ background: colors.negative }}></span></span> {t('analysis.yoyLegend')}</span>
+                                </div>
+                                <div className="chart-wrapper">
+                                    <ResponsiveContainer width="100%" height={chartHeight('main', isMobile)}>
+                                        <BarChart data={epsChartData} margin={mainChartMargins}>
+                                            <defs>
+                                                <linearGradient id="barGradOrange" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="0%" stopColor={colors.gold} stopOpacity={colors.isLight ? 1 : 0.8} />
+                                                    <stop offset="100%" stopColor={colors.gold} stopOpacity={colors.isLight ? 1 : 0.3} />
+                                                </linearGradient>
+                                                <linearGradient id="barGradEpsDown" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="0%" stopColor={colors.negative} stopOpacity={colors.isLight ? 1 : 0.8} />
+                                                    <stop offset="100%" stopColor={colors.negative} stopOpacity={colors.isLight ? 1 : 0.3} />
+                                                </linearGradient>
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} vertical={false} />
+                                            <XAxis dataKey="displayLabel" hide />
+                                            <YAxis
+                                                stroke={colors.textMuted}
+                                                fontSize={11}
+                                                tickFormatter={(val) => `${val.toLocaleString()} ${t('currency.won')}`}
+                                                domain={[dataMin => Math.min(dataMin, 0), 'auto']}
+                                                padding={{ top: 20, bottom: 20 }}
+                                                width={yAxisWidth}
+                                            />
+                                            <Tooltip content={<CustomTooltip colors={colors} valueFormatter={(value) => `${value.toLocaleString()} ${t('currency.won')}`} yoyKey="eps_change" />} />
+                                            <ReferenceLine y={0} stroke={colors.chartRef} />
+                                            <Bar dataKey="eps" name="EPS" fill="url(#barGradOrange)" radius={[4, 4, 0, 0]}>
+                                                {epsChartData.map((d, i) => (
+                                                    <Cell key={i} fill={isDecline(d.eps, d.eps_change) ? 'url(#barGradEpsDown)' : 'url(#barGradOrange)'} fillOpacity={latestBarOpacity(i, epsChartData.length)} />
+                                                ))}
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                    <YoyChart data={epsChartData} yoyKey="eps_change" height={chartHeight('yoy', isMobile)} margin={yoyChartMargins} yAxisWidth={yAxisWidth} isMobile={isMobile} colors={colors} />
+                                </div>
+                            </div>
+                        )}
+
                         {/* Close Price Chart */}
-                        {closePriceData.length > 0 && (
+                        {activeTab === 'valuation' && closePriceData.length > 0 && (
                             <div className="chart-section">
                                 <h3>
                                     {t('analysis.closePriceChart', { mode: viewMode === 'annual' ? t('analysis.annual') : t('analysis.quarterly') })}
@@ -1366,7 +1232,7 @@ const App = () => {
                                     <span><span className="legend-bar" style={{ background: colors.closePrice }}></span> {t('analysis.closePriceLegend')}</span>
                                 </div>
                                 <div className="chart-wrapper">
-                                    <ResponsiveContainer width="100%" height={250}>
+                                    <ResponsiveContainer width="100%" height={chartHeight('single', isMobile)}>
                                         <AreaChart data={closePriceData} margin={chartMargins}>
                                             <defs>
                                                 <linearGradient id="closePriceGrad" x1="0" y1="0" x2="0" y2="1">
@@ -1374,8 +1240,8 @@ const App = () => {
                                                     <stop offset="100%" stopColor={colors.closePrice} stopOpacity={0.02} />
                                                 </linearGradient>
                                             </defs>
-                                            <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
-                                            <XAxis dataKey="displayLabel" stroke={colors.textMuted} {...xAxisProps} />
+                                            <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} vertical={false} />
+                                            <XAxis {...yearAxisProps(closePriceData, isMobile)} stroke={colors.textMuted} />
                                             <YAxis
                                                 stroke={colors.textMuted}
                                                 fontSize={11}
@@ -1400,7 +1266,7 @@ const App = () => {
                                                 fillOpacity={1}
                                                 fill="url(#closePriceGrad)"
                                                 dot={(dotProps) => {
-                                                    const { cx, cy, payload } = dotProps;
+                                                    const { cx, cy, payload, index } = dotProps;
                                                     if (payload.isCurrent) {
                                                         return (
                                                             <g key="current-dot">
@@ -1409,7 +1275,7 @@ const App = () => {
                                                             </g>
                                                         );
                                                     }
-                                                    return <circle cx={cx} cy={cy} r={2} fill={colors.closePrice} strokeWidth={0} />;
+                                                    return <circle key={`cp-${index}`} cx={cx} cy={cy} r={2} fill={colors.closePrice} strokeWidth={0} />;
                                                 }}
                                                 activeDot={{ r: 4, fill: colors.closePrice, strokeWidth: 2, stroke: colors.bgCard }}
                                             />
@@ -1420,7 +1286,7 @@ const App = () => {
                         )}
 
                         {/* EPS vs Price Growth (Bogle) Chart */}
-                        {bogleData.length > 0 && (
+                        {activeTab === 'valuation' && bogleData.length > 0 && (
                             <div className="chart-section">
                                 <h3>
                                     {t('analysis.bogleChart', { mode: viewMode === 'annual' ? t('analysis.annual') : t('analysis.quarterly') })}
@@ -1431,10 +1297,10 @@ const App = () => {
                                     <span><span className="legend-bar" style={{ background: colors.accent }}></span> {t('analysis.priceGrowthLegend')}</span>
                                 </div>
                                 <div className="chart-wrapper">
-                                    <ResponsiveContainer width="100%" height={300}>
+                                    <ResponsiveContainer width="100%" height={chartHeight('single', isMobile)}>
                                         <ComposedChart data={bogleData} margin={chartMargins}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
-                                            <XAxis dataKey="displayLabel" stroke={colors.textMuted} {...xAxisProps} />
+                                            <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} vertical={false} />
+                                            <XAxis {...yearAxisProps(bogleData, isMobile)} stroke={colors.textMuted} />
                                             <YAxis
                                                 stroke={colors.textMuted}
                                                 fontSize={11}
@@ -1459,7 +1325,7 @@ const App = () => {
                         )}
 
                         {/* PER / PBR Chart */}
-                        {perPbrData.length > 0 && (
+                        {activeTab === 'valuation' && perPbrData.length > 0 && (
                             <div className="chart-section">
                                 <h3>
                                     {t('analysis.perPbrChart', { mode: viewMode === 'annual' ? t('analysis.annual') : t('analysis.quarterly') })}
@@ -1471,10 +1337,10 @@ const App = () => {
                                     {viewMode === 'quarterly' && <span><span className="legend-bar" style={{ background: colors.accent, borderRadius: '50%', width: '10px', height: '10px' }}></span> {t('analysis.currentPrice')} TTM</span>}
                                 </div>
                                 <div className="chart-wrapper">
-                                    <ResponsiveContainer width="100%" height={300}>
+                                    <ResponsiveContainer width="100%" height={chartHeight('single', isMobile)}>
                                         <ComposedChart data={perPbrData} margin={chartMargins}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} />
-                                            <XAxis dataKey="displayLabel" stroke={colors.textMuted} {...xAxisProps} />
+                                            <CartesianGrid strokeDasharray="3 3" stroke={colors.chartGrid} vertical={false} />
+                                            <XAxis {...yearAxisProps(perPbrData, isMobile)} stroke={colors.textMuted} />
                                             <YAxis
                                                 yAxisId="per"
                                                 stroke={colors.per}
@@ -1508,11 +1374,11 @@ const App = () => {
                                             </Bar>
                                             <Line yAxisId="pbr" type="monotone" dataKey="pbr" name="PBR" stroke={colors.pbr} strokeWidth={2.5}
                                                 dot={(props) => {
-                                                    const { cx, cy, payload } = props;
+                                                    const { cx, cy, payload, index } = props;
                                                     if (payload.isCurrent) {
                                                         return <g key="cur-pbr"><circle cx={cx} cy={cy} r={6} fill={colors.accent} stroke={colors.bgCard} strokeWidth={2}/><circle cx={cx} cy={cy} r={3} fill="#fff"/></g>;
                                                     }
-                                                    return <circle key={`pbr-${cx}-${cy}`} cx={cx} cy={cy} r={3} fill={colors.pbr}/>;
+                                                    return <circle key={`pbr-${index}`} cx={cx} cy={cy} r={3} fill={colors.pbr}/>;
                                                 }}
                                             />
                                         </ComposedChart>
@@ -1541,28 +1407,46 @@ const App = () => {
                         </div>
 
                         {/* Peer Companies Section */}
-                        <div className="peers-section">
-                            <h3>{t('analysis.peers')}</h3>
+                        <div className="peers-section" ref={peersRef}>
+                            <h3>
+                                {t('analysis.peers')}
+                                {peerCompanies.length > 0 && <span className="peers-hint">{t('metricTabs.peersMetric')}</span>}
+                            </h3>
                             <div className="peers-list">
-                                {peerCompanies.map(peer => (
-                                    <button
-                                        key={peer.code}
-                                        onClick={() => {
-                                            // Scroll the charts-container to top (not window!)
-                                            const chartsContainer = document.querySelector('.charts-container');
-                                            if (chartsContainer) {
-                                                chartsContainer.scrollTo({ top: 0, behavior: 'instant' });
-                                            }
-                                            setSearchTerm(''); // Clear search to ensure company is in list
-                                            setSelectedCode(peer.code);
-                                            setIsMobileMenuOpen(false); // Close mobile menu
-                                        }}
-                                        className="peer-item"
-                                    >
-                                        <span className="peer-code">{peer.code}</span>
-                                        <span className="peer-name">{peer.name}</span>
-                                    </button>
-                                ))}
+                                {peerCompanies.map(peer => {
+                                    const trend = peerTrends[peer.code];
+                                    const up = trend?.yoy == null || trend.yoy >= 0;
+                                    return (
+                                        <button
+                                            key={peer.code}
+                                            onClick={() => {
+                                                // Scroll the charts-container to top (not window!)
+                                                const chartsContainer = document.querySelector('.charts-container');
+                                                if (chartsContainer) {
+                                                    chartsContainer.scrollTo({ top: 0, behavior: 'instant' });
+                                                }
+                                                setSearchTerm(''); // Clear search to ensure company is in list
+                                                setSelectedCode(peer.code);
+                                                setIsMobileMenuOpen(false); // Close mobile menu
+                                            }}
+                                            className="peer-item"
+                                        >
+                                            <span className="peer-code">{peer.code}</span>
+                                            <span className="peer-name">{peer.name}</span>
+                                            {trend && (
+                                                <>
+                                                    <Sparkline values={trend.values} color={up ? colors.positive : colors.negative} />
+                                                    <span className="peer-metric">
+                                                        <span className="peer-revenue">{formatCurrency(trend.revenue / 100000000)}</span>
+                                                        {trend.yoy != null && (
+                                                            <span className={`peer-yoy ${up ? 'up' : 'down'}`}>{formatSignedChange(trend.yoy)}</span>
+                                                        )}
+                                                    </span>
+                                                </>
+                                            )}
+                                        </button>
+                                    );
+                                })}
                                 {peerCompanies.length === 0 && <span className="no-peers">{t('analysis.noPeers')}</span>}
                             </div>
                         </div>
