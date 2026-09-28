@@ -17,6 +17,7 @@ import ThemeToggle from '../components/ThemeToggle';
 import useThemeColors from '../hooks/useThemeColors';
 import { chartHeight } from '../chartHeights';
 import useMetricTab from '../hooks/useMetricTab';
+import { addRecentStock } from '../recentStocks';
 import { MetricTabs, MetricHeadline, ChartControls, summaryCardProps } from '../components/MetricTabs';
 import YoyChart from '../components/YoyChart';
 import { yearAxisProps, defaultRangePreset, rangeFromPreset, latestBarOpacity } from '../chartAxis';
@@ -192,6 +193,7 @@ const UsStockPage = () => {
             try {
                 const data = await loadUsCompanyData(selectedTicker);
                 setCompanyData(data);
+                if (data) addRecentStock({ market: 'us', code: selectedTicker, name: data.name });
             } catch (err) {
                 console.error('Error loading US company data:', err);
                 setCompanyData(null);

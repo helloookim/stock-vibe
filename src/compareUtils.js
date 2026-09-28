@@ -41,7 +41,8 @@ export function formatUsd(value, digits = 1) {
     return `${sign}$${Math.round(abs).toLocaleString()}`;
 }
 
-const NAME_SUFFIXES = new Set(['INC', 'CORP', 'CO', 'LTD', 'PLC', 'NV', 'SA', 'AG', 'LP', 'LLC', 'INCORPORATED', 'CORPORATION', 'COMPANY']);
+// 'COM' covers SEC names like "AMAZON COM INC"
+const NAME_SUFFIXES = new Set(['INC', 'CORP', 'CO', 'LTD', 'PLC', 'NV', 'SA', 'AG', 'LP', 'LLC', 'INCORPORATED', 'CORPORATION', 'COMPANY', 'COM']);
 
 // Display name for SEC company names: drops the legal suffix ("Tesla, Inc." → "Tesla",
 // "General Motors Co" → "General Motors") and title-cases ALL-CAPS names

@@ -2,14 +2,29 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import SEOHead from '../components/SEOHead';
-import { Search, Menu, X, BarChart3, TrendingUp, PieChart, ArrowUpDown, ChevronLeft, ChevronRight, CheckCircle, Trophy, Layers, ArrowRightLeft } from 'lucide-react';
-import { loadUsCompanyIndex } from '../usDataLoader';
-import { loadKrCompanyIndex } from '../krDataLoader';
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts';
+import { Search, Menu, X, BarChart3, TrendingUp, PieChart, ArrowUpDown, ChevronLeft, ChevronRight, CheckCircle, Trophy, Layers, ArrowRightLeft, Clock } from 'lucide-react';
+import { loadUsCompanyIndex, loadUsCompanyData } from '../usDataLoader';
+import { loadKrCompanyIndex, loadKrCompanyData, processKrCompanyData } from '../krDataLoader';
 import LanguageToggle from '../components/LanguageToggle';
 import MarketToggle from '../components/MarketToggle';
 import ThemeToggle from '../components/ThemeToggle';
+import StockPicker from '../components/StockPicker';
+import { SpotlightCard, StockTrendRow, MoversGrid } from '../components/HomeSections';
 import useThemeColors from '../hooks/useThemeColors';
+import { getRecentStocks, clearRecentStocks } from '../recentStocks';
+import { formatEok, formatUsd, prettyUsName } from '../compareUtils';
+
+const POPULAR_KR = ['005930', '000660', '373220', '005380', '035420', '035720'];
+const POPULAR_US = ['AAPL', 'NVDA', 'MSFT', 'AMZN', 'TSLA', 'META'];
+const SPOTLIGHT = ['005930', '000660'];
+
+// Last 8 quarters of revenue + latest YoY for a popular-stock row
+const trendOf = (quarters) => {
+    const rows = (quarters || []).filter(q => q.revenue != null);
+    if (rows.length === 0) return null;
+    const last = rows[rows.length - 1];
+    return { values: rows.slice(-8).map(q => q.revenue), revenue: last.revenue, yoy: last.rev_change ?? null };
+};
 
 const Home = () => {
     const { t, i18n } = useTranslation();
@@ -28,9 +43,14 @@ const Home = () => {
     const [usIndexLoading, setUsIndexLoading] = useState(false);
     const [usSortBy, setUsSortBy] = useState('rank');
     const [usSearchTerm, setUsSearchTerm] = useState('');
-    const [spotlightData, setSpotlightData] = useState({ samsung: null, skhynix: null });
-    const [spotlightLoading, setSpotlightLoading] = useState(true);
+    const [krQuarters, setKrQuarters] = useState({}); // code → processed quarterly rows (spotlight + popular)
+    const [krNames, setKrNames] = useState({});
+    const [usTrends, setUsTrends] = useState({}); // ticker → { trend, name }
+    const [popularMarket, setPopularMarket] = useState('kr'); // mobile: one list at a time
     const [moversData, setMoversData] = useState(null);
+    const [recentStocks, setRecentStocks] = useState([]);
+
+    const isEn = i18n.language === 'en';
 
     // Detect mobile screen size
     useEffect(() => {
@@ -40,78 +60,37 @@ const Home = () => {
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
-    const popularStocks = [
-        { code: '005930', name: '삼성전자', name_en: 'Samsung Electronics' },
-        { code: '000660', name: 'SK하이닉스', name_en: 'SK hynix' },
-        { code: '373220', name: 'LG에너지솔루션', name_en: 'LG Energy Solution' },
-        { code: '005380', name: '현대자동차', name_en: 'Hyundai Motor' },
-        { code: '035420', name: 'NAVER', name_en: 'NAVER' },
-        { code: '035720', name: '카카오', name_en: 'Kakao' },
-    ];
-
-    const isEn = i18n.language === 'en';
-
-    const usPopularStocks = [
-        { ticker: 'AAPL', name: 'Apple Inc.' },
-        { ticker: 'NVDA', name: 'NVIDIA CORP' },
-        { ticker: 'MSFT', name: 'MICROSOFT CORP' },
-        { ticker: 'AMZN', name: 'AMAZON COM INC' },
-        { ticker: 'TSLA', name: 'Tesla, Inc.' },
-        { ticker: 'META', name: 'Meta Platforms, Inc.' },
-    ];
-
-    // Period label for a spotlight card, derived from its latest quarter (e.g. "2026년 2분기 실적")
-    const spotlightPeriod = quarters => {
-        const latest = quarters?.[quarters.length - 1];
-        return latest ? t('home.spotlightPeriod', { year: latest.year, quarter: latest.quarter[0] }) : '';
-    };
-
-    // Load spotlight data for Samsung Electronics
     useEffect(() => {
-        async function loadSpotlightData() {
-            try {
-                const [samsungRaw, hynixRaw] = await Promise.all([
-                    fetch('/data/kr_stocks/005930.json').then(r => r.json()),
-                    fetch('/data/kr_stocks/000660.json').then(r => r.json()),
-                ]);
+        setRecentStocks(getRecentStocks());
+    }, []);
 
-                const toQuarters = raw => (raw?.quarterly || [])
-                    .sort((a, b) => a.year - b.year || a.quarter.localeCompare(b.quarter))
-                    .slice(-8)
-                    .map(e => ({
-                        label: `${String(e.year).slice(-2)}.${e.quarter}`,
-                        year: e.year,
-                        quarter: e.quarter,
-                        revenue: e.revenue,
-                        op_profit: e.op_profit,
-                    }));
-
-                setSpotlightData({ samsung: toQuarters(samsungRaw), skhynix: toQuarters(hynixRaw) });
-            } catch (err) {
-                console.error('Error loading spotlight data:', err);
-            } finally {
-                setSpotlightLoading(false);
-            }
-        }
-        loadSpotlightData();
+    // Spotlight + popular KR stocks (per-company JSONs, cached by the loader)
+    useEffect(() => {
+        const codes = [...new Set([...SPOTLIGHT, ...POPULAR_KR])];
+        Promise.all(codes.map(code => loadKrCompanyData(code).then(raw => [code, raw]).catch(() => [code, null])))
+            .then(results => {
+                const quarters = {};
+                const names = {};
+                results.forEach(([code, raw]) => {
+                    if (!raw) return;
+                    quarters[code] = processKrCompanyData(raw).quarterlyData;
+                    names[code] = { name: raw.name, name_en: raw.name_en };
+                });
+                setKrQuarters(quarters);
+                setKrNames(names);
+            });
+        Promise.all(POPULAR_US.map(ticker => loadUsCompanyData(ticker).then(d => [ticker, d]).catch(() => [ticker, null])))
+            .then(results => {
+                const trends = {};
+                results.forEach(([ticker, d]) => {
+                    if (d) trends[ticker] = { trend: trendOf(d.quarterlyData), name: d.name };
+                });
+                setUsTrends(trends);
+            });
         fetch('/data/kr_movers.json').then(r => r.json()).then(setMoversData).catch(() => {});
     }, []);
 
-    const formatKrw = (val, lang) => {
-        if (val == null) return 'N/A';
-        const abs = Math.abs(val);
-        if (abs >= 1e12) {
-            const v = (val / 1e12).toFixed(1);
-            return lang === 'ko' ? `${v}조원` : `${v}T KRW`;
-        }
-        if (abs >= 1e8) {
-            const v = Math.round(val / 1e8).toLocaleString();
-            return lang === 'ko' ? `${v}억원` : `${v}B KRW`;
-        }
-        return val.toLocaleString();
-    };
-
-    // Load KR company index for sidebar
+    // Load KR company index for sidebar + home search
     useEffect(() => {
         async function loadData() {
             setDataLoading(true);
@@ -148,22 +127,17 @@ const Home = () => {
         return list;
     }, [searchTerm, sortBy, krCompanyIndex, isEn]);
 
-    // Load US company index when sidebar switches to US
+    // US company index: needed by the home search right away (also feeds the sidebar's US list)
     useEffect(() => {
-        if (sidebarMarket !== 'us' || usCompanyIndex.length > 0) return;
-        async function loadUsIndex() {
-            setUsIndexLoading(true);
-            try {
-                const index = await loadUsCompanyIndex();
-                setUsCompanyIndex(index || []);
-            } catch (err) {
-                console.error('Error loading US company index:', err);
-            } finally {
-                setUsIndexLoading(false);
-            }
-        }
-        loadUsIndex();
-    }, [sidebarMarket]);
+        if (usCompanyIndex.length > 0) return;
+        let cancelled = false;
+        setUsIndexLoading(true);
+        loadUsCompanyIndex()
+            .then(index => { if (!cancelled) setUsCompanyIndex(index || []); })
+            .catch(err => console.error('Error loading US company index:', err))
+            .finally(() => { if (!cancelled) setUsIndexLoading(false); });
+        return () => { cancelled = true; };
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const usCompanyList = useMemo(() => {
         let list = usCompanyIndex.filter(c => {
@@ -194,6 +168,37 @@ const Home = () => {
         setUsSearchTerm('');
         setSortDropdownOpen(false);
     };
+
+    // Home search: Korean and US stocks together. Latin-only input (tickers) lists US first.
+    const searchAll = (term) => {
+        const q = term.trim().toLowerCase();
+        if (!q) return [];
+        const kr = krCompanyIndex
+            .filter(c => c.stock_code.includes(q) || c.name.toLowerCase().includes(q) || (c.name_en || '').toLowerCase().includes(q))
+            .sort((a, b) => (b.last_mktcap || 0) - (a.last_mktcap || 0))
+            .slice(0, 6)
+            .map(c => ({ id: `kr:${c.stock_code}`, code: c.stock_code, name: isEn ? (c.name_en || c.name) : c.name, meta: `KR · ${c.sector || ''}` }));
+        const us = usCompanyIndex
+            .filter(c => c.ticker.toLowerCase().startsWith(q) || c.name.toLowerCase().includes(q))
+            .sort((a, b) => (b.ticker.toLowerCase() === q) - (a.ticker.toLowerCase() === q))
+            .slice(0, 4)
+            .map(c => ({ id: `us:${c.ticker}`, code: c.ticker, name: prettyUsName(c.name), meta: 'US' }));
+        return /^[a-z0-9.\s-]+$/i.test(q) ? [...us, ...kr] : [...kr, ...us];
+    };
+
+    const openSearchResult = (id) => {
+        const [market, code] = id.split(':');
+        navigate(market === 'us' ? `/us-stocks/${code}` : `/stocks/${code}`);
+    };
+
+    const krName = (code) => {
+        const n = krNames[code];
+        return n ? (isEn ? (n.name_en || n.name) : n.name) : code;
+    };
+    const spotlightColors = [
+        { color: '#409cff', light: '#6ab6ff' },
+        { color: '#a855f7', light: '#c084fc' },
+    ];
 
     return (
         <>
@@ -370,550 +375,186 @@ const Home = () => {
                     <div className="charts-container">
                         <div className="home-page">
 
-                            {/* Logo */}
-                            <div className="home-logo-header">
-                                <h1 className="home-hero-logo">KSTOCKVIEW</h1>
-                            </div>
-
-                            {/* Revenue Spotlight Section */}
-                            <section style={{
-                                maxWidth: '900px',
-                                margin: '0 auto 3rem',
-                                padding: '0 16px',
-                            }}>
-                                <p style={{
-                                    textAlign: 'center',
-                                    fontSize: '0.75rem',
-                                    fontWeight: 700,
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.15em',
-                                    color: colors.textMuted,
-                                    marginBottom: '24px',
-                                }}>
-                                    {t('home.spotlightTitle')}
-                                </p>
-
-                                {spotlightLoading ? (
-                                    <div style={{
-                                        background: 'rgba(0, 0, 0, 0.4)',
-                                        borderRadius: '16px',
-                                        height: '300px',
-                                        animation: 'homeHeroFadeIn 1.5s ease-in-out infinite alternate',
-                                    }} />
-                                ) : (
-                                    <div style={{
-                                        display: 'grid',
-                                        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-                                        gap: '16px',
-                                    }}>
-                                        {/* Samsung Electronics Card */}
-                                        {spotlightData.samsung && (
-                                            <Link to="/stocks/005930" style={{ textDecoration: 'none' }}>
-                                                <div style={{
-                                                    background: colors.bgCard,
-                                                    border: '1px solid rgba(64, 156, 255, 0.25)',
-                                                    borderRadius: '8px',
-                                                    padding: isMobile ? '22px' : '28px',
-                                                    transition: 'all 0.3s ease',
-                                                    cursor: 'pointer',
-                                                }} onMouseEnter={e => {
-                                                    e.currentTarget.style.transform = 'translateY(-4px)';
-                                                    e.currentTarget.style.borderColor = 'rgba(64, 156, 255, 0.5)';
-                                                    e.currentTarget.style.boxShadow = '0 8px 30px rgba(64, 156, 255, 0.15)';
-                                                }} onMouseLeave={e => {
-                                                    e.currentTarget.style.transform = 'translateY(0)';
-                                                    e.currentTarget.style.borderColor = 'rgba(64, 156, 255, 0.25)';
-                                                    e.currentTarget.style.boxShadow = 'none';
-                                                }}>
-                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
-                                                        <div>
-                                                            <p style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700, color: colors.textPrimary, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                                <span style={{ fontSize: '1.15rem' }}>&#127472;&#127479;</span> {i18n.language === 'ko' ? '삼성전자' : 'Samsung Electronics'}
-                                                                <span style={{ fontSize: '0.75rem', color: colors.textMuted, fontWeight: 400 }}>005930</span>
-                                                            </p>
-                                                            <p style={{ margin: '6px 0 0 0', fontSize: '0.8rem', color: colors.textMuted, fontWeight: 500 }}>
-                                                                {spotlightPeriod(spotlightData.samsung)}
-                                                            </p>
-                                                        </div>
-                                                        <div style={{ textAlign: 'right' }}>
-                                                            <p style={{
-                                                                margin: 0,
-                                                                fontSize: isMobile ? '1.4rem' : '1.7rem',
-                                                                fontWeight: 800,
-                                                                color: '#409cff',
-                                                                textShadow: '0 0 18px rgba(64, 156, 255, 0.35)',
-                                                            }}>
-                                                                {formatKrw(spotlightData.samsung[spotlightData.samsung.length - 1]?.revenue, i18n.language)}
-                                                            </p>
-                                                            <p style={{ margin: '4px 0 0 0', fontSize: '0.82rem', color: colors.textMuted }}>
-                                                                {i18n.language === 'ko' ? '영업이익 ' : 'Op. Profit '}
-                                                                <span style={{ color: colors.positive, fontWeight: 700 }}>
-                                                                    {formatKrw(spotlightData.samsung[spotlightData.samsung.length - 1]?.op_profit, i18n.language)}
-                                                                </span>
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                    <p style={{ fontSize: '0.82rem', color: colors.textMuted, lineHeight: 1.5, margin: '12px 0 16px 0' }}>
-                                                        {t('home.spotlightSamsungHook')}
-                                                    </p>
-                                                    <ResponsiveContainer width="100%" height={isMobile ? 150 : 180}>
-                                                        <BarChart data={spotlightData.samsung} margin={{ top: 5, right: 5, left: 5, bottom: 0 }}>
-                                                            <defs>
-                                                                <linearGradient id="spotSamsungNormal" x1="0" y1="0" x2="0" y2="1">
-                                                                    <stop offset="0%" stopColor="#409cff" stopOpacity={0.35} />
-                                                                    <stop offset="100%" stopColor="#409cff" stopOpacity={0.05} />
-                                                                </linearGradient>
-                                                                <linearGradient id="spotSamsungLatest" x1="0" y1="0" x2="0" y2="1">
-                                                                    <stop offset="0%" stopColor="#6ab6ff" stopOpacity={1} />
-                                                                    <stop offset="100%" stopColor="#409cff" stopOpacity={0.75} />
-                                                                </linearGradient>
-                                                            </defs>
-                                                            <XAxis dataKey="label" stroke={colors.textFaded} fontSize={10} tickLine={false} axisLine={false} />
-                                                            <YAxis hide />
-                                                            <Bar dataKey="revenue" radius={[2, 2, 0, 0]} animationDuration={1200}>
-                                                                {spotlightData.samsung.map((_, index) => (
-                                                                    <Cell
-                                                                        key={index}
-                                                                        fill={index === spotlightData.samsung.length - 1 ? 'url(#spotSamsungLatest)' : 'url(#spotSamsungNormal)'}
-                                                                    />
-                                                                ))}
-                                                            </Bar>
-                                                        </BarChart>
-                                                    </ResponsiveContainer>
-                                                    <p style={{
-                                                        margin: '14px 0 0 0',
-                                                        fontSize: '0.82rem',
-                                                        fontWeight: 600,
-                                                        color: '#409cff',
-                                                    }}>
-                                                        {t('home.spotlightViewAnalysis')}
-                                                    </p>
-                                                </div>
-                                            </Link>
-                                        )}
-
-                                        {/* SK Hynix Card */}
-                                        {spotlightData.skhynix && (
-                                            <Link to="/stocks/000660" style={{ textDecoration: 'none' }}>
-                                                <div style={{
-                                                    background: colors.bgCard,
-                                                    border: '1px solid rgba(168, 85, 247, 0.25)',
-                                                    borderRadius: '8px',
-                                                    padding: isMobile ? '22px' : '28px',
-                                                    transition: 'all 0.3s ease',
-                                                    cursor: 'pointer',
-                                                }} onMouseEnter={e => {
-                                                    e.currentTarget.style.transform = 'translateY(-4px)';
-                                                    e.currentTarget.style.borderColor = 'rgba(168, 85, 247, 0.5)';
-                                                    e.currentTarget.style.boxShadow = '0 8px 30px rgba(168, 85, 247, 0.15)';
-                                                }} onMouseLeave={e => {
-                                                    e.currentTarget.style.transform = 'translateY(0)';
-                                                    e.currentTarget.style.borderColor = 'rgba(168, 85, 247, 0.25)';
-                                                    e.currentTarget.style.boxShadow = 'none';
-                                                }}>
-                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
-                                                        <div>
-                                                            <p style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700, color: colors.textPrimary, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                                <span style={{ fontSize: '1.15rem' }}>&#127472;&#127479;</span> {i18n.language === 'ko' ? 'SK하이닉스' : 'SK hynix'}
-                                                                <span style={{ fontSize: '0.75rem', color: colors.textMuted, fontWeight: 400 }}>000660</span>
-                                                            </p>
-                                                            <p style={{ margin: '6px 0 0 0', fontSize: '0.8rem', color: colors.textMuted, fontWeight: 500 }}>
-                                                                {spotlightPeriod(spotlightData.skhynix)}
-                                                            </p>
-                                                        </div>
-                                                        <div style={{ textAlign: 'right' }}>
-                                                            <p style={{
-                                                                margin: 0,
-                                                                fontSize: isMobile ? '1.4rem' : '1.7rem',
-                                                                fontWeight: 800,
-                                                                color: '#a855f7',
-                                                                textShadow: '0 0 18px rgba(168, 85, 247, 0.35)',
-                                                            }}>
-                                                                {formatKrw(spotlightData.skhynix[spotlightData.skhynix.length - 1]?.revenue, i18n.language)}
-                                                            </p>
-                                                            <p style={{ margin: '4px 0 0 0', fontSize: '0.82rem', color: colors.textMuted }}>
-                                                                {i18n.language === 'ko' ? '영업이익 ' : 'Op. Profit '}
-                                                                <span style={{ color: colors.positive, fontWeight: 700 }}>
-                                                                    {formatKrw(spotlightData.skhynix[spotlightData.skhynix.length - 1]?.op_profit, i18n.language)}
-                                                                </span>
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                    <p style={{ fontSize: '0.82rem', color: colors.textMuted, lineHeight: 1.5, margin: '12px 0 16px 0' }}>
-                                                        {t('home.spotlightSkHynixHook')}
-                                                    </p>
-                                                    <ResponsiveContainer width="100%" height={isMobile ? 150 : 180}>
-                                                        <BarChart data={spotlightData.skhynix} margin={{ top: 5, right: 5, left: 5, bottom: 0 }}>
-                                                            <defs>
-                                                                <linearGradient id="spotHynixNormal" x1="0" y1="0" x2="0" y2="1">
-                                                                    <stop offset="0%" stopColor="#a855f7" stopOpacity={0.35} />
-                                                                    <stop offset="100%" stopColor="#a855f7" stopOpacity={0.05} />
-                                                                </linearGradient>
-                                                                <linearGradient id="spotHynixLatest" x1="0" y1="0" x2="0" y2="1">
-                                                                    <stop offset="0%" stopColor="#c084fc" stopOpacity={1} />
-                                                                    <stop offset="100%" stopColor="#a855f7" stopOpacity={0.75} />
-                                                                </linearGradient>
-                                                            </defs>
-                                                            <XAxis dataKey="label" stroke={colors.textFaded} fontSize={10} tickLine={false} axisLine={false} />
-                                                            <YAxis hide />
-                                                            <Bar dataKey="revenue" radius={[2, 2, 0, 0]} animationDuration={1200}>
-                                                                {spotlightData.skhynix.map((_, index) => (
-                                                                    <Cell
-                                                                        key={index}
-                                                                        fill={index === spotlightData.skhynix.length - 1 ? 'url(#spotHynixLatest)' : 'url(#spotHynixNormal)'}
-                                                                    />
-                                                                ))}
-                                                            </Bar>
-                                                        </BarChart>
-                                                    </ResponsiveContainer>
-                                                    <p style={{
-                                                        margin: '14px 0 0 0',
-                                                        fontSize: '0.82rem',
-                                                        fontWeight: 600,
-                                                        color: '#a855f7',
-                                                    }}>
-                                                        {t('home.spotlightViewAnalysis')}
-                                                    </p>
-                                                </div>
-                                            </Link>
-                                        )}
-                                    </div>
-                                )}
-                            </section>
-
-                            {/* Intro / Tagline */}
-                            <section className="home-intro">
-                                <p className="home-hero-tagline">
+                            {/* Hero: what the site does + search (Korean and US stocks together) */}
+                            <section className="home-section home-hero2">
+                                <p className="home-hero2-brand" aria-hidden="true">KSTOCKVIEW</p>
+                                <h1 className="home-hero2-title">
                                     {t('home.tagline')}<br />
                                     {t('home.tagline2')}
-                                </p>
+                                </h1>
+                                <StockPicker
+                                    className="home-search"
+                                    search={searchAll}
+                                    onPick={openSearchResult}
+                                    placeholder={t('home.searchPlaceholder')}
+                                    hint={t('home.searchHint')}
+                                />
                                 <div className="home-hero-badge">
-                                    <CheckCircle size={18} className="home-hero-badge-icon" />
+                                    <CheckCircle size={16} className="home-hero-badge-icon" />
                                     <span className="home-hero-badge-text">{t('home.freeService')}</span>
                                 </div>
-                                <button
-                                    className="home-cta-primary"
-                                    onClick={() => {
-                                        if (isMobile) {
-                                            setIsMobileMenuOpen(true);
-                                        } else {
-                                            setSidebarCollapsed(false);
-                                            setTimeout(() => {
-                                                const searchInput = document.querySelector('.search-box input');
-                                                if (searchInput) searchInput.focus();
-                                            }, 100);
-                                        }
-                                    }}
-                                >
-                                    <Search size={20} />
-                                    {t('home.ctaButton')}
-                                </button>
                             </section>
 
-                            {/* Popular Stocks - Korean */}
-                            <section className="home-popular-section">
-                                <p className="home-popular-label">🇰🇷 {t('home.popularStocks')}</p>
-                                <div className="home-popular-grid">
-                                    {popularStocks.map((stock) => (
-                                        <Link
-                                            key={stock.code}
-                                            to={`/stocks/${stock.code}`}
-                                            className="home-popular-chip"
-                                        >
-                                            <span className="home-popular-chip-code">{stock.code}</span>
-                                            <span className="home-popular-chip-name">{isEn ? stock.name_en : stock.name}</span>
-                                        </Link>
-                                    ))}
-                                </div>
-                            </section>
-
-                            {/* Popular Stocks - US */}
-                            <section className="home-popular-section" style={{ marginTop: '0' }}>
-                                <p className="home-popular-label">🇺🇸 {t('home.usPopularStocks')}</p>
-                                <div className="home-popular-grid">
-                                    {usPopularStocks.map((stock) => (
-                                        <Link
-                                            key={stock.ticker}
-                                            to={`/us-stocks/${stock.ticker}`}
-                                            className="home-popular-chip"
-                                        >
-                                            <span className="home-popular-chip-code">{stock.ticker}</span>
-                                            <span className="home-popular-chip-name">{stock.name}</span>
-                                        </Link>
-                                    ))}
-                                </div>
-                            </section>
-
-                            {/* Market Movers Section — temporarily hidden pending data review */}
-                            {false && moversData && (
-                                <section style={{
-                                    maxWidth: '900px',
-                                    margin: '0 auto 3rem',
-                                    padding: '0 16px',
-                                }}>
-                                    <p style={{
-                                        textAlign: 'center',
-                                        fontSize: '0.75rem',
-                                        fontWeight: 700,
-                                        textTransform: 'uppercase',
-                                        letterSpacing: '0.15em',
-                                        color: colors.textMuted,
-                                        marginBottom: '24px',
-                                    }}>
-                                        {t('movers.title')}
-                                    </p>
-                                    <div style={{
-                                        display: 'grid',
-                                        gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
-                                        gap: '16px',
-                                    }}>
-                                        {[
-                                            { key: 'revenue_growth_top', label: t('movers.revenueGrowth'), icon: '🚀', color: colors.positive },
-                                            { key: 'op_profit_turnaround', label: t('movers.opTurnaround'), icon: '📈', color: colors.revenue },
-                                            { key: 'margin_expansion', label: t('movers.marginExpansion'), icon: '✨', color: colors.gold },
-                                            { key: 'revenue_decline_top', label: t('movers.revenueDecliner'), icon: '📉', color: colors.negative },
-                                        ].map(cat => {
-                                            const items = (moversData[cat.key] || []).slice(0, 3);
-                                            if (items.length === 0) return null;
-                                            return (
-                                                <div key={cat.key} style={{
-                                                    background: colors.bgCard,
-                                                    border: `1px solid ${colors.border}`,
-                                                    borderRadius: '10px',
-                                                    padding: '16px',
-                                                }}>
-                                                    <p style={{ fontSize: '0.85rem', fontWeight: 600, color: colors.textPrimary, margin: '0 0 10px' }}>
-                                                        {cat.icon} {cat.label}
-                                                    </p>
-                                                    {items.map((item, i) => (
-                                                        <Link
-                                                            key={item.stock_code}
-                                                            to={`/stocks/${item.stock_code}`}
-                                                            style={{ textDecoration: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderTop: i > 0 ? `1px solid ${colors.border}` : 'none' }}
-                                                        >
-                                                            <span style={{ fontSize: '0.8rem', color: colors.textPrimary }}>
-                                                                {isEn ? (item.name_en || item.name) : item.name}
-                                                            </span>
-                                                            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: cat.color, fontVariantNumeric: 'tabular-nums' }}>
-                                                                {item.value > 0 ? '+' : ''}{item.value.toFixed(1)}%
-                                                            </span>
-                                                        </Link>
-                                                    ))}
-                                                </div>
-                                            );
-                                        })}
+                            {/* Recently viewed (this browser only) */}
+                            {recentStocks.length > 0 && (
+                                <section className="home-section home-recent">
+                                    <span className="home-recent-label"><Clock size={14} /> {t('home.recentTitle')}</span>
+                                    <div className="home-recent-chips">
+                                        {recentStocks.map(s => (
+                                            <Link
+                                                key={`${s.market}:${s.code}`}
+                                                to={s.market === 'us' ? `/us-stocks/${s.code}` : `/stocks/${s.code}`}
+                                                className="home-recent-chip"
+                                            >
+                                                <span className="home-recent-chip-name">
+                                                    {s.market === 'us' ? prettyUsName(s.name) : (isEn ? (s.name_en || s.name) : s.name)}
+                                                </span>
+                                                <span className="home-recent-chip-code">{s.code}</span>
+                                            </Link>
+                                        ))}
+                                        <button className="home-recent-clear" onClick={() => { clearRecentStocks(); setRecentStocks([]); }}>
+                                            {t('home.recentClear')}
+                                        </button>
                                     </div>
-                                    <p style={{ textAlign: 'center', fontSize: '0.7rem', color: colors.textFaded, marginTop: '12px' }}>
-                                        {t('movers.lastUpdated', { date: moversData.updated_date })}
-                                    </p>
                                 </section>
                             )}
 
-                            {/* Global Compare promo banner */}
-                            <section style={{
-                                maxWidth: '900px',
-                                margin: '0 auto 2rem',
-                                padding: '0 16px',
-                            }}>
-                                <Link to="/global-compare" style={{ textDecoration: 'none' }}>
-                                    <div style={{
-                                        background: 'linear-gradient(135deg, rgba(0,71,160,0.12), rgba(200,16,44,0.12))',
-                                        border: `1px solid ${colors.border}`,
-                                        borderRadius: '14px',
-                                        padding: isMobile ? '20px' : '24px 28px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        flexWrap: 'wrap',
-                                        gap: '12px',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.2s',
-                                    }} onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                                       onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; }}>
-                                        <div>
-                                            <p style={{ margin: 0, fontSize: isMobile ? '1rem' : '1.1rem', fontWeight: 700, color: colors.textPrimary }}>
-                                                {t('home.globalCompareTitle')}
-                                            </p>
-                                            <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: colors.textMuted }}>
-                                                {t('home.globalCompareDesc')}
-                                            </p>
+                            {/* Earnings spotlight */}
+                            <section className="home-section">
+                                <p className="home-section-label">{t('home.spotlightTitle')}</p>
+                                <div className="home-spotlight-grid">
+                                    {SPOTLIGHT.map((code, i) => (
+                                        krQuarters[code] ? (
+                                            <SpotlightCard
+                                                key={code}
+                                                code={code}
+                                                name={krName(code)}
+                                                color={spotlightColors[i].color}
+                                                colorLight={spotlightColors[i].light}
+                                                quarters={krQuarters[code]}
+                                                isMobile={isMobile}
+                                                colors={colors}
+                                            />
+                                        ) : (
+                                            <div key={code} className="home-spotlight-card home-skeleton" />
+                                        )
+                                    ))}
+                                </div>
+                            </section>
+
+                            {/* Popular stocks with revenue trend (desktop: KR | US side by side, mobile: toggle) */}
+                            <section className="home-section">
+                                <div className="home-section-head">
+                                    <p className="home-section-label">{t('home.popularTitle')}</p>
+                                    <span className="home-section-sub">{t('metricTabs.peersMetric')}</span>
+                                </div>
+                                {isMobile && (
+                                    <div className="chart-controls-group home-popular-toggle" role="radiogroup">
+                                        {['kr', 'us'].map(m => (
+                                            <button
+                                                key={m}
+                                                role="radio"
+                                                aria-checked={popularMarket === m}
+                                                className={`chart-chip ${popularMarket === m ? 'active' : ''}`}
+                                                onClick={() => setPopularMarket(m)}
+                                            >
+                                                {m === 'kr' ? '🇰🇷' : '🇺🇸'} {t(m === 'kr' ? 'home.popularKr' : 'home.popularUs')}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                                <div className="home-popular-columns">
+                                    {(!isMobile || popularMarket === 'kr') && (
+                                        <div className="home-popular-list">
+                                            {!isMobile && <p className="home-popular-list-title">🇰🇷 {t('home.popularKr')}</p>}
+                                            {POPULAR_KR.map(code => (
+                                                <StockTrendRow
+                                                    key={code}
+                                                    to={`/stocks/${code}`}
+                                                    code={code}
+                                                    name={krName(code)}
+                                                    trend={krQuarters[code] ? trendOf(krQuarters[code]) : null}
+                                                    formatRevenue={(v) => formatEok(v / 1e8, isEn)}
+                                                    colors={colors}
+                                                />
+                                            ))}
                                         </div>
-                                        <span style={{
-                                            flexShrink: 0,
-                                            padding: '8px 18px',
-                                            borderRadius: '20px',
-                                            background: colors.accent,
-                                            color: '#fff',
-                                            fontSize: '0.82rem',
-                                            fontWeight: 600,
-                                            whiteSpace: 'nowrap',
-                                        }}>
-                                            {t('home.globalCompareCta')} →
+                                    )}
+                                    {(!isMobile || popularMarket === 'us') && (
+                                        <div className="home-popular-list">
+                                            {!isMobile && <p className="home-popular-list-title">🇺🇸 {t('home.popularUs')}</p>}
+                                            {POPULAR_US.map(ticker => (
+                                                <StockTrendRow
+                                                    key={ticker}
+                                                    to={`/us-stocks/${ticker}`}
+                                                    code={ticker}
+                                                    name={prettyUsName(usTrends[ticker]?.name) || ticker}
+                                                    trend={usTrends[ticker]?.trend ?? null}
+                                                    formatRevenue={(v) => formatUsd(v)}
+                                                    colors={colors}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </section>
+
+                            {/* Market movers: latest quarter vs the same quarter a year earlier */}
+                            {moversData?.period && (
+                                <section className="home-section">
+                                    <div className="home-section-head">
+                                        <p className="home-section-label">{t('movers.title')}</p>
+                                        <span className="home-section-sub">
+                                            {t('movers.criteria', { period: moversData.period, prev: moversData.prev_period, n: moversData.universe })}
                                         </span>
                                     </div>
+                                    <MoversGrid movers={moversData} isEn={isEn} colors={colors} />
+                                </section>
+                            )}
+
+                            {/* Global compare promo + quick links */}
+                            <section className="home-section">
+                                <Link to="/global-compare" className="home-promo">
+                                    <div>
+                                        <p className="home-promo-title">{t('home.globalCompareTitle')}</p>
+                                        <p className="home-promo-desc">{t('home.globalCompareDesc')}</p>
+                                    </div>
+                                    <span className="home-promo-cta">{t('home.globalCompareCta')} →</span>
                                 </Link>
-                            </section>
-
-                            {/* Quick Links: Rankings, Sectors, Compare */}
-                            <section style={{
-                                maxWidth: '900px',
-                                margin: '0 auto 3rem',
-                                padding: '0 16px',
-                            }}>
-                                <div style={{
-                                    display: 'grid',
-                                    gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
-                                    gap: '12px',
-                                }}>
-                                    <Link to="/rankings" style={{ textDecoration: 'none' }}>
-                                        <div style={{
-                                            background: colors.bgCard,
-                                            border: `1px solid ${colors.border}`,
-                                            borderRadius: '10px',
-                                            padding: '16px 20px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '12px',
-                                            cursor: 'pointer',
-                                            transition: 'all 0.2s',
-                                        }} onMouseEnter={e => {
-                                            e.currentTarget.style.borderColor = colors.accent;
-                                            e.currentTarget.style.transform = 'translateY(-2px)';
-                                        }} onMouseLeave={e => {
-                                            e.currentTarget.style.borderColor = colors.border;
-                                            e.currentTarget.style.transform = 'translateY(0)';
-                                        }}>
-                                            <Trophy size={22} style={{ color: colors.accent }} />
-                                            <div>
-                                                <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: colors.textPrimary }}>{t('home.rankingsLink')}</p>
-                                                <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: colors.textMuted }}>{t('home.rankingsLinkDesc')}</p>
-                                            </div>
-                                        </div>
-                                    </Link>
-                                    <Link to="/sectors" style={{ textDecoration: 'none' }}>
-                                        <div style={{
-                                            background: colors.bgCard,
-                                            border: `1px solid ${colors.border}`,
-                                            borderRadius: '10px',
-                                            padding: '16px 20px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '12px',
-                                            cursor: 'pointer',
-                                            transition: 'all 0.2s',
-                                        }} onMouseEnter={e => {
-                                            e.currentTarget.style.borderColor = colors.accent;
-                                            e.currentTarget.style.transform = 'translateY(-2px)';
-                                        }} onMouseLeave={e => {
-                                            e.currentTarget.style.borderColor = colors.border;
-                                            e.currentTarget.style.transform = 'translateY(0)';
-                                        }}>
-                                            <Layers size={22} style={{ color: colors.accent }} />
-                                            <div>
-                                                <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: colors.textPrimary }}>{t('home.sectorsLink')}</p>
-                                                <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: colors.textMuted }}>{t('home.sectorsLinkDesc')}</p>
-                                            </div>
-                                        </div>
-                                    </Link>
-                                    <Link to="/compare/005930-vs-000660" style={{ textDecoration: 'none' }}>
-                                        <div style={{
-                                            background: colors.bgCard,
-                                            border: `1px solid ${colors.border}`,
-                                            borderRadius: '10px',
-                                            padding: '16px 20px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '12px',
-                                            cursor: 'pointer',
-                                            transition: 'all 0.2s',
-                                        }} onMouseEnter={e => {
-                                            e.currentTarget.style.borderColor = colors.accent;
-                                            e.currentTarget.style.transform = 'translateY(-2px)';
-                                        }} onMouseLeave={e => {
-                                            e.currentTarget.style.borderColor = colors.border;
-                                            e.currentTarget.style.transform = 'translateY(0)';
-                                        }}>
-                                            <ArrowRightLeft size={22} style={{ color: colors.accent }} />
-                                            <div>
-                                                <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: colors.textPrimary }}>{t('home.compareLink')}</p>
-                                                <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: colors.textMuted }}>{t('home.compareLinkDesc')}</p>
-                                            </div>
-                                        </div>
-                                    </Link>
+                                <div className="home-links">
+                                    {[
+                                        { to: '/rankings', icon: Trophy, title: t('home.rankingsLink'), desc: t('home.rankingsLinkDesc') },
+                                        { to: '/sectors', icon: Layers, title: t('home.sectorsLink'), desc: t('home.sectorsLinkDesc') },
+                                        { to: '/compare/005930-vs-000660', icon: ArrowRightLeft, title: t('home.compareLink'), desc: t('home.compareLinkDesc') },
+                                    ].map(link => (
+                                        <Link key={link.to} to={link.to} className="home-link-card">
+                                            <link.icon size={22} className="home-link-icon" />
+                                            <span>
+                                                <span className="home-link-title">{link.title}</span>
+                                                <span className="home-link-desc">{link.desc}</span>
+                                            </span>
+                                        </Link>
+                                    ))}
                                 </div>
                             </section>
 
-                            {/* Feature Cards */}
-                            <section className="home-features-section">
-                                <p className="home-features-title">{t('home.featuresLabel')}</p>
-                                <div className="home-features-grid">
-                                    <div className="home-feature-card">
-                                        <div className="home-feature-icon home-feature-icon--blue">
-                                            <BarChart3 size={24} />
+                            {/* What the site covers (compact) */}
+                            <section className="home-section home-about">
+                                <p className="home-section-label">{t('home.featuresLabel')}</p>
+                                <div className="home-about-grid">
+                                    {[
+                                        { icon: BarChart3, tone: 'blue', title: t('home.featureRevenue'), desc: t('home.featureRevenueDesc') },
+                                        { icon: TrendingUp, tone: 'green', title: t('home.featureYoy'), desc: t('home.featureYoyDesc') },
+                                        { icon: PieChart, tone: 'purple', title: t('home.featureMargin'), desc: t('home.featureMarginDesc') },
+                                    ].map(f => (
+                                        <div key={f.title} className="home-about-item">
+                                            <span className={`home-about-icon home-feature-icon--${f.tone}`}><f.icon size={18} /></span>
+                                            <span>
+                                                <span className="home-about-title">{f.title}</span>
+                                                <span className="home-about-desc">{f.desc}</span>
+                                            </span>
                                         </div>
-                                        <div className="home-feature-card-text">
-                                            <h3 className="home-feature-title">{t('home.featureRevenue')}</h3>
-                                            <p className="home-feature-desc">{t('home.featureRevenueDesc')}</p>
-                                        </div>
-                                    </div>
-                                    <div className="home-feature-card">
-                                        <div className="home-feature-icon home-feature-icon--green">
-                                            <TrendingUp size={24} />
-                                        </div>
-                                        <div className="home-feature-card-text">
-                                            <h3 className="home-feature-title">{t('home.featureYoy')}</h3>
-                                            <p className="home-feature-desc">{t('home.featureYoyDesc')}</p>
-                                        </div>
-                                    </div>
-                                    <div className="home-feature-card">
-                                        <div className="home-feature-icon home-feature-icon--purple">
-                                            <PieChart size={24} />
-                                        </div>
-                                        <div className="home-feature-card-text">
-                                            <h3 className="home-feature-title">{t('home.featureMargin')}</h3>
-                                            <p className="home-feature-desc">{t('home.featureMarginDesc')}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </section>
-
-                            {/* How to Use */}
-                            <section className="home-howto-section">
-                                <div className="home-howto-header">
-                                    <p className="home-howto-label">{t('home.howToUseLabel')}</p>
-                                    <h2 className="home-howto-title">{t('home.howToUse')}</h2>
-                                </div>
-                                <div className="home-howto-steps">
-                                    <div
-                                        className={`home-howto-step ${isMobile ? 'home-howto-step--clickable' : ''}`}
-                                        onClick={() => { if (isMobile) setIsMobileMenuOpen(true); }}
-                                    >
-                                        <div className="home-howto-step-number home-howto-step-number--blue">1</div>
-                                        <div className="home-howto-step-content">
-                                            <p className="home-howto-step-title">{t('home.searchStocks')}</p>
-                                            <p className="home-howto-step-desc" dangerouslySetInnerHTML={{ __html: t('home.searchStocksDesc') }} />
-                                        </div>
-                                        {isMobile && (
-                                            <div className="home-howto-step-arrow">
-                                                <ChevronRight size={18} />
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div
-                                        className={`home-howto-step ${isMobile ? 'home-howto-step--clickable' : ''}`}
-                                        onClick={() => { if (isMobile) setIsMobileMenuOpen(true); }}
-                                    >
-                                        <div className="home-howto-step-number home-howto-step-number--green">2</div>
-                                        <div className="home-howto-step-content">
-                                            <p className="home-howto-step-title">{t('home.searchAndSort')}</p>
-                                            <p className="home-howto-step-desc">{t('home.searchAndSortDesc')}</p>
-                                        </div>
-                                        {isMobile && (
-                                            <div className="home-howto-step-arrow">
-                                                <ChevronRight size={18} />
-                                            </div>
-                                        )}
-                                    </div>
+                                    ))}
                                 </div>
                             </section>
 
@@ -922,6 +563,11 @@ const Home = () => {
                                 <div className="home-footer-brand">
                                     <h3>KSTOCKVIEW</h3>
                                     <p>{t('footer.serviceDesc')}</p>
+                                </div>
+                                <div className="home-footer-notice">
+                                    <p dangerouslySetInnerHTML={{ __html: t('footer.dataSourceText') }} />
+                                    <p dangerouslySetInnerHTML={{ __html: t('usFooter.dataSourceText') }} />
+                                    <p dangerouslySetInnerHTML={{ __html: t('footer.disclaimer3') }} />
                                 </div>
                                 <div className="home-footer-links">
                                     <Link to="/privacy">{t('footer.privacyPolicy')}</Link>

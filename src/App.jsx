@@ -17,6 +17,7 @@ import ThemeToggle from './components/ThemeToggle';
 import useThemeColors from './hooks/useThemeColors';
 import { chartHeight } from './chartHeights';
 import useMetricTab from './hooks/useMetricTab';
+import { addRecentStock } from './recentStocks';
 import { MetricTabs, MetricHeadline, ChartControls, summaryCardProps } from './components/MetricTabs';
 import YoyChart from './components/YoyChart';
 import Sparkline from './components/Sparkline';
@@ -245,6 +246,7 @@ const App = () => {
         loadKrCompanyData(selectedCode).then(data => {
             if (!cancelled) {
                 setCurrentCompanyRaw(data);
+                if (data) addRecentStock({ market: 'kr', code: selectedCode, name: data.name, name_en: data.name_en });
                 setCompanyLoading(false);
             }
         }).catch(() => {
