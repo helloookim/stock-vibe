@@ -473,7 +473,47 @@
         "seo_op_margin_top_title": "2026 한국 영업이익률 TOP 50 | 고수익 종목 - KStockView",
         "seo_op_margin_top_desc": "2026년 영업이익률이 가장 높은 한국 상장 종목 50개. 수익성 좋은 기업.",
         "seo_debt_ratio_lowest_title": "2026 한국 부채비율 최저 TOP 50 | 재무건전 종목 - KStockView",
-        "seo_debt_ratio_lowest_desc": "2026년 부채비율이 가장 낮은 한국 상장 종목 50개. 재무 안정성 높은 기업."
+        "seo_debt_ratio_lowest_desc": "2026년 부채비율이 가장 낮은 한국 상장 종목 50개. 재무 안정성 높은 기업.",
+        "short": {
+            "market_cap_top": "시가총액",
+            "revenue_top": "매출액",
+            "op_profit_top": "영업이익",
+            "per_lowest": "저PER",
+            "pbr_lowest": "저PBR",
+            "revenue_growth_top": "매출 성장률",
+            "op_margin_top": "영업이익률",
+            "debt_ratio_lowest": "저부채비율"
+        },
+        "valueLabel": {
+            "market_cap_top": "시가총액",
+            "revenue_top": "매출액",
+            "op_profit_top": "영업이익",
+            "per_lowest": "PER (TTM)",
+            "pbr_lowest": "PBR",
+            "revenue_growth_top": "매출 성장률",
+            "op_margin_top": "영업이익률",
+            "debt_ratio_lowest": "부채비율"
+        },
+        "criteria": {
+            "market_cap_top": "주가 기준일 {{date}}",
+            "revenue_top": "{{year}}년 연간 · 금융업 제외",
+            "op_profit_top": "{{year}}년 연간",
+            "per_lowest": "시가총액 3,000억 이상 · PER 0 초과 · 주가 기준일 {{date}}",
+            "pbr_lowest": "시가총액 3,000억 이상 · 주가 기준일 {{date}}",
+            "revenue_growth_top": "{{year}}년 vs {{prev}}년 · 매출 1,000억 이상 · 금융업 제외",
+            "op_margin_top": "{{year}}년 연간 · 매출 1,000억 이상 · 금융업 제외",
+            "debt_ratio_lowest": "{{year}}년 말 · 시가총액 3,000억 이상 · 금융업 제외"
+        },
+        "market": {
+            "all": "전체",
+            "KOSPI": "코스피",
+            "KOSDAQ": "코스닥"
+        },
+        "marketCap": "시가총액",
+        "viewAll": "TOP 50 전체 보기",
+        "compareTop3": "상위 3개 기업 비교하기",
+        "basis": "{{year}}년 연간 실적 · 주가 기준일 {{date}}",
+        "empty": "조건에 맞는 종목이 없습니다"
     },
     "movers": {
         "title": "이번 분기 주목할 종목",

@@ -1,6 +1,11 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { isFinancialCompany } from './financialFilter.js';
+
+// Rankings for /rankings: market cap, size, valuation and quality lists.
+// Output: public/data/kr_rankings.json — per category, a TOP_N list for all stocks and one per
+// market ({ all, KOSPI, KOSDAQ }) so the page's market filter always shows a full list.
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,103 +16,111 @@ const indexPath = path.join(rootDir, 'public', 'data', 'kr_company_index.json');
 const outputPath = path.join(rootDir, 'public', 'data', 'kr_rankings.json');
 
 const TOP_N = 50;
+const MIN_MKTCAP = 300_000_000_000;    // 3,000억 — valuation / balance-sheet lists skip micro caps
+const MIN_REVENUE = 100_000_000_000;   // 1,000억 — growth / margin lists need a meaningful revenue base
+const MAX_MARGIN = 100;                // operating margin above 100% = accounting oddity, not "quality"
+
+const round1 = (v) => parseFloat(v.toFixed(1));
 
 console.log('Generating rankings data...');
 
 const index = JSON.parse(fs.readFileSync(indexPath, 'utf-8'));
-const files = fs.readdirSync(krStocksDir).filter(f => f.endsWith('.json'));
 
-// Collect per-company derived metrics
+// Per-company annual rows + market data
 const companies = [];
-
-for (const file of files) {
+for (const c of index) {
     try {
-        const data = JSON.parse(fs.readFileSync(path.join(krStocksDir, file), 'utf-8'));
-        const code = data.stock_code;
-        const name = data.name;
-        const name_en = data.name_en || name;
-        const sector = data.sector || '';
-        const market = data.market || '';
-
-        // Find in index for rank/last_revenue/last_op_profit
-        const idx = index.find(c => c.stock_code === code);
-        const rank = idx?.rank || 9999;
-        const last_revenue = idx?.last_revenue || null;
-        const last_op_profit = idx?.last_op_profit || null;
-        const last_per = idx?.last_per || null;
-        const last_pbr = idx?.last_pbr || null;
-
-        // Get latest annual data
-        const annual = (data.annual || []).sort((a, b) => b.year - a.year);
-        const latest = annual[0];
-        const prev = annual[1];
-
-        let revenue_yoy = null;
-        let op_margin = null;
-        let debt_ratio = null;
-
-        if (latest && prev && latest.revenue && prev.revenue && prev.revenue > 0) {
-            revenue_yoy = parseFloat((((latest.revenue - prev.revenue) / Math.abs(prev.revenue)) * 100).toFixed(1));
-        }
-
-        if (latest && latest.revenue && latest.op_profit != null) {
-            op_margin = parseFloat(((latest.op_profit / latest.revenue) * 100).toFixed(1));
-        }
-
-        if (latest && latest.total_equity && latest.total_debt != null && latest.total_equity > 0) {
-            debt_ratio = parseFloat(((latest.total_debt / latest.total_equity) * 100).toFixed(1));
-        }
-
+        const data = JSON.parse(fs.readFileSync(path.join(krStocksDir, `${c.stock_code}.json`), 'utf-8'));
         companies.push({
-            stock_code: code,
-            name,
-            name_en,
-            sector,
-            market,
-            rank,
-            last_revenue,
-            last_op_profit,
-            last_per,
-            last_pbr,
-            revenue_yoy,
-            op_margin,
-            debt_ratio,
+            info: c,
+            financial: isFinancialCompany(c.name, c.sector),
+            annual: (data.annual || []).filter(a => a.revenue != null || a.op_profit != null),
+            closeDate: data.last_close_date || null,
         });
-    } catch (e) {
-        // Skip broken files
+    } catch {
+        // missing / unreadable file: skip
     }
 }
 
-console.log(`Processed ${companies.length} companies`);
+// Fiscal year used by the annual lists: the latest year most companies have reported
+const yearCounts = new Map();
+companies.forEach(({ annual }) => {
+    const latest = Math.max(...annual.map(a => a.year));
+    if (Number.isFinite(latest)) yearCounts.set(latest, (yearCounts.get(latest) || 0) + 1);
+});
+const fiscalYear = [...yearCounts.entries()].sort((a, b) => b[1] - a[1])[0][0];
 
-// Generate rankings
-function topN(arr, key, ascending = false, filterPositive = false) {
-    let filtered = arr.filter(c => c[key] != null && isFinite(c[key]));
-    if (filterPositive) filtered = filtered.filter(c => c[key] > 0);
-    filtered.sort((a, b) => ascending ? a[key] - b[key] : b[key] - a[key]);
-    return filtered.slice(0, TOP_N).map((c, i) => ({
-        rank: i + 1,
-        stock_code: c.stock_code,
-        name: c.name,
-        name_en: c.name_en,
-        sector: c.sector,
-        market: c.market,
-        value: c[key],
-    }));
+const rows = companies.map(({ info, financial, annual }) => {
+    const cur = annual.find(a => a.year === fiscalYear) || {};
+    const prev = annual.find(a => a.year === fiscalYear - 1) || {};
+    const bigEnough = cur.revenue >= MIN_REVENUE;
+    return {
+        stock_code: info.stock_code,
+        name: info.name,
+        name_en: info.name_en || info.name,
+        sector: info.sector || '',
+        // "KOSDAQ GLOBAL" is a KOSDAQ segment
+        market: (info.market || '').startsWith('KOSDAQ') ? 'KOSDAQ' : (info.market || ''),
+        financial,
+        mktcap: info.last_mktcap ?? null,
+        per: info.last_per ?? null,
+        pbr: info.last_pbr ?? null,
+        revenue: cur.revenue ?? null,
+        op_profit: cur.op_profit ?? null,
+        revenue_yoy: bigEnough && prev.revenue >= MIN_REVENUE
+            ? round1(((cur.revenue - prev.revenue) / prev.revenue) * 100) : null,
+        op_margin: bigEnough && cur.op_profit != null ? round1((cur.op_profit / cur.revenue) * 100) : null,
+        debt_ratio: cur.total_equity > 0 && cur.total_debt != null
+            ? round1((cur.total_debt / cur.total_equity) * 100) : null,
+    };
+});
+
+/**
+ * @param key      field ranked on
+ * @param order    'desc' | 'asc'
+ * @param include  row filter on top of "key is a finite number"
+ */
+function rank(key, order, include = () => true) {
+    const eligible = rows
+        .filter(r => r[key] != null && Number.isFinite(r[key]) && include(r))
+        .sort((a, b) => (order === 'asc' ? a[key] - b[key] : b[key] - a[key]));
+    const top = (list) => list
+        .slice(0, TOP_N)
+        .map((r, i) => ({
+            rank: i + 1,
+            stock_code: r.stock_code,
+            name: r.name,
+            name_en: r.name_en,
+            sector: r.sector,
+            market: r.market,
+            value: r[key],
+            mktcap: r.mktcap,
+        }));
+    return {
+        all: top(eligible),
+        KOSPI: top(eligible.filter(r => r.market === 'KOSPI')),
+        KOSDAQ: top(eligible.filter(r => r.market === 'KOSDAQ')),
+    };
 }
+
+const sizable = (r) => r.mktcap >= MIN_MKTCAP;
+const operating = (r) => !r.financial;
 
 const rankings = {
     generated_at: new Date().toISOString().split('T')[0],
-    market_cap_top: topN(companies, 'rank', true).map((c, i) => ({ ...c, rank: i + 1 })),
-    revenue_top: topN(companies, 'last_revenue'),
-    op_profit_top: topN(companies, 'last_op_profit'),
-    per_lowest: topN(companies.filter(c => c.last_per > 0), 'last_per', true),
-    pbr_lowest: topN(companies.filter(c => c.last_pbr > 0), 'last_pbr', true),
-    revenue_growth_top: topN(companies.filter(c => c.revenue_yoy <= 500), 'revenue_yoy'),
-    op_margin_top: topN(companies, 'op_margin'),
-    debt_ratio_lowest: topN(companies.filter(c => c.debt_ratio >= 0), 'debt_ratio', true),
+    fiscal_year: fiscalYear,
+    price_date: companies.map(c => c.closeDate).filter(Boolean).sort().pop() || null,
+    criteria: { min_mktcap: MIN_MKTCAP, min_revenue: MIN_REVENUE, max_margin: MAX_MARGIN },
+    market_cap_top: rank('mktcap', 'desc'),
+    revenue_top: rank('revenue', 'desc', operating),
+    op_profit_top: rank('op_profit', 'desc'),
+    per_lowest: rank('per', 'asc', r => r.per > 0 && sizable(r)),
+    pbr_lowest: rank('pbr', 'asc', r => r.pbr > 0 && sizable(r)),
+    revenue_growth_top: rank('revenue_yoy', 'desc', operating),
+    op_margin_top: rank('op_margin', 'desc', r => operating(r) && r.op_margin <= MAX_MARGIN),
+    debt_ratio_lowest: rank('debt_ratio', 'asc', r => operating(r) && sizable(r) && r.debt_ratio >= 0),
 };
 
 fs.writeFileSync(outputPath, JSON.stringify(rankings, null, 0));
 console.log(`Rankings generated: ${outputPath}`);
-console.log(`Categories: ${Object.keys(rankings).filter(k => k !== 'generated_at').length}`);
+console.log(`FY${fiscalYear} · price date ${rankings.price_date} · ${rows.length} companies`);

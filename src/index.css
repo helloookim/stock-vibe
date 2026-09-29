@@ -3444,3 +3444,323 @@ input[type="range"]::-moz-range-thumb {
     padding: 10px 0;
   }
 }
+
+/* ===== Rankings (/rankings, /rankings/:metric) — reuses .compare-page / .compare-inner ===== */
+.rankings-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin: 0 0 6px;
+}
+
+.rankings-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.rankings-basis {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--text-faded);
+}
+
+.rankings-back {
+  display: inline-block;
+  font-size: 0.85rem;
+  color: var(--accent);
+  text-decoration: none;
+  margin-bottom: 4px;
+}
+
+/* hub */
+.rankings-hub-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.rankings-hub-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 20px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  text-decoration: none;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+
+.rankings-hub-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px var(--box-shadow);
+}
+
+.rankings-hub-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.rankings-hub-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.rankings-hub-card-title {
+  display: block;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.rankings-hub-card-desc {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.rankings-hub-preview {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.rankings-hub-preview li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.85rem;
+}
+
+.rankings-hub-preview-name {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rankings-hub-preview-value {
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.rankings-hub-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  align-self: flex-end;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* rank badge: gold / silver / bronze for the top 3 */
+.rankings-rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.rankings-rank.rank-1 { background: #F5C542; color: #5a4300; }
+.rankings-rank.rank-2 { background: #C9CED6; color: #3b4048; }
+.rankings-rank.rank-3 { background: #D9A06B; color: #4a2c10; }
+
+/* detail */
+.rankings-detail-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 18px 0 14px;
+}
+
+.rankings-compare-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid var(--accent);
+  border-radius: 18px;
+  color: var(--accent);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.rankings-compare-link:hover {
+  background: var(--accent-bg);
+}
+
+.rankings-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.rankings-criteria {
+  font-size: 12px;
+  color: var(--text-faded);
+}
+
+.rankings-list {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.rankings-row {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 190px 130px;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 18px;
+  border-top: 1px solid var(--border-color);
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: background 0.15s;
+}
+
+.rankings-row:not(.rankings-row-head):hover {
+  background: var(--accent-bg);
+}
+
+.rankings-row-head {
+  border-top: none;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+/* market-cap list has no separate market-cap column */
+.rankings-list.no-mktcap .rankings-row {
+  grid-template-columns: 40px minmax(0, 1fr) 220px;
+}
+
+.rankings-company {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.rankings-company-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rankings-company-code {
+  margin-left: 8px;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text-faded);
+}
+
+.rankings-company-sub {
+  margin-top: 2px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rankings-col-value {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  text-align: right;
+}
+
+.rankings-value {
+  font-size: 0.92rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rankings-bar {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--bg-input);
+  overflow: hidden;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.rankings-bar > span {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--accent);
+  opacity: 0.75;
+}
+
+.rankings-col-mktcap {
+  text-align: right;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rankings-updated {
+  text-align: center;
+  margin: 16px 0 0;
+  font-size: 0.75rem;
+  color: var(--text-faded);
+}
+
+@media (max-width: 768px) {
+  .rankings-title {
+    font-size: 1.3rem;
+  }
+
+  .rankings-hub-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .rankings-row,
+  .rankings-list.no-mktcap .rankings-row {
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  /* market cap moves under the value on phones */
+  .rankings-row .rankings-col-mktcap {
+    display: none;
+  }
+
+  .rankings-col-value {
+    min-width: 96px;
+  }
+}

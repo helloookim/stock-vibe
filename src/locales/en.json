@@ -483,7 +483,47 @@
         "seo_op_margin_top_title": "2026 Korea Op. Margin TOP 50 | High Profit Stocks - KStockView",
         "seo_op_margin_top_desc": "2026 Korea stocks with the highest operating margins.",
         "seo_debt_ratio_lowest_title": "2026 Korea Lowest Debt Ratio TOP 50 | Stable Stocks - KStockView",
-        "seo_debt_ratio_lowest_desc": "2026 Korea stocks with the lowest debt-to-equity ratios."
+        "seo_debt_ratio_lowest_desc": "2026 Korea stocks with the lowest debt-to-equity ratios.",
+        "short": {
+            "market_cap_top": "Market cap",
+            "revenue_top": "Revenue",
+            "op_profit_top": "Op. income",
+            "per_lowest": "Low PER",
+            "pbr_lowest": "Low PBR",
+            "revenue_growth_top": "Revenue growth",
+            "op_margin_top": "Op. margin",
+            "debt_ratio_lowest": "Low debt"
+        },
+        "valueLabel": {
+            "market_cap_top": "Market cap",
+            "revenue_top": "Revenue",
+            "op_profit_top": "Operating income",
+            "per_lowest": "PER (TTM)",
+            "pbr_lowest": "PBR",
+            "revenue_growth_top": "Revenue growth",
+            "op_margin_top": "Operating margin",
+            "debt_ratio_lowest": "Debt ratio"
+        },
+        "criteria": {
+            "market_cap_top": "Prices as of {{date}}",
+            "revenue_top": "FY{{year}} · excl. financials",
+            "op_profit_top": "FY{{year}}",
+            "per_lowest": "Market cap ≥ ₩300B · PER > 0 · prices as of {{date}}",
+            "pbr_lowest": "Market cap ≥ ₩300B · prices as of {{date}}",
+            "revenue_growth_top": "FY{{year}} vs FY{{prev}} · revenue ≥ ₩100B · excl. financials",
+            "op_margin_top": "FY{{year}} · revenue ≥ ₩100B · excl. financials",
+            "debt_ratio_lowest": "End of FY{{year}} · market cap ≥ ₩300B · excl. financials"
+        },
+        "market": {
+            "all": "All",
+            "KOSPI": "KOSPI",
+            "KOSDAQ": "KOSDAQ"
+        },
+        "marketCap": "Market cap",
+        "viewAll": "View full TOP 50",
+        "compareTop3": "Compare the top 3",
+        "basis": "FY{{year}} results · prices as of {{date}}",
+        "empty": "No stocks match these conditions"
     },
     "movers": {
         "title": "Notable Stocks This Quarter",

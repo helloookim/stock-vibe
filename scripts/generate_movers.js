@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { isFinancialCompany as isFinancial } from './financialFilter.js';
 
 // Market movers for the home page: the latest quarter most companies have reported,
 // compared with the same quarter a year earlier. Output: public/data/kr_movers.json
@@ -17,12 +18,6 @@ const TOP_N = 8;
 const UNIVERSE_SIZE = 500;            // top companies by market cap
 const MIN_REVENUE = 100_000_000_000;  // 1,000억 in both quarters — tiny bases make % changes meaningless
 const MAX_ABS_MARGIN = 100;           // ignore margins outside ±100% (accounting oddities)
-
-// Financial-company rule from scripts/scan_outliers.py (+ 생명/해상/손해 for insurers): their "revenue" isn't comparable
-const FINANCIAL_SECTOR_KEYWORDS = ['금융', '은행', '보험', '증권', '투자', '신탁', '지주'];
-const FINANCIAL_NAME_KEYWORDS = ['은행', '보험', '증권', '금융', '캐피탈', '투자', '저축', '카드', '자산운용', '리츠', '스팩', '선물', '코리안리', '화재', '생명', '해상', '손해'];
-const isFinancial = (name = '', sector = '') =>
-    FINANCIAL_SECTOR_KEYWORDS.some(kw => sector.includes(kw)) || FINANCIAL_NAME_KEYWORDS.some(kw => name.includes(kw));
 
 const round1 = (v) => parseFloat(v.toFixed(1));
 const margin = (q) => (q.revenue ? (q.op_profit / q.revenue) * 100 : null);
