@@ -91,3 +91,18 @@ export function bestIndex(values, rule) {
     const valid = values.filter(v => v != null && Number.isFinite(v) && (rule !== 'minPositive' || v > 0));
     return valid.length >= 2 ? best : -1;
 }
+
+// Popular KR–US rival pairs, grouped by industry (labels in globalCompare.industries).
+// Also read by scripts/generate_og_images.mjs, which renders a share image per pair.
+export const POPULAR_PAIRS = [
+    { kr: '000660', us: 'MU', industry: 'semis', emoji: '\u{1F4BE}' },
+    { kr: '005930', us: 'INTC', industry: 'semis', emoji: '\u{1F9E0}' },
+    { kr: '005930', us: 'AAPL', industry: 'electronics', emoji: '\u{1F4F1}' },
+    { kr: '005380', us: 'GM', industry: 'autos', emoji: '\u{1F697}' },
+    { kr: '000270', us: 'TSLA', industry: 'autos', emoji: '\u{1F699}' },
+    { kr: '373220', us: 'TSLA', industry: 'battery', emoji: '\u{1F50B}' },
+    { kr: '035420', us: 'META', industry: 'internet', emoji: '\u{1F310}' },
+    { kr: '207940', us: 'TMO', industry: 'bio', emoji: '\u{1F9EA}' },
+    { kr: '068270', us: 'AMGN', industry: 'bio', emoji: '\u{1F48A}' },
+    { kr: '012450', us: 'LMT', industry: 'defense', emoji: '\u{1F6E1}' },
+];
