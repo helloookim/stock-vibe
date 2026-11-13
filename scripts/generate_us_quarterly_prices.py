@@ -1,7 +1,7 @@
 """
-Extract calendar quarter-end close prices for US stocks from the sibling
-us_stock/price_jsons/ dataset (yfinance daily OHLCV), for use in the
-Global Compare market cap chart.
+Extract calendar quarter-end close prices for US stocks from
+~/us_stock_data/price_jsons/ (daily OHLCV from scripts/us/etl_price_data.py),
+for use in the Global Compare market cap chart.
 
 Only tickers that exist in both price_jsons/ and public/data/us_stocks/
 (i.e. have fundamentals data too) are included.
@@ -17,7 +17,10 @@ import json
 import os
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PRICE_DIR = os.path.join(os.path.dirname(ROOT), "us_stock", "price_jsons")
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "us"))
+from config import PRICE_DIR  # noqa: E402  ~/us_stock_data/price_jsons
+PRICE_DIR = str(PRICE_DIR)
 FUND_DIR = os.path.join(ROOT, "public", "data", "us_stocks")
 OUTPUT_JSON = os.path.join(ROOT, "public", "data", "us_quarterly_price.json")
 

@@ -19,7 +19,8 @@ static JSON files consumed by the React frontend.
 ├─────────────────────────────────────────────────────────────────────┤
 │                         US Stocks (US)                             │
 │                                                                    │
-│  ④ prepare_us_data.py      SEC EDGAR JSONs → deploy-ready files    │
+│  ④ us/update_us_financials.py  SEC raw → ETL → fix → diff          │
+│     prepare_us_data.py      fixed JSONs → deploy-ready files       │
 │                                                                    │
 ├─────────────────────────────────────────────────────────────────────┤
 │                          Legacy                                    │
@@ -255,24 +256,53 @@ ChromeDriver. Falls back to visible mode if headless fails.
 
 ---
 
-## ④ prepare_us_data.py
+## ④ US pipeline — `scripts/us/` + prepare_us_data.py
 
-**US stock data preparation** — copies pre-processed SEC EDGAR data to the deploy directory.
+**US stock financials from SEC EDGAR Financial Statement Data Sets.** Migrated from the
+former standalone `vibecode/us_stock` project in Nov 2026.
 
-This is a simple file-copy script. The actual SEC EDGAR processing is done externally
-and stored in `us_fixed_company_jsons/`. This script filters to tickers with available
-data, generates the sidebar index, and copies files to `public/data/us_stocks/`.
+Large / regenerable data lives **outside OneDrive** (to avoid `*-laser4070` sync conflicts),
+at `~/us_stock_data` (override with env `US_STOCK_DATA_DIR`). All paths are in `scripts/us/config.py`.
 
-### Usage
+```
+~/us_stock_data/
+├── raw_data/{YYYYqN}/      SEC quarterly datasets (sub.txt, num.txt) — 2015q1~, ~24GB
+├── sec_data.db             SQLite staging DB (dropped/recreated every ETL run)
+├── company_jsons/          etl_sec_data.py output
+├── fixed_company_jsons/    + Q4 fill + known fixes → prepare_us_data.py input
+└── price_jsons/            daily OHLCV (etl_price_data.py) → generate_us_quarterly_prices.py
+```
+
+| Script | Role |
+|--------|------|
+| `us/etl_sec_data.py` | raw_data → SQLite → per-company JSON (84 XBRL tags → ~12 metrics, earliest-source filter, 3-tier op income derivation) |
+| `us/fix_financial_data.py` | Q4 = annual − 9M cumulative; creates/fills missing Q4 rows |
+| `us/known_fixes.py` | Re-applies manual fixes (e.g. AVGO FY2026Q1) — fills only null fields |
+| `us/update_us_financials.py` | Orchestrator: tickers refresh → ETL → fix → known fixes → diff report → (`--apply`) prepare |
+| `us/cik_aliases.json` | Old CIK → ticker when a company re-registers under a new CIK (holdco/redomicile, e.g. XOM). Auto-detected on `--refresh-tickers` as `merge: null`; **only `merge: true` (human-reviewed) entries are merged** — ticker reuse by a different company looks identical |
+| `us/generate_ticker_redirects.py` | Old → new ticker map (`src/usTickerRedirects.js`) for renamed/remapped tickers; runs in `--apply` before prepare. Served as 301 by `functions/[[path]].js` and as client replace in `UsStockPage.jsx` |
+| `us/etl_price_data.py` | Daily price history (Stooq + yfinance fallback) for top N tickers |
+| `prepare_us_data.py` | Builds `us_company_index.json` and copies fixed JSONs to `public/data/us_stocks/` |
+
+### Quarterly update
 
 ```bash
-python scripts/prepare_us_data.py
+# 1. Download YYYYqN.zip from https://www.sec.gov/dera/data/financial-statement-data-sets
+#    and extract to ~/us_stock_data/raw_data/YYYYqN/
+# 2. ETL + diff report (does NOT touch public/) → reports/us_update_diff_YYYYMMDD.md
+python scripts/us/update_us_financials.py --refresh-tickers
+# 3. Review the report (dropped tickers, changed historical values), then deploy:
+python scripts/us/update_us_financials.py --skip-etl --apply
 ```
+
+SEC releases dataset `YYYYqN` shortly after the calendar quarter ends; it contains filings
+*made* in that quarter (e.g. `2026q3` = 10-Qs filed Jul–Sep = June-quarter results).
+Requests to sec.gov need a `"name email"` style User-Agent or they get 403.
 
 ### Input
 
-- `us_company_tickers.json` — ticker metadata with market cap rankings
-- `us_fixed_company_jsons/{TICKER}.json` — pre-processed SEC EDGAR financial data
+- `us_company_tickers.json` — SEC CIK↔ticker mapping (order ≈ market-cap rank)
+- `~/us_stock_data/fixed_company_jsons/{TICKER}.json`
 
 ### Output
 
@@ -281,7 +311,7 @@ python scripts/prepare_us_data.py
 
 ### Dependencies
 
-None (stdlib only).
+`prepare_us_data.py`: stdlib only. `scripts/us/*`: `pandas` (+ `yfinance` for price fallback).
 
 ---
 
@@ -313,8 +343,9 @@ python scripts/fetch_krx_data.py
 # 3. Backfill EPS from Naver Finance (takes ~8 min for top 100)
 python scripts/fetch_naver_finance.py --top 100
 
-# 4. Prepare US stock data
-python scripts/prepare_us_data.py
+# 4. US stock data (after placing new SEC dataset in ~/us_stock_data/raw_data/)
+python scripts/us/update_us_financials.py --refresh-tickers
+python scripts/us/update_us_financials.py --skip-etl --apply
 ```
 
 ### Incremental Update (e.g., new quarter released)
@@ -417,7 +448,7 @@ All monetary values are in **KRW (원)**. `1조 = 1,000,000,000,000 / 1억 = 100
 
 ### US Stock (per-company)
 
-`public/data/us_stocks/{TICKER}.json` — see `us_fixed_company_jsons/README.md` for full spec.
+`public/data/us_stocks/{TICKER}.json` — see `scripts/us/etl_sec_data.py` for field derivation.
 
 ---
 

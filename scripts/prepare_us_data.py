@@ -10,11 +10,15 @@ import os
 import re
 import shutil
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-TICKERS_FILE = os.path.join(ROOT, "us_company_tickers.json")
-SOURCE_DIR = os.path.join(ROOT, "us_fixed_company_jsons")
-OUTPUT_INDEX = os.path.join(ROOT, "public", "data", "us_company_index.json")
-OUTPUT_DIR = os.path.join(ROOT, "public", "data", "us_stocks")
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "us"))
+from config import TICKER_FILE, FIXED_DIR, PUBLIC_US_INDEX, PUBLIC_US_DIR  # noqa: E402
+
+TICKERS_FILE = str(TICKER_FILE)
+SOURCE_DIR = str(FIXED_DIR)  # ~/us_stock_data/fixed_company_jsons (OneDrive 밖)
+OUTPUT_INDEX = str(PUBLIC_US_INDEX)
+OUTPUT_DIR = str(PUBLIC_US_DIR)
 
 # Windows reserves these device names (any extension) — a file literally named
 # CON.json can't be created/opened via the normal Win32 path API, so a ticker
