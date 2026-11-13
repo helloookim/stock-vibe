@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "description": "Only these paths invoke Pages Functions (each invocation counts toward the 100k/day free limit). Static assets, /data JSON and pre-rendered OG PNGs are served directly.",
+  "include": [
+    "/stocks/*",
+    "/us-stocks/*",
+    "/compare/*",
+    "/global-compare/*",
+    "/og/*",
+    "/0*",
+    "/1*",
+    "/2*",
+    "/3*",
+    "/4*",
+    "/5*",
+    "/6*",
+    "/7*",
+    "/8*",
+    "/9*"
+  ],
+  "exclude": [
+    "/og/kr/*",
+    "/og/us/*",
+    "/og/gc/*"
+  ]
+}
