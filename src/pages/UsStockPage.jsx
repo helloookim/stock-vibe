@@ -8,6 +8,7 @@ import {
 } from 'recharts';
 import { Search, ArrowUpDown, ChevronLeft, ChevronRight, Menu, X, Info } from 'lucide-react';
 import { loadUsCompanyIndex, loadUsCompanyData, formatUsdCurrency } from '../usDataLoader';
+import { US_TICKER_REDIRECTS } from '../usTickerRedirects';
 import { loadKrCompanyIndex } from '../krDataLoader';
 import NotFound from './NotFound';
 import LanguageToggle from '../components/LanguageToggle';
@@ -135,6 +136,7 @@ const UsStockPage = () => {
     const [isMobile, setIsMobile] = useState(false);
     const [viewMode, setViewMode] = useState('quarterly');
     const [isInvalidTicker, setIsInvalidTicker] = useState(false);
+    const [isDelisted, setIsDelisted] = useState(false);
     const [activeTab, setActiveTab] = useMetricTab(US_TABS);
 
     // Detect mobile
@@ -174,15 +176,38 @@ const UsStockPage = () => {
     useEffect(() => {
         if (indexLoading || !urlTicker) return;
         const normalized = urlTicker.toUpperCase();
+        // Ticker changed (e.g. GOOG → GOOGL, PSTG → P): same redirect the Pages Function issues as a 301
+        const renamed = US_TICKER_REDIRECTS[normalized];
+        if (renamed) {
+            navigate(`/us-stocks/${renamed}${location.search}`, { replace: true });
+            return;
+        }
         const exists = companyIndex.some(c => c.ticker === normalized);
         if (exists) {
             setIsInvalidTicker(false);
+            setIsDelisted(false);
             if (normalized !== selectedTicker) {
                 setSelectedTicker(normalized);
             }
-        } else {
-            setIsInvalidTicker(true);
+            return;
         }
+        // Not in the index but its data file is still deployed → delisted/acquired: show the last
+        // data with a badge instead of a 404. A missing file comes back as index.html, so the JSON
+        // parse fails and we fall through to NotFound.
+        let cancelled = false;
+        loadUsCompanyData(normalized)
+            .then(data => {
+                if (cancelled) return;
+                if (data) {
+                    setIsInvalidTicker(false);
+                    setIsDelisted(true);
+                    setSelectedTicker(normalized);
+                } else {
+                    setIsInvalidTicker(true);
+                }
+            })
+            .catch(() => { if (!cancelled) setIsInvalidTicker(true); });
+        return () => { cancelled = true; };
     }, [urlTicker, indexLoading, companyIndex]);
 
     // Load company data when ticker changes
@@ -617,6 +642,17 @@ const UsStockPage = () => {
                             <div className="company-info">
                                 <h1>{companyData?.name || selectedTicker}</h1>
                                 <span className="company-code">{selectedTicker}</span>
+                                {isDelisted && (
+                                    <span
+                                        title={t('usAnalysis.delistedNote')}
+                                        style={{
+                                            fontSize: '12px', fontWeight: 600, padding: '3px 8px', borderRadius: '6px',
+                                            color: colors.textMuted, border: `1px solid ${colors.textMuted}`, whiteSpace: 'nowrap',
+                                        }}
+                                    >
+                                        {t('usAnalysis.delisted')}
+                                    </span>
+                                )}
                                 <ShareButtons
                                     companyName={companyData?.name || ''}
                                     stockCode={selectedTicker}

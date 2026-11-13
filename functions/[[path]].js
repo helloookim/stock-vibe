@@ -10,6 +10,7 @@ import {
     formatKrwShort, formatUsdKorean, summarySentence, isForeignKrListing,
 } from '../src/ogSummary.js';
 import { prettyUsName } from '../src/compareUtils.js';
+import { US_TICKER_REDIRECTS } from '../src/usTickerRedirects.js';
 
 const SITE = 'https://kstockview.com';
 const DEFAULT_IMAGE = `${SITE}/og-image.png`;
@@ -30,6 +31,19 @@ export async function onRequest(context) {
         });
     }
 
+    // Renamed US tickers (GOOG → GOOGL, PSTG → P, ...) → current ticker. _redirects can't do this:
+    // Pages skips _redirects for requests a Function handles, and this Function handles every path.
+    const renamed = usTickerRedirect(path);
+    if (renamed) {
+        return new Response(null, {
+            status: 301,
+            headers: {
+                'Location': `${url.origin}/${renamed}${url.search}`,
+                'Cache-Control': 'public, max-age=86400',
+            },
+        });
+    }
+
     const response = await context.next();
     if (request.method !== 'GET' || !(response.headers.get('content-type') || '').includes('text/html')) {
         return response;
@@ -42,6 +56,20 @@ export async function onRequest(context) {
     } catch {
         return response;
     }
+}
+
+// New path for a URL that names a renamed US ticker, or null
+function usTickerRedirect(path) {
+    let m;
+    if ((m = /^us-stocks\/([A-Za-z0-9.\-]{1,10})\/?$/.exec(path))) {
+        const to = US_TICKER_REDIRECTS[m[1].toUpperCase()];
+        return to ? `us-stocks/${to}` : null;
+    }
+    if ((m = /^global-compare\/([0-9]{6})-vs-([A-Za-z0-9.\-]{1,10})\/?$/.exec(path))) {
+        const to = US_TICKER_REDIRECTS[m[2].toUpperCase()];
+        return to ? `global-compare/${m[1]}-vs-${to}` : null;
+    }
+    return null;
 }
 
 // ---------------------------------------------------------------- per-route meta
