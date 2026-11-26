@@ -882,6 +882,9 @@ def nullify_negative_q4(output_dir):
 QUARTER_TO_REPRT = {'1Q': '11013', '2Q': '11012', '3Q': '11014'}
 
 # Fields to fix and their corresponding account name sets
+# 1,000조 KRW — same threshold as scan_outliers.ABSURD_VALUE; no IS item legitimately reaches it
+ABSURD_IS_VALUE = 1_000_000_000_000_000
+
 FIXABLE_FIELDS = [
     ('revenue', REVENUE_NAMES),
     ('op_profit', OP_PROFIT_NAMES),
@@ -980,6 +983,10 @@ def fix_missing_financials(output_dir):
                 account_nm = item.get('account_nm', '')
                 if account_nm in name_set:
                     amt = parse_amount(item.get('thstrm_amount', ''))
+                    # Some filings report in 천원 while tagged as 원 → 1000x values (e.g. 3.7경).
+                    # These were nullified by fix_outliers before; don't re-fill them every run.
+                    if amt is not None and abs(amt) >= ABSURD_IS_VALUE:
+                        continue
                     if amt is not None:
                         # For revenue, pick the max (total revenue > sub-component)
                         if field == 'revenue':

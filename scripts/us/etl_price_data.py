@@ -172,10 +172,10 @@ def write_price_json(ticker, rows, source):
 # ---------------------------------------------------------------------------
 # 4. 메인 루프
 # ---------------------------------------------------------------------------
-def fetch_one(ticker, retries=3):
+def fetch_one(ticker, retries=3, yf_only=False):
     """Stooq -> (실패 시) yfinance 순으로 시도. (rows, source) 반환, 모두 실패 시 (None, None)."""
-    # Stooq (재시도 포함)
-    for attempt in range(retries):
+    # Stooq (재시도 포함). yf_only 면 건너뜀 (Stooq 가 SSL 로 끊길 때 재시도 대기만 길어짐)
+    for attempt in range(0 if yf_only else retries):
         try:
             df = fetch_stooq(ticker)
             if df is not None:
@@ -206,6 +206,9 @@ def main():
     ap.add_argument("--tickers", nargs="+", help="특정 티커만 수집 (테스트용)")
     ap.add_argument("--force", action="store_true", help="기존 파일도 다시 수집")
     ap.add_argument("--sleep", type=float, default=0.7, help="Stooq 호출 간 대기(초)")
+    ap.add_argument("--yf-only", action="store_true", help="Stooq 를 건너뛰고 yfinance 로만 수집")
+    ap.add_argument("--stale-before", type=int, metavar="YYYYMMDD",
+                    help="--force 와 함께: 마지막 날짜가 이 날짜보다 이전인 파일만 다시 수집")
     args = ap.parse_args()
 
     if args.tickers:
@@ -223,10 +226,19 @@ def main():
         if out_path.exists() and not args.force:
             n_skip += 1
             continue
+        if out_path.exists() and args.stale_before:
+            try:
+                with open(out_path, encoding="utf-8") as f:
+                    prices = json.load(f).get("prices") or []
+            except ValueError:  # 중단된 쓰기 등으로 깨진 파일 → 다시 수집
+                prices = []
+            if prices and prices[-1]["date"] >= args.stale_before:
+                n_skip += 1
+                continue
 
         print(f"[{i}/{len(universe)}] {ticker} ...", end=" ", flush=True)
         try:
-            rows, source = fetch_one(ticker)
+            rows, source = fetch_one(ticker, yf_only=args.yf_only)
         except Exception as e:  # 한 종목 오류가 전체 실행을 막지 않도록
             print(f"예외: {e}")
             n_fail += 1
@@ -245,7 +257,8 @@ def main():
             failed.append(ticker)
             print("실패")
 
-        time.sleep(args.sleep)  # Stooq에 예의를 갖춘 rate limit
+        if not args.yf_only:
+            time.sleep(args.sleep)  # Stooq에 예의를 갖춘 rate limit
 
     print("\n=== 요약 ===")
     print(f"Stooq 성공:     {n_stooq}")

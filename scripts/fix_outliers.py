@@ -59,6 +59,16 @@ KNOWN_FIXES = [
         'action': 'set_null', 'fields': ['eps'],
         'reason': 'EPS sign mismatch: eps=-13633 with positive net_income=124B',
     },
+    # ── 대유에이텍 (002880) ────────────────────────────────────────────────────
+    # 2026 H1 report: DART batch API returns values 1000x (천원 tagged as 원) for 2Q,
+    # e.g. revenue 253조. Q1 189B / Q3 246B confirm the correct scale.
+    {
+        'stock_code': '002880', 'type': 'quarterly', 'year': 2026, 'quarter': '2Q',
+        'action': 'set_value',
+        'fields': ['revenue', 'op_profit', 'net_income'],
+        'values': [252999996254, 13495638433, 14468219968],
+        'reason': '2026 2Q DART unit error (1000x): restoring correct-scale values',
+    },
 ]
 
 
